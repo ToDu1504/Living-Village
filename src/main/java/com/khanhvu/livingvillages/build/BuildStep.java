@@ -15,6 +15,14 @@ public sealed interface BuildStep {
 	/** A position inside the step, used to check that its chunk is loaded. */
 	BlockPos anchor();
 
+	/** Fell the natural tree whose lowest log is {@code root}: logs, its leaves, vines; nothing drops. */
+	record ChopTree(BlockPos root) implements BuildStep {
+		@Override
+		public BlockPos anchor() {
+			return root;
+		}
+	}
+
 	/** Fill a column with foundation blocks from {@code topY} down until solid ground. */
 	record Foundation(int x, int z, int topY, BlockState state) implements BuildStep {
 		@Override

@@ -20,7 +20,6 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -91,13 +90,20 @@ public final class BuilderAssignment {
 			return;
 		}
 		BlockPos anchor = step.anchor();
-		BlockPos target = new BlockPos(anchor.getX(), Math.max(anchor.getY(), project.getFloorY()), anchor.getZ());
-		boolean current = builder.getBrain().getMemory(MemoryModuleType.WALK_TARGET)
+		walkTo(builder, new BlockPos(anchor.getX(), Math.max(anchor.getY(), project.getFloorY()), anchor.getZ()), anchor);
+	}
+
+	/** Sends a villager to {@code target}, looking at {@code lookAt}; only writes the brain when it changed its mind. */
+	public static void walkTo(Villager villager, BlockPos target, BlockPos lookAt) {
+		if (villager.isTrading()) {
+			return;
+		}
+		boolean current = villager.getBrain().getMemory(MemoryModuleType.WALK_TARGET)
 				.map(walk -> walk.getTarget().currentBlockPosition().equals(target))
 				.orElse(false);
 		if (!current) {
-			builder.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target, WALK_SPEED, CLOSE_ENOUGH));
-			builder.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(anchor));
+			villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target, WALK_SPEED, CLOSE_ENOUGH));
+			villager.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(lookAt));
 		}
 	}
 
@@ -185,11 +191,11 @@ public final class BuilderAssignment {
 	}
 
 	private static Item heldItemFor(BuildStep step) {
-		BlockState state = switch (step) {
-			case BuildStep.Foundation foundation -> foundation.state();
-			case BuildStep.Place place -> place.blocks().get(0).state();
-			case BuildStep.Clear clear -> null;
+		return switch (step) {
+			case BuildStep.ChopTree chop -> Items.IRON_AXE;
+			case BuildStep.Foundation foundation -> foundation.state().getBlock().asItem();
+			case BuildStep.Place place -> place.blocks().get(0).state().getBlock().asItem();
+			case BuildStep.Clear clear -> Items.AIR;
 		};
-		return state == null ? Items.AIR : state.getBlock().asItem();
 	}
 }

@@ -4,7 +4,7 @@ import com.khanhvu.livingvillages.build.HouseTemplateProvider;
 import com.khanhvu.livingvillages.command.LVCommands;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.tick.VillageTicker;
-import com.khanhvu.livingvillages.util.Lang;
+import com.khanhvu.livingvillages.util.LVText;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +18,7 @@ public class LivingVillages implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LVConfig.load();
-		Lang.load();
+		LVText.load();
 		VillageTicker.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> HouseTemplateProvider.clearCache());

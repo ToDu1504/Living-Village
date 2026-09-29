@@ -30,12 +30,17 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
   - số nhà đã xây ít hơn `maxHousesPerVillage`;
   - đã qua một ngày Minecraft (`cooldownTicks`) kể từ nhà trước.
 - **Mẫu nhà** được đọc lúc chạy từ bộ `minecraft:village/<phong cách>/houses`. Chỉ dùng nhà có giường và không có khối nghề, nên không xây lò rèn hay nông trại. Datapack và mod sửa bộ nhà này sẽ tự được áp dụng.
-- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông 12–64 khối. Mod không bao giờ chặt cây, không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
+- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông 12–64 khối. Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
+- **Cây:** tối đa 4 cây tự nhiên mọc trong chỗ đặt nhà được chặt trước, không rơi đồ, và chỗ không có cây luôn được ưu tiên. Cây chỉ tính là tự nhiên khi có lá tự nhiên (không phải lá do người chơi đặt), nên nhà gỗ và cây trang trí của người chơi không bao giờ bị đụng tới. Cây khổng lồ và cây có tổ ong được giữ nguyên. Xây xong, mỗi cây đã chặt được trồng lại một cây non cùng loại, cách nhà 3–8 khối; nếu làng có nông dân thì một nông dân đi tới trồng.
 - **Thứ tự xây:** móng, rồi dọn cỏ và san đất, rồi dựng nhà từng tầng từ dưới lên, cuối cùng mới đặt cửa, giường, đuốc, thảm và đồ trang trí. Khối chỉ được đặt vào ô trống hoặc ô có thứ thay thế được như cỏ. Khối người chơi đặt chắn đường được giữ nguyên. Rương không có đồ bên trong.
 - **Thợ xây:** ưu tiên dân thất nghiệp, rồi thợ đá, rồi bất kỳ ai, trừ dân ngốc (nitwit) và trẻ con. Thợ xây phải đứng trong phạm vi `builderReach` khối mới đặt được, có vung tay và cầm khối đang đặt. Nếu thợ xây chết hoặc 60 giây không tới được công trường thì người khác thay. Không còn ai thì nhà tự xây với nửa tốc độ.
 - **Không cần vật liệu:** mod tự tạo khối, thợ xây không phải đi gom vật liệu và không lấy đồ của làng hay của người chơi.
 - **Tạm dừng** vào ban đêm, khi làng bị raid, và khi không có người chơi nào trong phạm vi `activeRange` khối. Làng ở xa thì dừng hẳn, không xây bù. Tiến độ được lưu lại, nên thoát game giữa chừng thì lần sau xây tiếp đúng chỗ.
 - Nếu chuông bị phá, làng chuyển sang ngừng hoạt động và dự án tạm dừng. Đặt chuông lại gần đó thì làng hoạt động trở lại.
+
+## Ngôn ngữ
+
+Người chơi không cần cài mod, nên mọi chữ được tạo trên server theo ngôn ngữ đặt ở mục `language` trong config: `vi_vn` (mặc định) hoặc `en_us`.
 
 ## Lệnh
 
@@ -59,6 +64,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 | Khóa | Mặc định | Ý nghĩa |
 |---|---|---|
+| `language` | `vi_vn` | Ngôn ngữ của mọi chữ: `vi_vn` hoặc `en_us` |
 | `enabled` | `true` | Công tắc chính (`pause`/`resume`) |
 | `scanIntervalTicks` | `100` | Bao lâu dò chuông quanh người chơi một lần |
 | `manageIntervalTicks` | `40` | Bao lâu mỗi làng xét việc khởi công một lần |
@@ -84,6 +90,11 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `maxSkippedRatio` | `0.1` | Hủy dự án khi tỉ lệ khối bị chắn vượt mức này |
 | `showBuilderHeldItem` | `true` | Thợ xây cầm khối đang đặt trên tay |
 | `debugLogging` | `false` | Ghi thêm log về làng, chỗ xây và thợ xây |
+| `allowTreeClearing` | `true` | Chặt cây tự nhiên trong chỗ xây |
+| `maxTreeLogs` | `40` | Cây có nhiều khối gỗ hơn số này thì không bao giờ bị chặt |
+| `maxTreesPerSite` | `4` | Số cây tối đa chặt cho một nhà |
+| `replantSaplings` | `true` | Trồng lại một cây non cho mỗi cây đã chặt |
+| `workTimeoutTicks` | `600` | Thời gian dân làng được đi tới chỗ làm việc (ví dụ trồng cây) trước khi việc được làm mà không cần họ |
 
 ## Tương thích
 
@@ -100,7 +111,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 ## Giới hạn đã biết
 
-- Làng nằm giữa rừng rậm hoặc trên đất dốc (thường gặp ở làng taiga) có thể không tìm được chỗ xây, vì mod không chặt cây. Sau `maxSiteFailures` lần thất bại, làng ngừng thử cho tới khi có lệnh `/livingvillages build`.
+- Làng trên đất dốc có thể không tìm được chỗ xây. Sau `maxSiteFailures` lần thất bại, làng ngừng thử cho tới khi có lệnh `/livingvillages build`.
 - Chỉ hỗ trợ 5 kiểu làng vanilla.
 
 ## Gỡ mod

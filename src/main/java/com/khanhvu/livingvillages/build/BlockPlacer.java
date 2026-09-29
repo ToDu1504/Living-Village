@@ -1,8 +1,11 @@
 package com.khanhvu.livingvillages.build;
 
+import com.khanhvu.livingvillages.config.LVConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -29,6 +32,8 @@ public class BlockPlacer {
 	private final List<BlockPos> pendingUpdates = new ArrayList<>();
 	private int placedCount;
 	private int skippedCount;
+	/** Saplings to replant for trees felled since the last {@link #drainFelledSaplings()}. */
+	private final List<ResourceLocation> felledSaplings = new ArrayList<>();
 
 	public BlockPlacer(ServerLevel level, boolean playSounds) {
 		this.level = level;
@@ -44,6 +49,13 @@ public class BlockPlacer {
 		return skippedCount;
 	}
 
+	/** Saplings for the trees felled since the last call, then forgets them. */
+	public List<ResourceLocation> drainFelledSaplings() {
+		List<ResourceLocation> result = List.copyOf(felledSaplings);
+		felledSaplings.clear();
+		return result;
+	}
+
 	public boolean isLoaded(BuildStep step) {
 		return level.isLoaded(step.anchor());
 	}
@@ -51,6 +63,7 @@ public class BlockPlacer {
 	/** Runs one step and returns how many blocks it changed; 0 means there was nothing to do (or it was skipped). */
 	public int execute(BuildStep step) {
 		return switch (step) {
+			case BuildStep.ChopTree t -> chopTree(t);
 			case BuildStep.Foundation f -> foundation(f);
 			case BuildStep.Clear c -> clear(c);
 			case BuildStep.Place p -> place(p);
@@ -68,6 +81,29 @@ public class BlockPlacer {
 			level.blockUpdated(pos, updated.getBlock());
 		}
 		pendingUpdates.clear();
+	}
+
+	/**
+	 * Fells the tree again found from its root: it may have changed or be gone since the site was chosen, and a
+	 * player may have made it non-natural (then it is left alone). Blocks are removed top first with no drops.
+	 */
+	private int chopTree(BuildStep.ChopTree step) {
+		TreeFeller.Tree tree = TreeFeller.findTree(level, step.root(), LVConfig.get().maxTreeLogs);
+		if (tree == null) {
+			return 0;
+		}
+		felledSaplings.add(TreeFeller.saplingFor(level.getBlockState(tree.root())));
+		int changed = 0;
+		for (BlockPos pos : TreeFeller.collectFelling(level, tree)) {
+			if (level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS)) {
+				pendingUpdates.add(pos);
+				changed++;
+			}
+		}
+		if (changed > 0 && playSounds) {
+			level.playSound(null, tree.root(), SoundEvents.WOOD_BREAK, SoundSource.BLOCKS, 0.8F, 0.9F);
+		}
+		return changed;
 	}
 
 	private int foundation(BuildStep.Foundation step) {
@@ -91,7 +127,8 @@ public class BlockPlacer {
 		for (int y = step.fromY(); y <= step.toY(); y++) {
 			pos.set(step.x(), y, step.z());
 			BlockState state = level.getBlockState(pos);
-			if (!state.isAir() && (SiteFinder.isClearable(state) || SiteFinder.isNaturalGround(state))) {
+			boolean naturalLeaves = LVConfig.get().allowTreeClearing && TreeFeller.isNaturalLeaves(state);
+			if (!state.isAir() && (SiteFinder.isClearable(state) || SiteFinder.isNaturalGround(state) || naturalLeaves)) {
 				level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
 				pendingUpdates.add(pos.immutable());
 				changed++;

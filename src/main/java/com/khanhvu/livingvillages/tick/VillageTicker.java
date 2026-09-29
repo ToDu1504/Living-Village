@@ -7,6 +7,7 @@ import com.khanhvu.livingvillages.build.BuildSite;
 import com.khanhvu.livingvillages.build.BuildStep;
 import com.khanhvu.livingvillages.build.HouseTemplate;
 import com.khanhvu.livingvillages.build.HouseTemplateProvider;
+import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
@@ -16,6 +17,7 @@ import com.khanhvu.livingvillages.village.VillageScanner;
 import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
@@ -40,7 +42,6 @@ public final class VillageTicker {
 	/** Global block budget, shared by all dimensions within one server tick. */
 	private static int budgetServerTick = -1;
 	private static int budgetLeft;
-
 
 	private VillageTicker() {
 	}
@@ -71,6 +72,9 @@ public final class VillageTicker {
 			BuildProject project = village.getProject();
 			if (project != null) {
 				tickProject(level, registry, village, project, updateBuilders);
+			}
+			if (config.replantSaplings) {
+				Replanter.tick(level, registry, village);
 			}
 		}
 	}
@@ -121,7 +125,8 @@ public final class VillageTicker {
 				village.setProject(project);
 				village.setFailedSiteAttempts(0);
 				registry.setDirty();
-				LivingVillages.debug("Village {} starts {} at {} ({})", village.getId(), house.id(), site.get().origin(), site.get().rotation());
+				LivingVillages.debug("Village {} starts {} at {} ({}), {} tree(s) to fell", village.getId(), house.id(),
+						site.get().origin(), site.get().rotation(), site.get().treeRoots().size());
 				return project;
 			}
 		}
@@ -179,6 +184,7 @@ public final class VillageTicker {
 			int skippedBefore = placer.getSkippedCount();
 			int changed = placer.execute(step);
 			project.addSkipped(placer.getSkippedCount() - skippedBefore);
+			project.addReplant(placer.drainFelledSaplings());
 			BuildStep next = project.nextStep();
 			project.advance();
 			progressed = true;
@@ -228,6 +234,7 @@ public final class VillageTicker {
 			int skippedBefore = placer.getSkippedCount();
 			placer.execute(step);
 			project.addSkipped(placer.getSkippedCount() - skippedBefore);
+			project.addReplant(placer.drainFelledSaplings());
 			project.advance();
 		}
 		placer.flushUpdates();
@@ -241,6 +248,7 @@ public final class VillageTicker {
 	private static void finishProject(ServerLevel level, VillageRegistry registry, VillageRecord village, BuildProject project) {
 		project.getPlacer(level).flushUpdates();
 		BuilderAssignment.release(level, project);
+		queueReplants(village, project);
 		village.recordHouseBuilt(project.getFootprint(), level.getGameTime());
 		village.setProject(null);
 		registry.setDirty();
@@ -255,8 +263,19 @@ public final class VillageTicker {
 		}
 		project.getPlacer(level).flushUpdates();
 		BuilderAssignment.release(level, project);
+		queueReplants(village, project);
 		village.setProject(null);
 		registry.setDirty();
+	}
+
+	/** Trees felled for the project are replanted around it (spec v2-GĐ 1), even if it was cancelled. */
+	private static void queueReplants(VillageRecord village, BuildProject project) {
+		if (!LVConfig.get().replantSaplings) {
+			return;
+		}
+		for (ResourceLocation sapling : project.getReplant()) {
+			village.getPendingSaplings().add(new VillageRecord.PendingSapling(sapling, project.getFootprint().getCenter()));
+		}
 	}
 
 	public static VillageType villageType(VillageRecord village) {

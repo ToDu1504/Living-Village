@@ -28,11 +28,16 @@ No new blocks, items, entities or textures. Players do not need the mod on their
   - it has built fewer than `maxHousesPerVillage` houses;
   - one Minecraft day (`cooldownTicks`) has passed since its last house.
 - **House designs** are read at runtime from the pool `minecraft:village/<style>/houses`. Only houses with a bed and no job-site block are used, so no smithies or farms. Datapacks and mods that change these pools are picked up automatically.
-- **The building site** is flat, dry, natural ground within 12–64 blocks of the bell. The mod never cuts trees and never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
+- **The building site** is flat, dry, natural ground within 12–64 blocks of the bell. The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
+- **Trees:** up to 4 natural trees growing inside the footprint are felled first, with no item drops, and sites without trees are preferred. A tree counts as natural only if it has natural (non-persistent) leaves, so log houses and trees decorated with player-placed leaves are never touched. Giant trees and trees with a bee nest stay. After the house is done, one sapling of the same kind per felled tree is replanted 3–8 blocks away; a farmer walks there to plant it if the village has one.
 - **Build order:** foundation, then clearing plants and levelling earth, then the structure layer by layer from the bottom, then doors, beds, torches, carpets and other decorations. A block is only ever placed into air or a replaceable block such as grass. Anything a player put in the way is left alone. Chests get no loot.
 - **The builder:** unemployed villagers are chosen first, then masons, then anyone except nitwits and children. The builder must be within `builderReach` blocks of the work, and swings its arm and holds the block it places. If the builder dies or cannot reach the site for 60 seconds, another villager takes over. If nobody is available, the house builds itself at half speed.
 - **Building pauses** at night, during raids, and when no player is within `activeRange` blocks. Nothing is simulated while a village is far away. Progress is saved, so a house under construction continues after a restart.
 - If the bell is broken, the village becomes inactive and its project pauses. A bell placed again nearby revives the village.
+
+## Language
+
+Players do not need the mod, so all texts are produced on the server in the language set by `language` in the config: `vi_vn` (default) or `en_us`.
 
 ## Commands
 
@@ -56,6 +61,7 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 | Key | Default | Meaning |
 |---|---|---|
+| `language` | `vi_vn` | Language of all texts: `vi_vn` or `en_us` |
 | `enabled` | `true` | Master switch (`pause`/`resume`) |
 | `scanIntervalTicks` | `100` | How often to look for bells around players |
 | `manageIntervalTicks` | `40` | How often each village checks whether to start a house |
@@ -81,6 +87,11 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `maxSkippedRatio` | `0.1` | Cancel a project when more than this share of its blocks is blocked |
 | `showBuilderHeldItem` | `true` | Builder holds the block it places |
 | `debugLogging` | `false` | Extra log lines about villages, sites and builders |
+| `allowTreeClearing` | `true` | Fell natural trees inside building sites |
+| `maxTreeLogs` | `40` | Trees with more logs than this are never felled |
+| `maxTreesPerSite` | `4` | Most trees felled for one house |
+| `replantSaplings` | `true` | Replant one sapling per felled tree |
+| `workTimeoutTicks` | `600` | How long a villager may take to walk to a task (e.g. replanting) before it is done without them |
 
 ## Compatibility
 
@@ -97,7 +108,7 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 ## Known limitations
 
-- Villages in dense forest or on steep ground, typical for taiga, may find no site, since trees are never cut. After `maxSiteFailures` failed searches such a village stops trying until `/livingvillages build`.
+- Villages on steep ground may find no site. After `maxSiteFailures` failed searches such a village stops trying until `/livingvillages build`.
 - Only the five vanilla village styles are supported.
 
 ## Removing the mod

@@ -7,6 +7,7 @@ import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +34,8 @@ public class VillageRecord {
 	private final List<BoundingBox> plots = new ArrayList<>();
 	@Nullable
 	private BuildProject project;
+	/** Saplings still to replant for trees felled on building sites, planted near {@code near}. */
+	private final List<PendingSapling> pendingSaplings = new ArrayList<>();
 	/** After a failed site search, no new search before this game tick. Not saved: a restart simply retries. */
 	private long nextSiteAttemptTick;
 
@@ -115,6 +118,13 @@ public class VillageRecord {
 		this.nextSiteAttemptTick = nextSiteAttemptTick;
 	}
 
+	public record PendingSapling(ResourceLocation sapling, BlockPos near) {
+	}
+
+	public List<PendingSapling> getPendingSaplings() {
+		return pendingSaplings;
+	}
+
 	/** Bookkeeping when a house is finished: the plot is reserved and the cooldown starts. */
 	public void recordHouseBuilt(BoundingBox plot, long gameTime) {
 		plots.add(plot);
@@ -149,6 +159,14 @@ public class VillageRecord {
 		if (project != null) {
 			tag.put("Project", project.save());
 		}
+		ListTag saplings = new ListTag();
+		for (PendingSapling pending : pendingSaplings) {
+			CompoundTag entry = new CompoundTag();
+			entry.putString("Sapling", pending.sapling().toString());
+			entry.putLong("Near", pending.near().asLong());
+			saplings.add(entry);
+		}
+		tag.put("PendingSaplings", saplings);
 		return tag;
 	}
 
@@ -178,6 +196,14 @@ public class VillageRecord {
 		}
 		if (tag.contains("Project", Tag.TAG_COMPOUND)) {
 			record.project = BuildProject.load(tag.getCompound("Project"));
+		}
+		ListTag saplings = tag.getList("PendingSaplings", Tag.TAG_COMPOUND);
+		for (int i = 0; i < saplings.size(); i++) {
+			CompoundTag entry = saplings.getCompound(i);
+			ResourceLocation sapling = ResourceLocation.tryParse(entry.getString("Sapling"));
+			if (sapling != null) {
+				record.pendingSaplings.add(new PendingSapling(sapling, BlockPos.of(entry.getLong("Near"))));
+			}
 		}
 		return record;
 	}

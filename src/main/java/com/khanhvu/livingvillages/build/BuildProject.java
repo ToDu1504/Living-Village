@@ -3,13 +3,17 @@ package com.khanhvu.livingvillages.build;
 import com.khanhvu.livingvillages.village.VillageType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +28,11 @@ public class BuildProject {
 	private final BlockPos origin;
 	private final Rotation rotation;
 	private final BoundingBox footprint;
+	/** Natural trees to fell first; part of the build order inputs, so saved. */
+	private final List<BlockPos> treeRoots;
 	private int stepIndex;
+	/** Saplings of the trees felled so far, replanted when the house is done. */
+	private final List<ResourceLocation> replant = new ArrayList<>();
 	private int skippedCount;
 	@Nullable
 	private UUID builderUuid;
@@ -42,15 +50,24 @@ public class BuildProject {
 	/** Builders that got stuck on this project; not chosen again for it. */
 	private final Set<UUID> excludedBuilders = new HashSet<>();
 
-	public BuildProject(ResourceLocation templateId, BlockPos origin, Rotation rotation, BoundingBox footprint) {
+	public BuildProject(ResourceLocation templateId, BlockPos origin, Rotation rotation, BoundingBox footprint, List<BlockPos> treeRoots) {
 		this.templateId = templateId;
 		this.origin = origin.immutable();
 		this.rotation = rotation;
 		this.footprint = footprint;
+		this.treeRoots = List.copyOf(treeRoots);
 	}
 
 	public static BuildProject create(HouseTemplate house, BuildSite site) {
-		return new BuildProject(house.id(), site.origin(), site.rotation(), site.footprint());
+		return new BuildProject(house.id(), site.origin(), site.rotation(), site.footprint(), site.treeRoots());
+	}
+
+	public List<ResourceLocation> getReplant() {
+		return replant;
+	}
+
+	public void addReplant(List<ResourceLocation> saplings) {
+		replant.addAll(saplings);
 	}
 
 	public ResourceLocation getTemplateId() {
@@ -101,7 +118,7 @@ public class BuildProject {
 			return false;
 		}
 		house = found;
-		steps = BuildOrder.create(found, new BuildSite(origin, rotation, footprint), type.getFoundationBlock().defaultBlockState());
+		steps = BuildOrder.create(found, new BuildSite(origin, rotation, footprint, treeRoots), type.getFoundationBlock().defaultBlockState());
 		totalBlocks = 0;
 		for (BuildStep step : steps) {
 			if (step instanceof BuildStep.Place place && !place.belowFloor()) {
@@ -201,6 +218,12 @@ public class BuildProject {
 		if (builderUuid != null) {
 			tag.putUUID("Builder", builderUuid);
 		}
+		tag.putLongArray("TreeRoots", treeRoots.stream().mapToLong(BlockPos::asLong).toArray());
+		ListTag replantList = new ListTag();
+		for (ResourceLocation sapling : replant) {
+			replantList.add(StringTag.valueOf(sapling.toString()));
+		}
+		tag.put("Replant", replantList);
 		return tag;
 	}
 
@@ -213,7 +236,18 @@ public class BuildProject {
 		if (id == null || origin == null || rotation == null || box.length != 6) {
 			return null;
 		}
-		BuildProject project = new BuildProject(id, origin, rotation, new BoundingBox(box[0], box[1], box[2], box[3], box[4], box[5]));
+		List<BlockPos> roots = new ArrayList<>();
+		for (long packed : tag.getLongArray("TreeRoots")) {
+			roots.add(BlockPos.of(packed));
+		}
+		BuildProject project = new BuildProject(id, origin, rotation, new BoundingBox(box[0], box[1], box[2], box[3], box[4], box[5]), roots);
+		ListTag replantList = tag.getList("Replant", Tag.TAG_STRING);
+		for (int i = 0; i < replantList.size(); i++) {
+			ResourceLocation sapling = ResourceLocation.tryParse(replantList.getString(i));
+			if (sapling != null) {
+				project.replant.add(sapling);
+			}
+		}
 		project.stepIndex = Math.max(0, tag.getInt("StepIndex"));
 		project.skippedCount = tag.getInt("Skipped");
 		if (tag.hasUUID("Builder")) {

@@ -17,9 +17,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Picks a flat, dry, empty spot near the village bell for a house. Never loads chunks: a candidate touching an
@@ -30,6 +34,8 @@ public final class SiteFinder {
 	private static final int MAX_COVER_DEPTH = 4;
 	/** POIs this far below the floor still count as "inside" the site (e.g. a bed in a basement). */
 	private static final int POI_DEPTH = 8;
+	/** How far below the heightmap we look through a tree (trunk, canopy) for the ground it stands on. */
+	private static final int MAX_TREE_DEPTH = 48;
 
 	private SiteFinder() {
 	}
@@ -39,6 +45,8 @@ public final class SiteFinder {
 		VillageRegistry registry = VillageRegistry.get(level);
 		BlockPos bell = village.getBellPos();
 		int attempts = config.siteAttempts;
+		// A site without trees wins at once; otherwise the one with the fewest trees to fell.
+		BuildSite best = null;
 		for (int i = 0; i < attempts; i++) {
 			// Rings from the inner to the outer radius: closer to the bell first.
 			double radius = attempts == 1 ? config.minBuildDistance
@@ -48,12 +56,18 @@ public final class SiteFinder {
 			int z = bell.getZ() + Mth.floor(Math.sin(angle) * radius);
 			for (Rotation rotation : Util.shuffledCopy(Rotation.values(), random)) {
 				BuildSite site = tryCandidate(level, registry, house, x, z, rotation, config);
-				if (site != null) {
+				if (site == null) {
+					continue;
+				}
+				if (site.treeRoots().isEmpty()) {
 					return Optional.of(site);
+				}
+				if (best == null || site.treeRoots().size() < best.treeRoots().size()) {
+					best = site;
 				}
 			}
 		}
-		return Optional.empty();
+		return Optional.ofNullable(best);
 	}
 
 	/**
@@ -105,11 +119,12 @@ public final class SiteFinder {
 		int minSurface = Integer.MAX_VALUE;
 		int maxSurface = Integer.MIN_VALUE;
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		boolean treesAllowed = config.allowTreeClearing;
 		for (int x = minX; x <= maxX; x++) {
 			for (int z = minZ; z <= maxZ; z++) {
-				int groundY = groundTop(level, x, z, pos);
-				BlockState ground = level.getBlockState(pos.set(x, groundY, z));
 				boolean inMargin = !content.isInside(x, content.minY(), z);
+				int groundY = groundTop(level, x, z, pos, treesAllowed && !inMargin);
+				BlockState ground = level.getBlockState(pos.set(x, groundY, z));
 				if (inMargin && ground.is(BlockTags.LOGS)) {
 					continue; // a tree next to the house is harmless; only trees inside the footprint block the site
 				}
@@ -137,13 +152,20 @@ public final class SiteFinder {
 		}
 
 		// The house volume must be empty: natural ground below each column's surface (levelled later),
-		// only air or replaceable plants above it. Trees, buildings and water reject the site.
+		// only air or replaceable plants above it. Buildings and water reject the site. Natural trees rooted in the
+		// footprint are felled first and natural leaves are cleared, up to maxTreesPerSite trees.
+		List<TreeFeller.Tree> trees = new ArrayList<>();
+		Set<BlockPos> treeLogs = new HashSet<>();
 		for (int x = content.minX(); x <= content.maxX(); x++) {
 			for (int z = content.minZ(); z <= content.maxZ(); z++) {
 				int s = surface[(x - minX) * sizeZ + (z - minZ)];
 				for (int y = floorY; y <= footprint.maxY(); y++) {
 					BlockState state = level.getBlockState(pos.set(x, y, z));
 					boolean ok = y < s ? isNaturalGround(state) || isClearable(state) : isClearable(state);
+					if (!ok && treesAllowed) {
+						ok = TreeFeller.isNaturalLeaves(state)
+								|| (TreeFeller.isTreeLog(state) && acceptTree(level, pos.immutable(), content, trees, treeLogs, config));
+					}
 					if (!ok) {
 						return null;
 					}
@@ -154,7 +176,23 @@ public final class SiteFinder {
 		if (containsPoi(level, minX, minZ, maxX, maxZ, floorY - POI_DEPTH, footprint.maxY())) {
 			return null;
 		}
-		return site;
+		return site.withTrees(trees.stream().map(TreeFeller.Tree::root).toList());
+	}
+
+	/** Whether the log at {@code pos} belongs to a natural tree that may be felled for this site. */
+	private static boolean acceptTree(ServerLevel level, BlockPos pos, BoundingBox content, List<TreeFeller.Tree> trees,
+			Set<BlockPos> treeLogs, LVConfig config) {
+		if (treeLogs.contains(pos)) {
+			return true;
+		}
+		TreeFeller.Tree tree = TreeFeller.findTree(level, pos, config.maxTreeLogs);
+		// Only trees growing inside the footprint; a trunk leaning in from outside stays an obstacle.
+		if (tree == null || !content.isInside(tree.root().getX(), content.minY(), tree.root().getZ())) {
+			return false;
+		}
+		trees.add(tree);
+		treeLogs.addAll(tree.logs());
+		return trees.size() <= config.maxTreesPerSite;
 	}
 
 	private static boolean allChunksLoaded(ServerLevel level, int minX, int minZ, int maxX, int maxZ) {
@@ -168,12 +206,18 @@ public final class SiteFinder {
 		return true;
 	}
 
-	/** Top ground block of a column, looking through snow layers and plants that the heightmap may count. */
-	private static int groundTop(ServerLevel level, int x, int z, BlockPos.MutableBlockPos pos) {
+	/**
+	 * Top ground block of a column, looking through snow layers and plants that the heightmap may count and, with
+	 * {@code throughTrees}, through tree trunks and leaves (whether the tree may be felled is checked later).
+	 */
+	private static int groundTop(ServerLevel level, int x, int z, BlockPos.MutableBlockPos pos, boolean throughTrees) {
 		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
-		for (int i = 0; i < MAX_COVER_DEPTH && y > level.getMinBuildHeight(); i++) {
+		int maxDepth = throughTrees ? MAX_TREE_DEPTH : MAX_COVER_DEPTH;
+		for (int i = 0; i < maxDepth && y > level.getMinBuildHeight(); i++) {
 			BlockState state = level.getBlockState(pos.set(x, y, z));
-			if (!isClearable(state)) {
+			boolean cover = isClearable(state)
+					|| (throughTrees && (TreeFeller.isTreeLog(state) || TreeFeller.isNaturalLeaves(state)));
+			if (!cover) {
 				break;
 			}
 			y--;

@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 /**
  * Mod configuration stored in config/livingvillages.json.
@@ -21,8 +22,13 @@ public class LVConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("livingvillages.json");
 
+	/** Languages with a bundled lang file. */
+	public static final Set<String> SUPPORTED_LANGUAGES = Set.of("vi_vn", "en_us");
+
 	private static LVConfig instance = new LVConfig();
 
+	/** Language of every text players see (bundled lang file), since vanilla clients have no lang file for the mod. */
+	public String language = "vi_vn";
 	public boolean enabled = true;
 	public int scanIntervalTicks = 100;
 	public int manageIntervalTicks = 40;
@@ -50,6 +56,13 @@ public class LVConfig {
 	public double maxSkippedRatio = 0.1;
 	public boolean showBuilderHeldItem = true;
 	public boolean debugLogging = false;
+
+	// v2-GĐ 1: natural trees in building sites
+	public boolean allowTreeClearing = true;
+	public int maxTreeLogs = 40;
+	public int maxTreesPerSite = 4;
+	public boolean replantSaplings = true;
+	public int workTimeoutTicks = 600;
 
 	public static LVConfig get() {
 		return instance;
@@ -124,6 +137,13 @@ public class LVConfig {
 		workStartTime = checkInt("workStartTime", workStartTime, 0, 23999, d.workStartTime);
 		workEndTime = checkInt("workEndTime", workEndTime, 0, 23999, d.workEndTime);
 		maxSkippedRatio = checkDouble("maxSkippedRatio", maxSkippedRatio, 0.0, 1.0, d.maxSkippedRatio);
+		if (language == null || !SUPPORTED_LANGUAGES.contains(language)) {
+			warn("language", language);
+			language = d.language;
+		}
+		maxTreeLogs = checkInt("maxTreeLogs", maxTreeLogs, 1, 256, d.maxTreeLogs);
+		maxTreesPerSite = checkInt("maxTreesPerSite", maxTreesPerSite, 0, 32, d.maxTreesPerSite);
+		workTimeoutTicks = checkInt("workTimeoutTicks", workTimeoutTicks, 20, 72000, d.workTimeoutTicks);
 	}
 
 	private static int checkInt(String name, int value, int min, int max, int fallback) {

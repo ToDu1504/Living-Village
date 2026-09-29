@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Turns a house + site into an ordered list of steps: foundation, clearing, structural blocks (by rising y),
+ * Turns a house + site into an ordered list of steps: tree felling, foundation, clearing, structural blocks (by rising y),
  * then blocks that need support. Fully deterministic (no randomness, no world reads), because only the step
  * index is saved and the list is rebuilt after a reload.
  */
@@ -78,6 +78,11 @@ public final class BuildOrder {
 		}
 
 		List<BuildStep> steps = new ArrayList<>();
+
+		// 0. Fell natural trees standing in the footprint (roots come sorted from the site).
+		for (BlockPos root : site.treeRoots()) {
+			steps.add(new BuildStep.ChopTree(root));
+		}
 
 		// 1. Foundation, only under columns that hold part of the house.
 		List<Long> columnKeys = new ArrayList<>(columns.keySet());
