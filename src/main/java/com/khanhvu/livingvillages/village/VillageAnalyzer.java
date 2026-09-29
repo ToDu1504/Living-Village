@@ -28,8 +28,9 @@ public final class VillageAnalyzer {
 
 	/**
 	 * @param dominantType majority style of the adult villagers present, or null if there are none
+	 * @param adults       the adult villagers counted (loaded entities)
 	 */
-	public record Stats(int adultVillagers, int totalBeds, int freeBeds, @Nullable VillageType dominantType) {
+	public record Stats(int adultVillagers, int totalBeds, int freeBeds, @Nullable VillageType dominantType, List<Villager> adults) {
 	}
 
 	public static Stats analyze(ServerLevel level, VillageRecord record) {
@@ -41,7 +42,7 @@ public final class VillageAnalyzer {
 		int totalBeds = (int) poi.getCountInRange(h -> h.is(PoiTypes.HOME), bell, radius, PoiManager.Occupancy.ANY);
 		int freeBeds = (int) poi.getCountInRange(h -> h.is(PoiTypes.HOME), bell, radius, PoiManager.Occupancy.HAS_SPACE);
 
-		return new Stats(adults.size(), totalBeds, freeBeds, dominantType(adults));
+		return new Stats(adults.size(), totalBeds, freeBeds, dominantType(adults), adults);
 	}
 
 	/**

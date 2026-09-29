@@ -64,6 +64,20 @@ public class LVConfig {
 	public boolean replantSaplings = true;
 	public int workTimeoutTicks = 600;
 
+	// v2-GĐ 2: needs, mood, leader
+	public boolean needsEnabled = true;
+	public double farmersPerVillager = 0.25;
+	/** Iron golems (and guards) wanted per adult villager for full safety. */
+	public double defendersPerVillager = 0.1;
+	/** Safety points lost per recent monster attack on a villager. */
+	public int attackPenalty = 10;
+	/** Recent attacks fade by half over this many ticks. */
+	public int attackHalfLifeTicks = 24000;
+	/** Temporary mood effects (new building, death...) fade to 0 over this many ticks. */
+	public int moodEffectTicks = 72000;
+	public int needThreshold = 40;
+	public int leaderAbsentTicks = 12000;
+
 	public static LVConfig get() {
 		return instance;
 	}
@@ -144,6 +158,13 @@ public class LVConfig {
 		maxTreeLogs = checkInt("maxTreeLogs", maxTreeLogs, 1, 256, d.maxTreeLogs);
 		maxTreesPerSite = checkInt("maxTreesPerSite", maxTreesPerSite, 0, 32, d.maxTreesPerSite);
 		workTimeoutTicks = checkInt("workTimeoutTicks", workTimeoutTicks, 20, 72000, d.workTimeoutTicks);
+		farmersPerVillager = checkDouble("farmersPerVillager", farmersPerVillager, 0.01, 1.0, d.farmersPerVillager);
+		defendersPerVillager = checkDouble("defendersPerVillager", defendersPerVillager, 0.01, 1.0, d.defendersPerVillager);
+		attackPenalty = checkInt("attackPenalty", attackPenalty, 0, 100, d.attackPenalty);
+		attackHalfLifeTicks = checkInt("attackHalfLifeTicks", attackHalfLifeTicks, 20, 720000, d.attackHalfLifeTicks);
+		moodEffectTicks = checkInt("moodEffectTicks", moodEffectTicks, 20, 720000, d.moodEffectTicks);
+		needThreshold = checkInt("needThreshold", needThreshold, 0, 100, d.needThreshold);
+		leaderAbsentTicks = checkInt("leaderAbsentTicks", leaderAbsentTicks, 20, 720000, d.leaderAbsentTicks);
 	}
 
 	private static int checkInt(String name, int value, int min, int max, int fallback) {

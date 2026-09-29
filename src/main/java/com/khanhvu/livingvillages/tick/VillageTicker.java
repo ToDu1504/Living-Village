@@ -10,7 +10,9 @@ import com.khanhvu.livingvillages.build.HouseTemplateProvider;
 import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
+import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageScanner;
@@ -66,8 +68,11 @@ public final class VillageTicker {
 			if (!village.isActive() || !level.isLoaded(village.getBellPos()) || !isNearPlayer(level, village, config.activeRange)) {
 				continue;
 			}
-			if (manage && village.getProject() == null) {
-				tryAutoStart(level, registry, village, time);
+			if (manage) {
+				VillageAnalyzer.Stats stats = config.needsEnabled ? VillageSociety.update(level, registry, village) : null;
+				if (village.getProject() == null) {
+					tryAutoStart(level, registry, village, time, stats);
+				}
 			}
 			BuildProject project = village.getProject();
 			if (project != null) {
@@ -79,8 +84,9 @@ public final class VillageTicker {
 		}
 	}
 
-	/** Starts a project when the village is full (spec 6.3). */
-	private static void tryAutoStart(ServerLevel level, VillageRegistry registry, VillageRecord village, long time) {
+	/** Starts a project when the village is full (spec 6.3). {@code stats} may be passed when already computed. */
+	private static void tryAutoStart(ServerLevel level, VillageRegistry registry, VillageRecord village, long time,
+			@Nullable VillageAnalyzer.Stats stats) {
 		LVConfig config = LVConfig.get();
 		if (village.getHousesBuilt() >= config.maxHousesPerVillage
 				|| village.getFailedSiteAttempts() >= config.maxSiteFailures
@@ -88,8 +94,10 @@ public final class VillageTicker {
 				|| (village.getLastBuildTick() != VillageRecord.NEVER && time - village.getLastBuildTick() < config.cooldownTicks)) {
 			return;
 		}
-		VillageAnalyzer.Stats stats = VillageAnalyzer.analyze(level, village);
-		VillageAnalyzer.ensureVillageType(village, stats, registry);
+		if (stats == null) {
+			stats = VillageAnalyzer.analyze(level, village);
+			VillageAnalyzer.ensureVillageType(village, stats, registry);
+		}
 		if (stats.adultVillagers() < 2 || stats.freeBeds() > config.freeBedThreshold) {
 			return;
 		}
@@ -250,6 +258,7 @@ public final class VillageTicker {
 		BuilderAssignment.release(level, project);
 		queueReplants(village, project);
 		village.recordHouseBuilt(project.getFootprint(), level.getGameTime());
+		VillageEvents.BUILDING_COMPLETED.post(new VillageEvents.BuildingCompleted(level, village, project.getTemplateId().toString()));
 		village.setProject(null);
 		registry.setDirty();
 		LivingVillages.debug("Village {} finished {} ({} blocks skipped)", village.getId(), project.getTemplateId(), project.getSkippedCount());

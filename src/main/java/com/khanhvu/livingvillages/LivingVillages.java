@@ -3,6 +3,8 @@ package com.khanhvu.livingvillages;
 import com.khanhvu.livingvillages.build.HouseTemplateProvider;
 import com.khanhvu.livingvillages.command.LVCommands;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.identity.NamePool;
+import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVText;
 import net.fabricmc.api.ModInitializer;
@@ -19,7 +21,9 @@ public class LivingVillages implements ModInitializer {
 	public void onInitialize() {
 		LVConfig.load();
 		LVText.load();
+		NamePool.load();
 		VillageTicker.register();
+		VillageSociety.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> HouseTemplateProvider.clearCache());
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> HouseTemplateProvider.clearCache());

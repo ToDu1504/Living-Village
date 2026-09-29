@@ -35,5 +35,20 @@
 	"livingvillages.command.resume": "Đã tiếp tục Living Villages.",
 	"livingvillages.command.speed": "Đã đặt hệ số tốc độ xây thành %s.",
 	"livingvillages.command.reload.done": "Đã nạp lại config Living Villages.",
-	"livingvillages.command.reload.failed": "Không đọc được config/livingvillages.json (xem log server); đang dùng giá trị mặc định cho tới khi sửa file."
+	"livingvillages.command.reload.failed": "Không đọc được config/livingvillages.json (xem log server); đang dùng giá trị mặc định cho tới khi sửa file.",
+	"livingvillages.command.status.needs": "Nhu cầu — nhà ở %s · thức ăn %s · việc làm %s · an ninh %s",
+	"livingvillages.command.status.mood": "Tâm trạng: %s (%s/100)",
+	"livingvillages.command.status.leader": "%s muốn: %s",
+	"livingvillages.command.status.leader_none": "Chưa có trưởng làng. Làng muốn: %s",
+	"livingvillages.mood.miserable": "Khốn khó",
+	"livingvillages.mood.normal": "Bình thường",
+	"livingvillages.mood.happy": "Hạnh phúc",
+	"livingvillages.leader.title": "Trưởng làng %s",
+	"livingvillages.wish.building": "tiếp tục xây %s (%s%%)",
+	"livingvillages.wish.house": "xây nhà ở (hết giường trống)",
+	"livingvillages.wish.rest": "nghỉ sau khi xây (còn %s giây)",
+	"livingvillages.wish.full": "không xây nữa: làng đã xây đủ %s nhà",
+	"livingvillages.wish.no_site": "tạm dừng: không tìm được chỗ xây",
+	"livingvillages.wish.few_villagers": "chờ làng đông người hơn",
+	"livingvillages.wish.ok": "chưa cần xây gì: làng đang ổn"
 }

@@ -35,5 +35,20 @@
 	"livingvillages.command.resume": "Living Villages resumed.",
 	"livingvillages.command.speed": "Build speed multiplier set to %s.",
 	"livingvillages.command.reload.done": "Living Villages config reloaded.",
-	"livingvillages.command.reload.failed": "Could not read config/livingvillages.json (see the server log); default values are in use until the file is fixed."
+	"livingvillages.command.reload.failed": "Could not read config/livingvillages.json (see the server log); default values are in use until the file is fixed.",
+	"livingvillages.command.status.needs": "Needs — housing %s · food %s · jobs %s · safety %s",
+	"livingvillages.command.status.mood": "Mood: %s (%s/100)",
+	"livingvillages.command.status.leader": "%s wants: %s",
+	"livingvillages.command.status.leader_none": "No leader yet. The village wants: %s",
+	"livingvillages.mood.miserable": "Miserable",
+	"livingvillages.mood.normal": "Normal",
+	"livingvillages.mood.happy": "Happy",
+	"livingvillages.leader.title": "Chief %s",
+	"livingvillages.wish.building": "to keep building %s (%s%%)",
+	"livingvillages.wish.house": "to build a house (no free bed left)",
+	"livingvillages.wish.rest": "to rest after the last building (%ss left)",
+	"livingvillages.wish.full": "nothing more: the village has built its %s houses",
+	"livingvillages.wish.no_site": "to wait: no building site was found",
+	"livingvillages.wish.few_villagers": "to wait for more villagers",
+	"livingvillages.wish.ok": "nothing for now: the village is doing fine"
 }

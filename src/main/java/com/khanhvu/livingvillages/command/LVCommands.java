@@ -5,7 +5,12 @@ import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.HouseTemplate;
 import com.khanhvu.livingvillages.build.HouseTemplateProvider;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.society.VillageLeader;
+import com.khanhvu.livingvillages.society.VillageMood;
+import com.khanhvu.livingvillages.society.VillageNeeds;
+import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -91,7 +96,26 @@ public final class LVCommands {
 		source.sendSuccess(() -> projectLine(level, record), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.cooldown",
 				cooldownLeft, cooldownLeft / 20), false);
+		if (config.needsEnabled) {
+			statusSociety(source, level, record, stats);
+		}
 		return 1;
+	}
+
+	/** Needs, mood and leader (spec v2-GĐ 2.5). Computed fresh here; the leader itself only changes in the ticker. */
+	private static void statusSociety(CommandSourceStack source, ServerLevel level, VillageRecord record, VillageAnalyzer.Stats stats) {
+		VillageNeeds needs = VillageNeeds.compute(level, record, stats);
+		int mood = VillageMood.compute(record, needs, level.getGameTime());
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.needs",
+				VillageSociety.bar(needs.housing()), VillageSociety.bar(needs.food()),
+				VillageSociety.bar(needs.jobs()), VillageSociety.bar(needs.safety())), false);
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.mood",
+				LVText.tr(VillageMood.Level.of(mood).langKey()), mood), false);
+		Component leader = VillageLeader.displayName(level, record);
+		Component wish = VillageSociety.describeWish(level, record, stats);
+		source.sendSuccess(() -> leader == null
+				? LVText.tr("livingvillages.command.status.leader_none", wish)
+				: LVText.tr("livingvillages.command.status.leader", leader, wish), false);
 	}
 
 	private static int list(CommandContext<CommandSourceStack> context) {
@@ -191,6 +215,7 @@ public final class LVCommands {
 		CommandSourceStack source = context.getSource();
 		boolean ok = LVConfig.load();
 		LVText.load(); // the language may have changed
+		NamePool.load();
 		if (ok) {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.reload.done"), true);
 			return 1;

@@ -54,6 +54,25 @@ public class VillageRegistry extends SavedData {
 		return best;
 	}
 
+	/** The active village whose area (see {@link VillageAnalyzer#areaRadius}) contains {@code pos}, the nearest if several. */
+	@Nullable
+	public VillageRecord findContaining(BlockPos pos) {
+		VillageRecord best = null;
+		double bestDist = Double.MAX_VALUE;
+		for (VillageRecord record : villages) {
+			if (!record.isActive()) {
+				continue;
+			}
+			double dist = record.horizontalDistSqr(pos);
+			int radius = VillageAnalyzer.areaRadius(record);
+			if (dist <= (double) radius * radius && dist < bestDist) {
+				best = record;
+				bestDist = dist;
+			}
+		}
+		return best;
+	}
+
 	@Override
 	public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
 		ListTag list = new ListTag();

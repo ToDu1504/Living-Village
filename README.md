@@ -33,6 +33,7 @@ No new blocks, items, entities or textures. Players do not need the mod on their
 - **Build order:** foundation, then clearing plants and levelling earth, then the structure layer by layer from the bottom, then doors, beds, torches, carpets and other decorations. A block is only ever placed into air or a replaceable block such as grass. Anything a player put in the way is left alone. Chests get no loot.
 - **The builder:** unemployed villagers are chosen first, then masons, then anyone except nitwits and children. The builder must be within `builderReach` blocks of the work, and swings its arm and holds the block it places. If the builder dies or cannot reach the site for 60 seconds, another villager takes over. If nobody is available, the house builds itself at half speed.
 - **Building pauses** at night, during raids, and when no player is within `activeRange` blocks. Nothing is simulated while a village is far away. Progress is saved, so a house under construction continues after a restart.
+- **Needs, mood and leader:** each village tracks four needs from 0 to 100 (housing: free beds; food: share of farmers; jobs: unemployed villagers against free job sites; safety: iron golems and Guard Villagers guards, minus recent monster attacks) and a mood made of them plus fading events (a new building cheers the village up, a death saddens it). The adult with the highest profession level becomes the leader, titled "Chief <name>" (visible when you look at them). A name given with a name tag is kept. The leader never works as a builder and is replaced when they die, are converted or stay away too long.
 - If the bell is broken, the village becomes inactive and its project pauses. A bell placed again nearby revives the village.
 
 ## Language
@@ -45,7 +46,7 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 | Command | Effect |
 |---|---|
-| `/livingvillages status` | Nearest village: bell position, style, villagers, beds (total/free), houses built, current project (house, progress, builder), cooldown left |
+| `/livingvillages status` | Nearest village: bell position, style, villagers, beds (total/free), houses built, current project (house, progress, builder), cooldown left, the four needs as bars, mood, and the leader with what they want to do |
 | `/livingvillages list` | All villages known in this dimension |
 | `/livingvillages build` | Start a house now in the nearest village, ignoring beds and cooldown (the house limit still applies) |
 | `/livingvillages build instant` | Same, but place the whole house at once (or finish the running project at once). For testing |
@@ -91,6 +92,14 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `maxTreeLogs` | `40` | Trees with more logs than this are never felled |
 | `maxTreesPerSite` | `4` | Most trees felled for one house |
 | `replantSaplings` | `true` | Replant one sapling per felled tree |
+| `needsEnabled` | `true` | Needs, mood and leader (off = behaves like 0.1) |
+| `farmersPerVillager` | `0.25` | Share of farmers for full food |
+| `defendersPerVillager` | `0.1` | Golems/guards per adult for full safety |
+| `attackPenalty` | `10` | Safety lost per recent monster attack on a villager |
+| `attackHalfLifeTicks` | `24000` | Recent attacks fade by half over this time |
+| `moodEffectTicks` | `72000` | Mood effects of events fade to nothing over this time |
+| `needThreshold` | `40` | A need below this counts as unmet (used from v2 stage 3) |
+| `leaderAbsentTicks` | `12000` | A leader away this long is replaced |
 | `workTimeoutTicks` | `600` | How long a villager may take to walk to a task (e.g. replanting) before it is done without them |
 
 ## Compatibility
@@ -113,4 +122,4 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 ## Removing the mod
 
-Houses that were built stay as ordinary blocks. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.
+Houses that were built stay as ordinary blocks, and villagers keep the names the mod gave them. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.

@@ -36,6 +36,7 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
 - **Thợ xây:** ưu tiên dân thất nghiệp, rồi thợ đá, rồi bất kỳ ai, trừ dân ngốc (nitwit) và trẻ con. Thợ xây phải đứng trong phạm vi `builderReach` khối mới đặt được, có vung tay và cầm khối đang đặt. Nếu thợ xây chết hoặc 60 giây không tới được công trường thì người khác thay. Không còn ai thì nhà tự xây với nửa tốc độ.
 - **Không cần vật liệu:** mod tự tạo khối, thợ xây không phải đi gom vật liệu và không lấy đồ của làng hay của người chơi.
 - **Tạm dừng** vào ban đêm, khi làng bị raid, và khi không có người chơi nào trong phạm vi `activeRange` khối. Làng ở xa thì dừng hẳn, không xây bù. Tiến độ được lưu lại, nên thoát game giữa chừng thì lần sau xây tiếp đúng chỗ.
+- **Nhu cầu, tâm trạng, trưởng làng:** mỗi làng có bốn nhu cầu từ 0 đến 100 (nhà ở: giường trống; thức ăn: tỉ lệ nông dân; việc làm: dân thất nghiệp so với bàn nghề còn trống; an ninh: golem sắt và lính gác của Guard Villagers, trừ đi các lần bị quái tấn công gần đây) và tâm trạng tính từ chúng cộng các sự kiện nhạt dần (công trình mới làm làng vui, có người mất làm làng buồn). Dân trưởng thành có cấp nghề cao nhất làm trưởng làng, mang danh hiệu "Trưởng làng <tên>" (hiện khi nhìn vào). Tên đặt bằng name tag được giữ nguyên. Trưởng làng không làm thợ xây, và được thay khi chết, bị biến đổi hoặc vắng mặt quá lâu.
 - Nếu chuông bị phá, làng chuyển sang ngừng hoạt động và dự án tạm dừng. Đặt chuông lại gần đó thì làng hoạt động trở lại.
 
 ## Ngôn ngữ
@@ -48,7 +49,7 @@ Mọi lệnh cần quyền cấp 2 (OP). "Làng gần nhất" là làng đã ghi
 
 | Lệnh | Tác dụng |
 |---|---|
-| `/livingvillages status` | Thông tin làng gần nhất: vị trí chuông, phong cách, số dân, giường (tổng/trống), số nhà đã xây, dự án hiện tại (mẫu nhà, tiến độ, thợ xây), thời gian chờ còn lại |
+| `/livingvillages status` | Thông tin làng gần nhất: vị trí chuông, phong cách, số dân, giường (tổng/trống), số nhà đã xây, dự án hiện tại (mẫu nhà, tiến độ, thợ xây), thời gian chờ còn lại, bốn nhu cầu dạng thanh, tâm trạng, trưởng làng và điều họ muốn làm |
 | `/livingvillages list` | Liệt kê các làng đã ghi nhận trong thế giới (chiều không gian) hiện tại |
 | `/livingvillages build` | Bắt làng gần nhất xây nhà ngay, bỏ qua điều kiện giường và thời gian chờ (vẫn tính giới hạn số nhà) |
 | `/livingvillages build instant` | Như trên nhưng dựng xong cả nhà ngay lập tức (hoặc hoàn thành ngay dự án đang xây). Dùng để thử |
@@ -94,6 +95,14 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `maxTreeLogs` | `40` | Cây có nhiều khối gỗ hơn số này thì không bao giờ bị chặt |
 | `maxTreesPerSite` | `4` | Số cây tối đa chặt cho một nhà |
 | `replantSaplings` | `true` | Trồng lại một cây non cho mỗi cây đã chặt |
+| `needsEnabled` | `true` | Nhu cầu, tâm trạng, trưởng làng (tắt = chạy như 0.1) |
+| `farmersPerVillager` | `0.25` | Tỉ lệ nông dân để thức ăn đầy đủ |
+| `defendersPerVillager` | `0.1` | Số golem/lính gác trên mỗi dân để an ninh đầy đủ |
+| `attackPenalty` | `10` | Điểm an ninh mất cho mỗi lần quái tấn công dân gần đây |
+| `attackHalfLifeTicks` | `24000` | Số lần bị tấn công giảm một nửa sau thời gian này |
+| `moodEffectTicks` | `72000` | Ảnh hưởng của sự kiện lên tâm trạng nhạt dần hết sau thời gian này |
+| `needThreshold` | `40` | Nhu cầu dưới mức này là chưa đủ (dùng từ v2-GĐ 3) |
+| `leaderAbsentTicks` | `12000` | Trưởng làng vắng mặt lâu hơn thế thì được thay |
 | `workTimeoutTicks` | `600` | Thời gian dân làng được đi tới chỗ làm việc (ví dụ trồng cây) trước khi việc được làm mà không cần họ |
 
 ## Tương thích
@@ -116,4 +125,4 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 ## Gỡ mod
 
-Nhà đã xây vẫn còn như khối bình thường. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.
+Nhà đã xây vẫn còn như khối bình thường, và dân làng giữ tên mà mod đã đặt. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.

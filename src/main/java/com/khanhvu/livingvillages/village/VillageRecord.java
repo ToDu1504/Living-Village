@@ -1,6 +1,7 @@
 package com.khanhvu.livingvillages.village;
 
 import com.khanhvu.livingvillages.build.BuildProject;
+import com.khanhvu.livingvillages.society.VillageNeeds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
@@ -12,7 +13,10 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -38,6 +42,26 @@ public class VillageRecord {
 	private final List<PendingSapling> pendingSaplings = new ArrayList<>();
 	/** After a failed site search, no new search before this game tick. Not saved: a restart simply retries. */
 	private long nextSiteAttemptTick;
+
+	// v2-GĐ 2: society state (saved)
+	@Nullable
+	private UUID leaderUuid;
+	private long leaderLastSeenTick;
+	/** Names of villagers this mod gave a title, without the title, to restore when the title goes. */
+	private final Map<UUID, String> titledBaseNames = new HashMap<>();
+	/** Villagers seen in the village and the game tick they were first seen (tie-break when choosing a leader). */
+	private final Map<UUID, Long> knownVillagers = new LinkedHashMap<>();
+	/** Recent monster attacks on villagers; decays over time, see {@code AttackTracker}. */
+	private double attackScore;
+	private long attackScoreTick;
+	private final List<MoodEffect> moodEffects = new ArrayList<>();
+
+	// v2-GĐ 2: last computed values (not saved, recomputed every manage interval)
+	@Nullable
+	private VillageNeeds needs;
+	private int mood = -1;
+	/** Set when the leader entity was removed (death, conversion); a new leader is chosen at the next update. */
+	private boolean leaderGone;
 
 	public VillageRecord(UUID id, BlockPos bellPos) {
 		this.id = id;
@@ -121,6 +145,78 @@ public class VillageRecord {
 	public record PendingSapling(ResourceLocation sapling, BlockPos near) {
 	}
 
+	/** A temporary mood change of {@code amount} that fades linearly to 0 from {@code startTick}. */
+	public record MoodEffect(int amount, long startTick) {
+	}
+
+	@Nullable
+	public UUID getLeaderUuid() {
+		return leaderUuid;
+	}
+
+	public void setLeaderUuid(@Nullable UUID leaderUuid) {
+		this.leaderUuid = leaderUuid;
+	}
+
+	public long getLeaderLastSeenTick() {
+		return leaderLastSeenTick;
+	}
+
+	public void setLeaderLastSeenTick(long leaderLastSeenTick) {
+		this.leaderLastSeenTick = leaderLastSeenTick;
+	}
+
+	public Map<UUID, String> getTitledBaseNames() {
+		return titledBaseNames;
+	}
+
+	public Map<UUID, Long> getKnownVillagers() {
+		return knownVillagers;
+	}
+
+	public double getAttackScore() {
+		return attackScore;
+	}
+
+	public long getAttackScoreTick() {
+		return attackScoreTick;
+	}
+
+	public void setAttackScore(double attackScore, long tick) {
+		this.attackScore = attackScore;
+		this.attackScoreTick = tick;
+	}
+
+	public List<MoodEffect> getMoodEffects() {
+		return moodEffects;
+	}
+
+	@Nullable
+	public VillageNeeds getNeeds() {
+		return needs;
+	}
+
+	public void setNeeds(@Nullable VillageNeeds needs) {
+		this.needs = needs;
+	}
+
+	/** Last computed mood 0–100, or -1 before the first update. */
+	public int getMood() {
+		return mood;
+	}
+
+	public void setMood(int mood) {
+		this.mood = mood;
+	}
+
+	public boolean isLeaderGone() {
+		return leaderGone;
+	}
+
+	public void setLeaderGone(boolean leaderGone) {
+		this.leaderGone = leaderGone;
+	}
+
 	public List<PendingSapling> getPendingSaplings() {
 		return pendingSaplings;
 	}
@@ -167,6 +263,36 @@ public class VillageRecord {
 			saplings.add(entry);
 		}
 		tag.put("PendingSaplings", saplings);
+		if (leaderUuid != null) {
+			tag.putUUID("Leader", leaderUuid);
+		}
+		tag.putLong("LeaderLastSeen", leaderLastSeenTick);
+		ListTag titled = new ListTag();
+		for (Map.Entry<UUID, String> entry : titledBaseNames.entrySet()) {
+			CompoundTag item = new CompoundTag();
+			item.putUUID("Id", entry.getKey());
+			item.putString("Name", entry.getValue());
+			titled.add(item);
+		}
+		tag.put("TitledNames", titled);
+		ListTag known = new ListTag();
+		for (Map.Entry<UUID, Long> entry : knownVillagers.entrySet()) {
+			CompoundTag item = new CompoundTag();
+			item.putUUID("Id", entry.getKey());
+			item.putLong("Since", entry.getValue());
+			known.add(item);
+		}
+		tag.put("KnownVillagers", known);
+		tag.putDouble("AttackScore", attackScore);
+		tag.putLong("AttackScoreTick", attackScoreTick);
+		ListTag effects = new ListTag();
+		for (MoodEffect effect : moodEffects) {
+			CompoundTag item = new CompoundTag();
+			item.putInt("Amount", effect.amount());
+			item.putLong("Start", effect.startTick());
+			effects.add(item);
+		}
+		tag.put("MoodEffects", effects);
 		return tag;
 	}
 
@@ -204,6 +330,32 @@ public class VillageRecord {
 			if (sapling != null) {
 				record.pendingSaplings.add(new PendingSapling(sapling, BlockPos.of(entry.getLong("Near"))));
 			}
+		}
+		// Fields added in v2: absent in 0.1 worlds, so every read has a default.
+		if (tag.hasUUID("Leader")) {
+			record.leaderUuid = tag.getUUID("Leader");
+		}
+		record.leaderLastSeenTick = tag.getLong("LeaderLastSeen");
+		ListTag titled = tag.getList("TitledNames", Tag.TAG_COMPOUND);
+		for (int i = 0; i < titled.size(); i++) {
+			CompoundTag item = titled.getCompound(i);
+			if (item.hasUUID("Id")) {
+				record.titledBaseNames.put(item.getUUID("Id"), item.getString("Name"));
+			}
+		}
+		ListTag known = tag.getList("KnownVillagers", Tag.TAG_COMPOUND);
+		for (int i = 0; i < known.size(); i++) {
+			CompoundTag item = known.getCompound(i);
+			if (item.hasUUID("Id")) {
+				record.knownVillagers.put(item.getUUID("Id"), item.getLong("Since"));
+			}
+		}
+		record.attackScore = tag.getDouble("AttackScore");
+		record.attackScoreTick = tag.getLong("AttackScoreTick");
+		ListTag effects = tag.getList("MoodEffects", Tag.TAG_COMPOUND);
+		for (int i = 0; i < effects.size(); i++) {
+			CompoundTag item = effects.getCompound(i);
+			record.moodEffects.add(new MoodEffect(item.getInt("Amount"), item.getLong("Start")));
 		}
 		return record;
 	}

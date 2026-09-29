@@ -63,6 +63,10 @@ public final class BuilderAssignment {
 		if (builder == null) {
 			// Dead, despawned or in an unloaded chunk: either way it cannot work here.
 			builder = assign(level, village, project);
+		} else if (builder.getUUID().equals(village.getLeaderUuid())) {
+			// The leader decides, it does not build (spec v2-GĐ 2.3).
+			release(builder);
+			builder = assign(level, village, project);
 		} else if (isInReach(builder, step, project)) {
 			project.setTicksOutOfReach(0);
 		} else {
@@ -176,7 +180,8 @@ public final class BuilderAssignment {
 		double bestDist = Double.MAX_VALUE;
 		for (Villager villager : adults) {
 			VillagerProfession profession = villager.getVillagerData().getProfession();
-			if (profession == VillagerProfession.NITWIT || busy.contains(villager.getUUID()) || project.isExcluded(villager.getUUID())) {
+			if (profession == VillagerProfession.NITWIT || busy.contains(villager.getUUID()) || project.isExcluded(villager.getUUID())
+					|| villager.getUUID().equals(village.getLeaderUuid())) {
 				continue;
 			}
 			int rank = profession == VillagerProfession.NONE ? 0 : profession == VillagerProfession.MASON ? 1 : 2;
