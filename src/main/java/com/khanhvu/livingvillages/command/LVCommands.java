@@ -1,0 +1,274 @@
+package com.khanhvu.livingvillages.command;
+
+import com.khanhvu.livingvillages.build.BlockPlacer;
+import com.khanhvu.livingvillages.build.BuildProject;
+import com.khanhvu.livingvillages.build.HouseTemplate;
+import com.khanhvu.livingvillages.build.HouseTemplateProvider;
+import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.Lang;
+import com.khanhvu.livingvillages.village.VillageAnalyzer;
+import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.village.VillageRegistry;
+import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.worker.BuilderAssignment;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * /livingvillages command tree. All subcommands require permission level 2.
+ */
+public final class LVCommands {
+	private LVCommands() {
+	}
+
+	public static void register() {
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> registerTree(dispatcher));
+	}
+
+	private static void registerTree(CommandDispatcher<CommandSourceStack> dispatcher) {
+		dispatcher.register(Commands.literal("livingvillages")
+				.requires(source -> source.hasPermission(2))
+				.then(Commands.literal("status").executes(LVCommands::status))
+				.then(Commands.literal("list").executes(LVCommands::list))
+				.then(Commands.literal("build")
+						.executes(ctx -> build(ctx, false))
+						.then(Commands.literal("instant").executes(ctx -> build(ctx, true))))
+				.then(Commands.literal("cancel").executes(LVCommands::cancel))
+				.then(Commands.literal("pause").executes(ctx -> setEnabled(ctx, false)))
+				.then(Commands.literal("resume").executes(ctx -> setEnabled(ctx, true)))
+				.then(Commands.literal("reload").executes(LVCommands::reload))
+				.then(Commands.literal("speed")
+						.then(Commands.argument("multiplier", DoubleArgumentType.doubleArg(0.1, 10.0))
+								.executes(LVCommands::speed)))
+				.then(Commands.literal("templates")
+						.executes(LVCommands::templatesForNearest)
+						.then(Commands.argument("type", StringArgumentType.word())
+								.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+										Arrays.stream(VillageType.values()).map(VillageType::getSerializedName), builder))
+								.executes(LVCommands::templatesForType))));
+	}
+
+	private static int status(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		ServerLevel level = source.getLevel();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+
+		LVConfig config = LVConfig.get();
+		VillageAnalyzer.Stats stats = VillageAnalyzer.analyze(level, record);
+		BlockPos bell = record.getBellPos();
+		long cooldownLeft = record.getLastBuildTick() == VillageRecord.NEVER
+				? 0
+				: Math.max(0, record.getLastBuildTick() + config.cooldownTicks - level.getGameTime());
+
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.status.header",
+				formatPos(bell), typeName(record.getVillageType()), stateName(record)), false);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.status.villagers",
+				stats.adultVillagers()), false);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.status.beds",
+				stats.totalBeds(), stats.freeBeds()), false);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.status.houses",
+				record.getHousesBuilt(), config.maxHousesPerVillage), false);
+		source.sendSuccess(() -> projectLine(level, record), false);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.status.cooldown",
+				cooldownLeft, cooldownLeft / 20), false);
+		return 1;
+	}
+
+	private static int list(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		List<VillageRecord> villages = VillageRegistry.get(source.getLevel()).getVillages();
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.list.header", villages.size()), false);
+		for (VillageRecord record : villages) {
+			source.sendSuccess(() -> Lang.tr("livingvillages.command.list.entry",
+					formatPos(record.getBellPos()), typeName(record.getVillageType()),
+					record.getHousesBuilt(), stateName(record)), false);
+		}
+		return villages.size();
+	}
+
+	/**
+	 * Starts a project now, ignoring beds and cooldown (and past site failures). With {@code instant}, the project
+	 * (new or already running) is placed at once for debugging.
+	 */
+	private static int build(CommandContext<CommandSourceStack> context, boolean instant) {
+		CommandSourceStack source = context.getSource();
+		ServerLevel level = source.getLevel();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		VillageRegistry registry = VillageRegistry.get(level);
+		BuildProject project = record.getProject();
+		if (project == null) {
+			LVConfig config = LVConfig.get();
+			if (record.getHousesBuilt() >= config.maxHousesPerVillage) {
+				source.sendFailure(Lang.tr("livingvillages.command.build.max_houses", config.maxHousesPerVillage));
+				return 0;
+			}
+			VillageAnalyzer.ensureVillageType(record, VillageAnalyzer.analyze(level, record), registry);
+			VillageType type = VillageTicker.villageType(record);
+			int houseCount = HouseTemplateProvider.getHouses(level, type).size();
+			if (houseCount == 0) {
+				source.sendFailure(Lang.tr("livingvillages.command.build.no_template", typeName(type)));
+				return 0;
+			}
+			record.setFailedSiteAttempts(0);
+			record.setNextSiteAttemptTick(0);
+			project = VillageTicker.startProject(level, registry, record, true);
+			if (project == null) {
+				source.sendFailure(Lang.tr("livingvillages.command.build.no_site", houseCount));
+				return 0;
+			}
+		} else if (!instant) {
+			source.sendFailure(Lang.tr("livingvillages.command.build.already", project.getTemplateId().toString()));
+			return 0;
+		}
+
+		String houseId = project.getTemplateId().toString();
+		String origin = formatPos(project.getOrigin());
+		String rotation = project.getRotation().getSerializedName();
+		if (!instant) {
+			source.sendSuccess(() -> Lang.tr("livingvillages.command.build.started", houseId, origin, rotation), true);
+			return 1;
+		}
+		BlockPlacer placer = VillageTicker.completeInstantly(level, registry, record);
+		if (placer == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.build.template_missing", houseId));
+			return 0;
+		}
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.build.instant_done", houseId, origin,
+				rotation, placer.getPlacedCount(), placer.getSkippedCount()), true);
+		return 1;
+	}
+
+	private static int cancel(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		BuildProject project = record.getProject();
+		if (project == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.cancel.none"));
+			return 0;
+		}
+		String houseId = project.getTemplateId().toString();
+		VillageTicker.cancelProject(source.getLevel(), VillageRegistry.get(source.getLevel()), record);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.cancel.done", houseId), true);
+		return 1;
+	}
+
+	private static int setEnabled(CommandContext<CommandSourceStack> context, boolean enabled) {
+		LVConfig.get().enabled = enabled;
+		LVConfig.save();
+		context.getSource().sendSuccess(() -> Lang.tr(enabled ? "livingvillages.command.resume" : "livingvillages.command.pause"), true);
+		return 1;
+	}
+
+	private static int reload(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		if (LVConfig.load()) {
+			source.sendSuccess(() -> Lang.tr("livingvillages.command.reload.done"), true);
+			return 1;
+		}
+		source.sendFailure(Lang.tr("livingvillages.command.reload.failed"));
+		return 0;
+	}
+
+	private static int speed(CommandContext<CommandSourceStack> context) {
+		double multiplier = DoubleArgumentType.getDouble(context, "multiplier");
+		LVConfig.get().speedMultiplier = multiplier;
+		LVConfig.save();
+		context.getSource().sendSuccess(() -> Lang.tr("livingvillages.command.speed", multiplier), true);
+		return 1;
+	}
+
+	private static int templatesForNearest(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		VillageType type = record.getVillageType() != null ? record.getVillageType() : VillageType.PLAINS;
+		return listTemplates(source, type);
+	}
+
+	/** Debug variant: list houses of any village type without standing in such a village. */
+	private static int templatesForType(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageType type = VillageType.byName(StringArgumentType.getString(context, "type"));
+		if (type == null) {
+			source.sendFailure(Lang.tr("livingvillages.command.templates.bad_type"));
+			return 0;
+		}
+		return listTemplates(source, type);
+	}
+
+	private static int listTemplates(CommandSourceStack source, VillageType type) {
+		List<HouseTemplate> houses = HouseTemplateProvider.getHouses(source.getLevel(), type);
+		source.sendSuccess(() -> Lang.tr("livingvillages.command.templates.header",
+				houses.size(), typeName(type), type.getHousePool().toString()), false);
+		for (HouseTemplate house : houses) {
+			BoundingBox box = house.contentBox();
+			source.sendSuccess(() -> Lang.tr("livingvillages.command.templates.entry",
+					house.id().toString(), box.getXSpan() + "x" + box.getYSpan() + "x" + box.getZSpan(),
+					house.bedCount(), house.weight(), house.floorY()), false);
+		}
+		return houses.size();
+	}
+
+	/** Nearest registered village to the command source, within activeRange. */
+	@Nullable
+	static VillageRecord findNearestVillage(CommandSourceStack source) {
+		BlockPos pos = BlockPos.containing(source.getPosition());
+		return VillageRegistry.get(source.getLevel()).findNearest(pos, LVConfig.get().activeRange);
+	}
+
+	private static Component projectLine(ServerLevel level, VillageRecord record) {
+		BuildProject project = record.getProject();
+		if (project == null) {
+			return Lang.tr("livingvillages.command.status.project_none");
+		}
+		project.ensureSteps(level, VillageTicker.villageType(record));
+		Villager builder = BuilderAssignment.getBuilder(level, project);
+		Component builderName = builder != null ? builder.getName()
+				: Lang.tr(project.getBuilderUuid() == null ? "livingvillages.command.status.builder_none" : "livingvillages.command.status.builder_away");
+		return Lang.tr("livingvillages.command.status.project", project.getTemplateId().toString(),
+				project.getProgressPercent(), builderName, project.getSkippedCount());
+	}
+
+	private static String formatPos(BlockPos pos) {
+		return pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
+	}
+
+	private static Component typeName(@Nullable VillageType type) {
+		return Lang.tr("livingvillages.type." + (type == null ? "unknown" : type.getSerializedName()));
+	}
+
+	private static Component stateName(VillageRecord record) {
+		return Lang.tr(record.isActive() ? "livingvillages.state.active" : "livingvillages.state.inactive");
+	}
+}

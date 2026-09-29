@@ -1,0 +1,63 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+}
+
+loom {
+	mods {
+		"livingvillages" {
+			sourceSet sourceSets.main
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Compatibility testing only: load reference mods from ../ref into runClient/runServer.
+	// Runtime-only, never compiled against and never bundled. Enable with e.g.
+	//   ./gradlew runClient -PrefMods=bettervillage,regrowth,guardvillagers
+	def refJars = [
+		bettervillage : ["bettervillage-fabric-1.21.1-3.3.1.jar", "libraryferret-fabric-1.21.1-4.0.0.jar"],
+		regrowth      : ["fabric-release-regrowth-1.21.1-115.31.2.jar"],
+		guardvillagers: ["guardvillagers-2.1.2-1.21.1.jar"],
+	]
+	def refMods = project.findProperty("refMods")
+	if (refMods) {
+		refMods.toString().split(",").each { name ->
+			def jars = refJars[name.trim()]
+			if (jars == null) throw new GradleException("Unknown refMods entry '${name}', expected one of ${refJars.keySet()}")
+			jars.each { modLocalRuntime files("../ref/${it}") }
+		}
+	}
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.encoding = "UTF-8"
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}

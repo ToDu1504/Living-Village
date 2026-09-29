@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "com.khanhvu.livingvillages.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"SinglePoolElementAccessor",
+		"StructureTemplateAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
