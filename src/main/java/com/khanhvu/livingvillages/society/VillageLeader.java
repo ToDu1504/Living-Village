@@ -21,6 +21,10 @@ import java.util.UUID;
  * The village leader (spec v2-GĐ 2.3): the adult with the highest profession level, titled "Chief <name>" (visible
  * when looked at). A leader stays leader until they die, are converted (zombie, guard) or are away for
  * {@code leaderAbsentTicks}; a stronger villager does not take over.
+ * <p>
+ * Villagers with a profession come first, and a jobless leader gives way as soon as someone with a profession
+ * can lead: vanilla closes the trading screen of jobless villagers every tick, and the material board (v2-GĐ 9)
+ * trades through the leader.
  */
 public final class VillageLeader {
 	private static final String TITLE_KEY = "livingvillages.leader.title";
@@ -37,7 +41,9 @@ public final class VillageLeader {
 		}
 		boolean absentTooLong = leaderId != null && leader == null
 				&& now - village.getLeaderLastSeenTick() > LVConfig.get().leaderAbsentTicks;
-		if (leaderId == null || village.isLeaderGone() || absentTooLong) {
+		boolean joblessLeader = leader != null && !hasJob(leader)
+				&& adults.stream().anyMatch(v -> hasJob(v) && isCandidate(village, v));
+		if (leaderId == null || village.isLeaderGone() || absentTooLong || joblessLeader) {
 			Villager chosen = choose(village, adults, now);
 			village.setLeaderGone(false);
 			if (chosen != null || leaderId != null) {
@@ -89,15 +95,24 @@ public final class VillageLeader {
 	/** Highest profession level, then the villager this mod has known longest; never a nitwit or a builder. */
 	@Nullable
 	private static Villager choose(VillageRecord village, List<Villager> adults, long now) {
-		BuildProject project = village.getProject();
-		UUID builder = project == null ? null : project.getBuilderUuid();
 		return adults.stream()
-				.filter(v -> v.getVillagerData().getProfession() != VillagerProfession.NITWIT)
-				.filter(v -> !v.getUUID().equals(builder))
-				.min(Comparator.comparingInt((Villager v) -> -v.getVillagerData().getLevel())
+				.filter(v -> isCandidate(village, v))
+				.min(Comparator.comparing((Villager v) -> !hasJob(v)) // jobless villagers cannot trade
+						.thenComparingInt((Villager v) -> -v.getVillagerData().getLevel())
 						.thenComparingLong(v -> village.getKnownVillagers().getOrDefault(v.getUUID(), now))
 						.thenComparing(Villager::getUUID))
 				.orElse(null);
+	}
+
+	/** Never a nitwit, and never the villager building the current project. */
+	private static boolean isCandidate(VillageRecord village, Villager villager) {
+		BuildProject project = village.getProject();
+		UUID builder = project == null ? null : project.getBuilderUuid();
+		return villager.getVillagerData().getProfession() != VillagerProfession.NITWIT && !villager.getUUID().equals(builder);
+	}
+
+	private static boolean hasJob(Villager villager) {
+		return villager.getVillagerData().getProfession() != VillagerProfession.NONE;
 	}
 
 	/**

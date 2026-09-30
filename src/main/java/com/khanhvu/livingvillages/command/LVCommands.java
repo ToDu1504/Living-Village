@@ -37,6 +37,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,6 +95,11 @@ public final class LVCommands {
 		}
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.board.header", VillageIdentity.displayName(record)), false);
 		sendRequests(source, record);
+		Villager leader = VillageLeader.getLeader(source.getLevel(), record);
+		if (leader != null && leader.getVillagerData().getProfession() == VillagerProfession.NONE && !record.getRequests().isEmpty()) {
+			// Vanilla closes the trading screen of jobless villagers; a villager with a job takes over when there is one.
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.board.jobless_leader"), false);
+		}
 		return record.getRequests().size();
 	}
 

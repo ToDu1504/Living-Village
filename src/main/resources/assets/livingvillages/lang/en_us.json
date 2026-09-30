@@ -296,5 +296,6 @@
 	"livingvillages.voice.board_all_done.2": "Everything we asked for. Thank you!",
 	"livingvillages.voice.board_all_done.3": "Now the building goes up fast!",
 	"livingvillages.voice.board_all_done.4": "You are a true friend, %s!",
-	"livingvillages.voice.board_all_done.5": "Builders, to work!"
+	"livingvillages.voice.board_all_done.5": "Builders, to work!",
+	"livingvillages.command.board.jobless_leader": "The chief has no job yet, so nobody can trade with them. A villager with a job becomes chief as soon as there is one."
 }

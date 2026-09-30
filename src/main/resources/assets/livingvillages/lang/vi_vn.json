@@ -296,5 +296,6 @@
 	"livingvillages.voice.board_all_done.2": "Đủ hết những gì làng cần. Cảm ơn!",
 	"livingvillages.voice.board_all_done.3": "Giờ thì công trình lên nhanh rồi!",
 	"livingvillages.voice.board_all_done.4": "%s đúng là bạn của làng!",
-	"livingvillages.voice.board_all_done.5": "Thợ xây ơi, bắt tay vào việc!"
+	"livingvillages.voice.board_all_done.5": "Thợ xây ơi, bắt tay vào việc!",
+	"livingvillages.command.board.jobless_leader": "Trưởng làng chưa có nghề nên chưa giao dịch được. Làng có người có nghề thì người đó sẽ làm trưởng làng."
 }
