@@ -1,12 +1,15 @@
 package com.khanhvu.livingvillages;
 
-import com.khanhvu.livingvillages.build.HouseTemplateProvider;
+import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.command.LVCommands;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.NamePool;
+import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVText;
+import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.ResourceLocation;
@@ -24,9 +27,15 @@ public class LivingVillages implements ModInitializer {
 		NamePool.load();
 		VillageTicker.register();
 		VillageSociety.register();
+		ProfessionWork.register();
+		VillageVoice.register();
 		LVCommands.register();
-		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> HouseTemplateProvider.clearCache());
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> HouseTemplateProvider.clearCache());
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> BuildingTemplateProvider.clearCache());
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> server.getAllLevels().forEach(VillageVoice::clear));
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			BuildingTemplateProvider.clearCache();
+			VillageIdentity.clear();
+		});
 		LOGGER.info("[LivingVillages] loaded");
 	}
 

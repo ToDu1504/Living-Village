@@ -12,6 +12,9 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -77,6 +80,75 @@ public class LVConfig {
 	public int moodEffectTicks = 72000;
 	public int needThreshold = 40;
 	public int leaderAbsentTicks = 12000;
+
+	// v2-GĐ 3: build by needs, village levels
+	public boolean levelsEnabled = true;
+	/** Requirements to reach level 1 (Village), 2 (Town) and 3 (City); level 0 (Hamlet) is the start. */
+	public List<LevelRequirement> levelRequirements = List.of(
+			new LevelRequirement(8, 3, List.of()),
+			new LevelRequirement(20, 6, List.of("librarian")),
+			new LevelRequirement(35, 10, List.of("librarian", "cleric")));
+	public List<Integer> levelMaxBuildings = List.of(4, 10, 20, 32);
+	public List<Integer> buildRadiusByLevel = List.of(48, 64, 80, 96);
+	public boolean levelCanDecrease = false;
+
+	// v2-GĐ 4: profession work and animals
+	public boolean workEnabled = true;
+	public int workIntervalTicks = 600;
+	public double workChance = 0.5;
+	/** Per profession (id without namespace): whether it does its v2 job. */
+	public Map<String, Boolean> professionWork = defaultProfessionWork();
+	/** Most animals of one kind the village breeds, by level. */
+	public List<Integer> maxAnimalsPerType = List.of(6, 8, 12, 16);
+	public int maxFishInBarrel = 16;
+	public double toolsmithBuildSpeedBonus = 0.1;
+	public double toolsmithBuildSpeedMax = 0.3;
+	public int cartographerRadiusBonus = 16;
+	/** Safety points per armorer or weaponsmith, and the most they add together. */
+	public int smithSafetyBonus = 5;
+	public int smithSafetyMax = 20;
+	public boolean clericCureZombies = true;
+	public int clericCuresPerDay = 1;
+	public int clericCureRange = 4;
+
+	// v2-GĐ 5: identity
+	public boolean nameVillagers = true;
+	public boolean nameGuards = true;
+	public boolean showEntryTitle = true;
+	public int greetingCooldownTicks = 6000;
+
+	// v2-GĐ 6: voice
+	public boolean voiceEnabled = true;
+	public int voiceRange = 24;
+	public int voiceIntervalTicks = 200;
+	public double voiceChance = 0.35;
+	public int maxBubblesPerVillage = 2;
+	public int bubbleDurationTicks = 80;
+
+	private static Map<String, Boolean> defaultProfessionWork() {
+		Map<String, Boolean> map = new LinkedHashMap<>();
+		for (String id : List.of("shepherd", "butcher", "leatherworker", "fletcher", "fisherman", "cleric", "armorer",
+				"weaponsmith", "toolsmith", "cartographer", "librarian", "mason")) {
+			map.put(id, true);
+		}
+		return map;
+	}
+
+	public static class LevelRequirement {
+		public int villagers;
+		public int professions;
+		/** Professions (ids without namespace, e.g. "librarian") that must be present. */
+		public List<String> services = List.of();
+
+		public LevelRequirement() {
+		}
+
+		public LevelRequirement(int villagers, int professions, List<String> services) {
+			this.villagers = villagers;
+			this.professions = professions;
+			this.services = services;
+		}
+	}
 
 	public static LVConfig get() {
 		return instance;
@@ -165,6 +237,47 @@ public class LVConfig {
 		moodEffectTicks = checkInt("moodEffectTicks", moodEffectTicks, 20, 720000, d.moodEffectTicks);
 		needThreshold = checkInt("needThreshold", needThreshold, 0, 100, d.needThreshold);
 		leaderAbsentTicks = checkInt("leaderAbsentTicks", leaderAbsentTicks, 20, 720000, d.leaderAbsentTicks);
+		if (levelRequirements == null || levelRequirements.size() != 3 || levelRequirements.stream().anyMatch(q -> q == null || q.villagers < 0 || q.professions < 0)) {
+			warn("levelRequirements", levelRequirements);
+			levelRequirements = d.levelRequirements;
+		}
+		for (LevelRequirement requirement : levelRequirements) {
+			if (requirement.services == null) {
+				requirement.services = List.of();
+			}
+		}
+		if (levelMaxBuildings == null || levelMaxBuildings.size() != 4 || levelMaxBuildings.stream().anyMatch(n -> n == null || n < 0 || n > 1000)) {
+			warn("levelMaxBuildings", levelMaxBuildings);
+			levelMaxBuildings = d.levelMaxBuildings;
+		}
+		workIntervalTicks = checkInt("workIntervalTicks", workIntervalTicks, 20, 72000, d.workIntervalTicks);
+		workChance = checkDouble("workChance", workChance, 0.0, 1.0, d.workChance);
+		if (professionWork == null) {
+			warn("professionWork", null);
+			professionWork = d.professionWork;
+		}
+		if (maxAnimalsPerType == null || maxAnimalsPerType.size() != 4 || maxAnimalsPerType.stream().anyMatch(n -> n == null || n < 0 || n > 256)) {
+			warn("maxAnimalsPerType", maxAnimalsPerType);
+			maxAnimalsPerType = d.maxAnimalsPerType;
+		}
+		maxFishInBarrel = checkInt("maxFishInBarrel", maxFishInBarrel, 0, 27 * 64, d.maxFishInBarrel);
+		toolsmithBuildSpeedBonus = checkDouble("toolsmithBuildSpeedBonus", toolsmithBuildSpeedBonus, 0.0, 1.0, d.toolsmithBuildSpeedBonus);
+		toolsmithBuildSpeedMax = checkDouble("toolsmithBuildSpeedMax", toolsmithBuildSpeedMax, 0.0, 5.0, d.toolsmithBuildSpeedMax);
+		cartographerRadiusBonus = checkInt("cartographerRadiusBonus", cartographerRadiusBonus, 0, 128, d.cartographerRadiusBonus);
+		smithSafetyBonus = checkInt("smithSafetyBonus", smithSafetyBonus, 0, 100, d.smithSafetyBonus);
+		smithSafetyMax = checkInt("smithSafetyMax", smithSafetyMax, 0, 100, d.smithSafetyMax);
+		clericCuresPerDay = checkInt("clericCuresPerDay", clericCuresPerDay, 0, 100, d.clericCuresPerDay);
+		clericCureRange = checkInt("clericCureRange", clericCureRange, 1, 16, d.clericCureRange);
+		greetingCooldownTicks = checkInt("greetingCooldownTicks", greetingCooldownTicks, 0, 720000, d.greetingCooldownTicks);
+		voiceRange = checkInt("voiceRange", voiceRange, 4, 128, d.voiceRange);
+		voiceIntervalTicks = checkInt("voiceIntervalTicks", voiceIntervalTicks, 20, 72000, d.voiceIntervalTicks);
+		voiceChance = checkDouble("voiceChance", voiceChance, 0.0, 1.0, d.voiceChance);
+		maxBubblesPerVillage = checkInt("maxBubblesPerVillage", maxBubblesPerVillage, 0, 16, d.maxBubblesPerVillage);
+		bubbleDurationTicks = checkInt("bubbleDurationTicks", bubbleDurationTicks, 20, 1200, d.bubbleDurationTicks);
+		if (buildRadiusByLevel == null || buildRadiusByLevel.size() != 4 || buildRadiusByLevel.stream().anyMatch(n -> n == null || n < minBuildDistance || n > 256)) {
+			warn("buildRadiusByLevel", buildRadiusByLevel);
+			buildRadiusByLevel = d.buildRadiusByLevel;
+		}
 	}
 
 	private static int checkInt(String name, int value, int min, int max, int fallback) {

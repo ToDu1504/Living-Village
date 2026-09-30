@@ -2,6 +2,7 @@ package com.khanhvu.livingvillages.village;
 
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.society.VillageNeeds;
+import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
@@ -55,6 +56,28 @@ public class VillageRecord {
 	private double attackScore;
 	private long attackScoreTick;
 	private final List<MoodEffect> moodEffects = new ArrayList<>();
+	/** Village level 0 (hamlet) to 3 (city); -1 until first computed. Only rises unless levelCanDecrease. */
+	private int level = -1;
+
+	// v2-GĐ 5: identity (saved)
+	@Nullable
+	private String name;
+	/** Households: anchor position (plot centre or first bed seen) → surname. */
+	private final Map<Long, String> households = new HashMap<>();
+	/** Names this mod gave to villagers; a villager renamed since is left alone. */
+	private final Map<UUID, String> givenNames = new HashMap<>();
+	/** Adults counted at the last update (for the entry greeting); not saved. */
+	private int lastAdultCount;
+
+	// Recent events for villagers to talk about (not saved): name and game tick.
+	@Nullable
+	private String recentBirthName;
+	private long recentBirthTick = Long.MIN_VALUE;
+	@Nullable
+	private String recentDeathName;
+	private long recentDeathTick = Long.MIN_VALUE;
+	/** A festival is going on (v2-GĐ 8); not saved. */
+	private boolean festivalActive;
 
 	// v2-GĐ 2: last computed values (not saved, recomputed every manage interval)
 	@Nullable
@@ -62,6 +85,8 @@ public class VillageRecord {
 	private int mood = -1;
 	/** Set when the leader entity was removed (death, conversion); a new leader is chosen at the next update. */
 	private boolean leaderGone;
+	/** Village-wide effects of professions (v2-GĐ 4), from the last update; none before it. */
+	private ProfessionWork.Bonuses bonuses = new ProfessionWork.Bonuses(0, 0, 0);
 
 	public VillageRecord(UUID id, BlockPos bellPos) {
 		this.id = id;
@@ -187,6 +212,14 @@ public class VillageRecord {
 		this.attackScoreTick = tick;
 	}
 
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
+
 	public List<MoodEffect> getMoodEffects() {
 		return moodEffects;
 	}
@@ -207,6 +240,75 @@ public class VillageRecord {
 
 	public void setMood(int mood) {
 		this.mood = mood;
+	}
+
+	@Nullable
+	public String getName() {
+		return name;
+	}
+
+	public void setName(@Nullable String name) {
+		this.name = name;
+	}
+
+	public Map<Long, String> getHouseholds() {
+		return households;
+	}
+
+	public Map<UUID, String> getGivenNames() {
+		return givenNames;
+	}
+
+	@Nullable
+	public String getRecentBirthName() {
+		return recentBirthName;
+	}
+
+	public long getRecentBirthTick() {
+		return recentBirthTick;
+	}
+
+	public void setRecentBirth(String name, long tick) {
+		this.recentBirthName = name;
+		this.recentBirthTick = tick;
+	}
+
+	@Nullable
+	public String getRecentDeathName() {
+		return recentDeathName;
+	}
+
+	public long getRecentDeathTick() {
+		return recentDeathTick;
+	}
+
+	public void setRecentDeath(String name, long tick) {
+		this.recentDeathName = name;
+		this.recentDeathTick = tick;
+	}
+
+	public boolean isFestivalActive() {
+		return festivalActive;
+	}
+
+	public void setFestivalActive(boolean festivalActive) {
+		this.festivalActive = festivalActive;
+	}
+
+	public int getLastAdultCount() {
+		return lastAdultCount;
+	}
+
+	public void setLastAdultCount(int lastAdultCount) {
+		this.lastAdultCount = lastAdultCount;
+	}
+
+	public ProfessionWork.Bonuses getBonuses() {
+		return bonuses;
+	}
+
+	public void setBonuses(ProfessionWork.Bonuses bonuses) {
+		this.bonuses = bonuses;
 	}
 
 	public boolean isLeaderGone() {
@@ -293,6 +395,26 @@ public class VillageRecord {
 			effects.add(item);
 		}
 		tag.put("MoodEffects", effects);
+		tag.putInt("Level", level);
+		if (name != null) {
+			tag.putString("Name", name);
+		}
+		ListTag householdList = new ListTag();
+		for (Map.Entry<Long, String> entry : households.entrySet()) {
+			CompoundTag item = new CompoundTag();
+			item.putLong("Anchor", entry.getKey());
+			item.putString("Surname", entry.getValue());
+			householdList.add(item);
+		}
+		tag.put("Households", householdList);
+		ListTag named = new ListTag();
+		for (Map.Entry<UUID, String> entry : givenNames.entrySet()) {
+			CompoundTag item = new CompoundTag();
+			item.putUUID("Id", entry.getKey());
+			item.putString("Name", entry.getValue());
+			named.add(item);
+		}
+		tag.put("GivenNames", named);
 		return tag;
 	}
 
@@ -356,6 +478,22 @@ public class VillageRecord {
 		for (int i = 0; i < effects.size(); i++) {
 			CompoundTag item = effects.getCompound(i);
 			record.moodEffects.add(new MoodEffect(item.getInt("Amount"), item.getLong("Start")));
+		}
+		record.level = tag.contains("Level") ? tag.getInt("Level") : -1;
+		if (tag.contains("Name", Tag.TAG_STRING)) {
+			record.name = tag.getString("Name");
+		}
+		ListTag householdList = tag.getList("Households", Tag.TAG_COMPOUND);
+		for (int i = 0; i < householdList.size(); i++) {
+			CompoundTag item = householdList.getCompound(i);
+			record.households.put(item.getLong("Anchor"), item.getString("Surname"));
+		}
+		ListTag named = tag.getList("GivenNames", Tag.TAG_COMPOUND);
+		for (int i = 0; i < named.size(); i++) {
+			CompoundTag item = named.getCompound(i);
+			if (item.hasUUID("Id")) {
+				record.givenNames.put(item.getUUID("Id"), item.getString("Name"));
+			}
 		}
 		return record;
 	}

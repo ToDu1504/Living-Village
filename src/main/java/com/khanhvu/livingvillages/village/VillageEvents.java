@@ -1,7 +1,10 @@
 package com.khanhvu.livingvillages.village;
 
+import com.khanhvu.livingvillages.build.BuildingKind;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -13,7 +16,8 @@ import java.util.function.Consumer;
  * later) listen instead of calling each other directly. Listeners run on the server thread, synchronously.
  */
 public final class VillageEvents {
-	public record BuildingCompleted(ServerLevel level, VillageRecord village, String templateId) {
+	public record BuildingCompleted(ServerLevel level, VillageRecord village, ResourceLocation templateId, @Nullable BuildingKind kind,
+			BoundingBox footprint) {
 	}
 
 	/** A villager of the village died (killed, not converted). */
@@ -23,9 +27,23 @@ public final class VillageEvents {
 	public record LeaderChanged(ServerLevel level, VillageRecord village, @Nullable Villager oldLeader, @Nullable Villager newLeader) {
 	}
 
+	public record LevelUp(ServerLevel level, VillageRecord village, int newLevel) {
+	}
+
+	/** A baby villager was born in the village. */
+	public record Birth(ServerLevel level, VillageRecord village, Villager baby) {
+	}
+
+	/** A zombie villager that a cleric of the village started curing became a villager again (v2-GĐ 4.5). */
+	public record ZombieCured(ServerLevel level, VillageRecord village, @Nullable Villager cleric, Villager villager) {
+	}
+
 	public static final Bus<BuildingCompleted> BUILDING_COMPLETED = new Bus<>();
+	public static final Bus<LevelUp> LEVEL_UP = new Bus<>();
 	public static final Bus<Death> DEATH = new Bus<>();
 	public static final Bus<LeaderChanged> LEADER_CHANGED = new Bus<>();
+	public static final Bus<Birth> BIRTH = new Bus<>();
+	public static final Bus<ZombieCured> ZOMBIE_CURED = new Bus<>();
 
 	private VillageEvents() {
 	}

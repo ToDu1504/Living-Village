@@ -5,11 +5,16 @@ import com.khanhvu.livingvillages.build.BlockPlacer;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildSite;
 import com.khanhvu.livingvillages.build.BuildStep;
-import com.khanhvu.livingvillages.build.HouseTemplate;
-import com.khanhvu.livingvillages.build.HouseTemplateProvider;
+import com.khanhvu.livingvillages.build.BuildingTemplate;
+import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.build.BuildingKind;
+import com.khanhvu.livingvillages.identity.VillageIdentity;
+import com.khanhvu.livingvillages.identity.VillageLevel;
+import com.khanhvu.livingvillages.society.BuildDecision;
+import com.khanhvu.livingvillages.society.VillageMood;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
@@ -17,10 +22,16 @@ import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageScanner;
 import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
 import org.jetbrains.annotations.Nullable;
@@ -64,12 +75,22 @@ public final class VillageTicker {
 		boolean manage = time % config.manageIntervalTicks == 0;
 		boolean updateBuilders = time % BuilderAssignment.UPDATE_INTERVAL == 0;
 		VillageRegistry registry = VillageRegistry.get(level);
+		if (config.workEnabled) {
+			ProfessionWork.tickTasks(level);
+		}
+		if (updateBuilders) {
+			VillageIdentity.greetPlayers(level, registry);
+		}
 		for (VillageRecord village : registry.getVillages()) {
 			if (!village.isActive() || !level.isLoaded(village.getBellPos()) || !isNearPlayer(level, village, config.activeRange)) {
 				continue;
 			}
 			if (manage) {
 				VillageAnalyzer.Stats stats = config.needsEnabled ? VillageSociety.update(level, registry, village) : null;
+				if (!config.needsEnabled) {
+					VillageIdentity.ensureName(village, villageType(village), level);
+					VillageIdentity.nameVillagers(level, village);
+				}
 				if (village.getProject() == null) {
 					tryAutoStart(level, registry, village, time, stats);
 				}
@@ -81,14 +102,23 @@ public final class VillageTicker {
 			if (config.replantSaplings) {
 				Replanter.tick(level, registry, village);
 			}
+			if (config.workEnabled) {
+				ProfessionWork.tick(level, village);
+			}
+			if (config.voiceEnabled) {
+				VillageVoice.tick(level, village);
+			}
 		}
 	}
 
-	/** Starts a project when the village is full (spec 6.3). {@code stats} may be passed when already computed. */
+	/**
+	 * Starts a project when the village needs one: by the leader's decision (spec v2-GĐ 3.2) when needs are enabled,
+	 * otherwise when the village is full (0.1 rule). {@code stats} may be passed when already computed.
+	 */
 	private static void tryAutoStart(ServerLevel level, VillageRegistry registry, VillageRecord village, long time,
 			@Nullable VillageAnalyzer.Stats stats) {
 		LVConfig config = LVConfig.get();
-		if (village.getHousesBuilt() >= config.maxHousesPerVillage
+		if (village.getHousesBuilt() >= VillageLevel.buildLimit(village)
 				|| village.getFailedSiteAttempts() >= config.maxSiteFailures
 				|| time < village.getNextSiteAttemptTick()
 				|| (village.getLastBuildTick() != VillageRecord.NEVER && time - village.getLastBuildTick() < config.cooldownTicks)) {
@@ -98,10 +128,36 @@ public final class VillageTicker {
 			stats = VillageAnalyzer.analyze(level, village);
 			VillageAnalyzer.ensureVillageType(village, stats, registry);
 		}
-		if (stats.adultVillagers() < 2 || stats.freeBeds() > config.freeBedThreshold) {
+		if (stats.adultVillagers() < 2) {
 			return;
 		}
-		startProject(level, registry, village, false);
+		List<BuildingTemplate> buildings = BuildingTemplateProvider.getBuildings(level, villageType(village));
+		if (config.needsEnabled && village.getNeeds() != null) {
+			BuildDecision decision = BuildDecision.decide(level, village, stats, village.getNeeds(), buildings);
+			if (decision.builds()) {
+				startProject(level, registry, village, decision.candidates(buildings), false);
+			}
+		} else if (stats.freeBeds() <= config.freeBedThreshold) {
+			startProject(level, registry, village, BuildingTemplateProvider.ofKind(buildings, BuildingKind.HOUSE), false);
+		}
+	}
+
+	/**
+	 * Command {@code build}: what the leader would build now (a house if nothing is needed), ignoring cooldown and
+	 * past site failures. Every matching template is tried.
+	 */
+	@Nullable
+	public static BuildProject startForced(ServerLevel level, VillageRegistry registry, VillageRecord village) {
+		List<BuildingTemplate> buildings = BuildingTemplateProvider.getBuildings(level, villageType(village));
+		List<BuildingTemplate> pool = BuildingTemplateProvider.ofKind(buildings, BuildingKind.HOUSE);
+		if (LVConfig.get().needsEnabled) {
+			VillageAnalyzer.Stats stats = VillageSociety.update(level, registry, village);
+			BuildDecision decision = BuildDecision.decide(level, village, stats, village.getNeeds(), buildings);
+			if (decision.builds()) {
+				pool = decision.candidates(buildings);
+			}
+		}
+		return startProject(level, registry, village, pool, true);
 	}
 
 	/**
@@ -110,23 +166,23 @@ public final class VillageTicker {
 	 * A failed search counts toward maxSiteFailures. Returns null if no house or no site was found.
 	 */
 	@Nullable
-	public static BuildProject startProject(ServerLevel level, VillageRegistry registry, VillageRecord village, boolean tryAllTemplates) {
+	public static BuildProject startProject(ServerLevel level, VillageRegistry registry, VillageRecord village,
+			List<BuildingTemplate> houses, boolean tryAllTemplates) {
 		LVConfig config = LVConfig.get();
-		List<HouseTemplate> houses = HouseTemplateProvider.getHouses(level, villageType(village));
-		HouseTemplate first = HouseTemplateProvider.pickRandom(houses, level.getRandom());
+		BuildingTemplate first = BuildingTemplateProvider.pickRandom(houses, level.getRandom());
 		if (first == null) {
 			return null;
 		}
-		List<HouseTemplate> candidates = new ArrayList<>();
+		List<BuildingTemplate> candidates = new ArrayList<>();
 		candidates.add(first);
 		if (tryAllTemplates) {
-			for (HouseTemplate house : houses) {
+			for (BuildingTemplate house : houses) {
 				if (house != first) {
 					candidates.add(house);
 				}
 			}
 		}
-		for (HouseTemplate house : candidates) {
+		for (BuildingTemplate house : candidates) {
 			Optional<BuildSite> site = SiteFinder.find(level, village, house, level.getRandom());
 			if (site.isPresent()) {
 				BuildProject project = BuildProject.create(house, site.get());
@@ -178,7 +234,8 @@ public final class VillageTicker {
 		if (!builderless && (builder == null || !BuilderAssignment.isInReach(builder, step, project))) {
 			return; // the builder is on the way
 		}
-		double rate = config.blocksPerSecond * config.speedMultiplier / 20.0 * (builderless ? 0.5 : 1.0);
+		double rate = config.blocksPerSecond * config.speedMultiplier / 20.0 * (builderless ? 0.5 : 1.0) * moodSpeedFactor(village)
+				* (1.0 + village.getBonuses().buildSpeed());
 		project.setBuildPoints(Math.min(MAX_BUILD_POINTS, project.getBuildPoints() + rate));
 
 		BlockPlacer placer = project.getPlacer(level);
@@ -258,7 +315,13 @@ public final class VillageTicker {
 		BuilderAssignment.release(level, project);
 		queueReplants(village, project);
 		village.recordHouseBuilt(project.getFootprint(), level.getGameTime());
-		VillageEvents.BUILDING_COMPLETED.post(new VillageEvents.BuildingCompleted(level, village, project.getTemplateId().toString()));
+		BuildingTemplate building = project.getHouse();
+		BuildingKind kind = building == null ? null : building.kind();
+		if (kind == BuildingKind.PEN) {
+			stockPen(level, village, project);
+		}
+		VillageEvents.BUILDING_COMPLETED.post(new VillageEvents.BuildingCompleted(level, village, project.getTemplateId(), kind,
+				project.getFootprint()));
 		village.setProject(null);
 		registry.setDirty();
 		LivingVillages.debug("Village {} finished {} ({} blocks skipped)", village.getId(), project.getTemplateId(), project.getSkippedCount());
@@ -275,6 +338,33 @@ public final class VillageTicker {
 		queueReplants(village, project);
 		village.setProject(null);
 		registry.setDirty();
+	}
+
+	/** Mood changes building speed (spec v2-GĐ 2.2): happy ×1.25, miserable ×0.75. */
+	private static double moodSpeedFactor(VillageRecord village) {
+		if (!LVConfig.get().needsEnabled || village.getMood() < 0) {
+			return 1.0;
+		}
+		return switch (VillageMood.Level.of(village.getMood())) {
+			case HAPPY -> 1.25;
+			case MISERABLE -> 0.75;
+			case NORMAL -> 1.0;
+		};
+	}
+
+	/**
+	 * A new pen gets a breeding pair, like a vanilla village pen: the animal of a keeper profession the village has
+	 * (sheep, pig, cow, chicken), sheep otherwise. Vanilla pens get their animals from the village generator, which
+	 * this mod does not run.
+	 */
+	private static void stockPen(ServerLevel level, VillageRecord village, BuildProject project) {
+		List<Villager> adults = VillageAnalyzer.getAdultVillagers(level, village.getBellPos(), VillageAnalyzer.areaRadius(village));
+		EntityType<? extends Animal> type = BuildDecision.animalForPen(adults);
+		BlockPos center = project.getFootprint().getCenter();
+		BlockPos spawn = new BlockPos(center.getX(), project.getFloorY(), center.getZ());
+		for (int i = 0; i < 2; i++) {
+			type.spawn(level, spawn, MobSpawnType.EVENT);
+		}
 	}
 
 	/** Trees felled for the project are replanted around it (spec v2-GĐ 1), even if it was cancelled. */

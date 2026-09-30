@@ -2,7 +2,7 @@
 
 *[English](README.md)*
 
-Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Khi làng hết giường trống, một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối một ngôi nhà mới. Mẫu nhà lấy từ chính bộ nhà của làng nên luôn đúng phong cách. Nếu có cài Better Village thì nhà mới theo mẫu của Better Village.
+Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng.
 
 Mod không thêm khối, vật phẩm, sinh vật hay texture mới. Người chơi không cần cài mod ở máy mình.
 
@@ -24,13 +24,18 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
 ## Cách hoạt động
 
 - **Làng** được nhận diện qua chuông (điểm tụ họp). Mỗi chuông là một làng. Phong cách làng (đồng bằng, sa mạc, xavan, tuyết, taiga) lấy theo dân làng ở lần đầu mod thấy làng và không đổi về sau. Dân làng rừng rậm và đầm lầy được tính là đồng bằng.
-- **Làng tự khởi công nhà mới** khi đủ tất cả điều kiện:
-  - có ít nhất 2 dân làng trưởng thành;
-  - hết giường trống (xem `freeBedThreshold`);
-  - số nhà đã xây ít hơn `maxHousesPerVillage`;
-  - đã qua một ngày Minecraft (`cooldownTicks`) kể từ nhà trước.
-- **Mẫu nhà** được đọc lúc chạy từ bộ `minecraft:village/<phong cách>/houses`. Chỉ dùng nhà có giường và không có khối nghề, nên không xây lò rèn hay nông trại. Datapack và mod sửa bộ nhà này sẽ tự được áp dụng.
-- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông 12–64 khối. Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
+- **Mẫu công trình** được đọc lúc chạy từ bộ `minecraft:village/<phong cách>/houses` và phân loại theo thứ bên trong: **xưởng** có khối nghề (xưởng cho nghề đó), **nông trại** có đất cày và thùng ủ phân (composter), **chuồng** là khu rào không có giường, **nhà ở** có giường. Các mảnh khác (trang trí, điểm tụ họp) không bao giờ được xây. Datapack và mod sửa bộ này sẽ tự được áp dụng.
+- **Xây gì** do trưởng làng quyết định, tối đa một lần mỗi ngày Minecraft (`cooldownTicks`) và chỉ khi làng có ít nhất 2 dân trưởng thành. Nhu cầu chưa đủ đầu tiên được ưu tiên:
+  1. nhà ở dưới `needThreshold` → nhà ở;
+  2. thức ăn dưới `needThreshold` → nông trại (trừ khi vẫn còn thùng ủ phân chưa ai nhận: lúc đó làng thiếu người chứ không thiếu ruộng);
+  3. việc làm dưới `needThreshold` → xưởng cho nghề mà làng có ít người nhất;
+  4. có người chăn nuôi (chăn cừu, bán thịt, thuộc da, làm tên) nhưng quanh làng không có gia súc của họ → chuồng, xây xong có sẵn một cặp gia súc đó;
+  5. còn lại thì không xây (`status` ghi lý do: làng đang ổn, hoặc làng cần lớn hơn để xây tiếp).
+- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố. Mỗi cấp cần đủ số dân trưởng thành và số nghề khác nhau (Thị trấn cần thêm thủ thư, Thành phố cần thủ thư và mục sư), và quyết định số công trình mod được xây (4 / 10 / 20 / 32) cùng khoảng cách xa nhất tới chuông (48 / 64 / 80 / 96 khối). Cấp được tính ngay khi mod thấy làng, nên làng vanilla có sẵn thường bắt đầu trên cấp Xóm. Cấp chỉ tăng; người chơi ở gần thấy tiêu đề khi làng lên cấp.
+- **Mỗi nghề một việc** (trong giờ làm việc): người chăn cừu cho cừu sinh sản và xén lông; người bán thịt cho lợn sinh sản và bỏ thịt sống cùng than củi vào lò hun khói của mình; thợ thuộc da cho bò sinh sản và đổ nước vào vạc của mình; thợ làm tên cho gà sinh sản; ngư dân câu cá ở chỗ nước gần đó rồi bỏ cá tuyết hoặc cá hồi vào thùng của mình; mục sư chữa dân bị thương và chữa dân làng zombie trong làng (mỗi người tối đa một lần mỗi ngày; không đụng con có tên, bị dắt dây hay được người chơi giữ lại); người vẽ bản đồ đi một vòng quanh rìa làng. Thợ rèn giáp và thợ rèn vũ khí làm làng an toàn hơn, thợ rèn công cụ giúp xây nhanh hơn (mỗi người +10%, tối đa +30%), có người vẽ bản đồ thì bán kính xây rộng thêm 16. Gia súc chỉ được cho sinh sản tới giới hạn mỗi loại (tăng theo cấp làng) và không bao giờ bị giết; con có tên hoặc bị dắt dây không bị đụng tới.
+- **Tên:** mỗi làng có một cái tên hợp với phong cách ("Làng Suối Bạc"). Mỗi nhà là một hộ có họ riêng, và dân làng mang họ của hộ có giường họ ngủ ("Trần Minh"). Tên đặt bằng name tag hoặc do mod khác đặt không bao giờ bị thay. Lính gác của Guard Villagers được đặt tên "Lính gác <tên>". Bước vào làng sẽ thấy tiêu đề ghi tên làng, cấp, số dân và tâm trạng.
+- **Lời nói:** thỉnh thoảng một dân làng gần người chơi nói một câu ngắn trên đầu, chọn theo điều đang thật sự xảy ra: nhu cầu chưa đủ, công trình đang xây, em bé mới sinh, người vừa mất, việc của nghề mình, dự định của trưởng làng, tâm trạng, hay lời chào. Chữ là một text display vanilla, tự biến mất sau vài giây; chữ còn sót lại (ví dụ sau khi game bị tắt đột ngột) bị xóa ngay khi được nạp.
+- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
 - **Cây:** tối đa 4 cây tự nhiên mọc trong chỗ đặt nhà được chặt trước, không rơi đồ, và chỗ không có cây luôn được ưu tiên. Cây chỉ tính là tự nhiên khi có lá tự nhiên (không phải lá do người chơi đặt), nên nhà gỗ và cây trang trí của người chơi không bao giờ bị đụng tới. Cây khổng lồ và cây có tổ ong được giữ nguyên. Xây xong, mỗi cây đã chặt được trồng lại một cây non cùng loại, cách nhà 3–8 khối; nếu làng có nông dân thì một nông dân đi tới trồng.
 - **Thứ tự xây:** móng, rồi dọn cỏ và san đất, rồi dựng nhà từng tầng từ dưới lên, cuối cùng mới đặt cửa, giường, đuốc, thảm và đồ trang trí. Khối chỉ được đặt vào ô trống hoặc ô có thứ thay thế được như cỏ. Khối người chơi đặt chắn đường được giữ nguyên. Rương không có đồ bên trong.
 - **Thợ xây:** ưu tiên dân thất nghiệp, rồi thợ đá, rồi bất kỳ ai, trừ dân ngốc (nitwit) và trẻ con. Thợ xây phải đứng trong phạm vi `builderReach` khối mới đặt được, có vung tay và cầm khối đang đặt. Nếu thợ xây chết hoặc 60 giây không tới được công trường thì người khác thay. Không còn ai thì nhà tự xây với nửa tốc độ.
@@ -49,12 +54,13 @@ Mọi lệnh cần quyền cấp 2 (OP). "Làng gần nhất" là làng đã ghi
 
 | Lệnh | Tác dụng |
 |---|---|
-| `/livingvillages status` | Thông tin làng gần nhất: vị trí chuông, phong cách, số dân, giường (tổng/trống), số nhà đã xây, dự án hiện tại (mẫu nhà, tiến độ, thợ xây), thời gian chờ còn lại, bốn nhu cầu dạng thanh, tâm trạng, trưởng làng và điều họ muốn làm |
+| `/livingvillages status` | Thông tin làng gần nhất: tên, vị trí chuông, phong cách, số dân, giường (tổng/trống), số công trình đã xây và giới hạn, cấp làng, dự án hiện tại (mẫu, tiến độ, thợ xây), thời gian chờ còn lại, bốn nhu cầu dạng thanh, tâm trạng, tác dụng của các nghề, trưởng làng cùng điều họ muốn xây và lý do |
 | `/livingvillages list` | Liệt kê các làng đã ghi nhận trong thế giới (chiều không gian) hiện tại |
-| `/livingvillages build` | Bắt làng gần nhất xây nhà ngay, bỏ qua điều kiện giường và thời gian chờ (vẫn tính giới hạn số nhà) |
-| `/livingvillages build instant` | Như trên nhưng dựng xong cả nhà ngay lập tức (hoặc hoàn thành ngay dự án đang xây). Dùng để thử |
+| `/livingvillages build` | Bắt đầu ngay công trình trưởng làng muốn (không cần gì thì xây nhà ở), bỏ qua thời gian chờ và các lần tìm chỗ thất bại (vẫn tính giới hạn công trình) |
+| `/livingvillages build instant` | Như trên nhưng dựng xong cả công trình ngay lập tức (hoặc hoàn thành ngay dự án đang xây). Dùng để thử |
 | `/livingvillages cancel` | Hủy dự án hiện tại. Các khối đã đặt vẫn giữ nguyên |
-| `/livingvillages templates [kiểu]` | Liệt kê mẫu nhà của làng gần nhất, hoặc của một kiểu: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
+| `/livingvillages templates [kiểu]` | Liệt kê mẫu công trình theo nhóm, của làng gần nhất hoặc của một kiểu: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
+| `/livingvillages rename <tên>` | Đổi tên làng gần nhất |
 | `/livingvillages pause` / `resume` | Tạm dừng / tiếp tục toàn bộ mod (lưu vào mục `enabled` của config) |
 | `/livingvillages speed <0.1–10>` | Hệ số tốc độ xây (lưu vào config) |
 | `/livingvillages reload` | Nạp lại `config/livingvillages.json` |
@@ -68,15 +74,15 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `language` | `vi_vn` | Ngôn ngữ của mọi chữ: `vi_vn` hoặc `en_us` |
 | `enabled` | `true` | Công tắc chính (`pause`/`resume`) |
 | `scanIntervalTicks` | `100` | Bao lâu dò chuông quanh người chơi một lần |
-| `manageIntervalTicks` | `40` | Bao lâu mỗi làng xét việc khởi công một lần |
+| `manageIntervalTicks` | `40` | Bao lâu mỗi làng cập nhật nhu cầu, cấp, trưởng làng và quyết định xây gì một lần |
 | `scanRadius` | `64` | Bán kính dò chuông quanh mỗi người chơi |
 | `villageRadius` | `48` | Bán kính quanh chuông để đếm dân và giường (tự nới rộng cho bao hết các nhà mod đã xây) |
 | `villageMergeRadius` | `48` | Các chuông gần nhau hơn khoảng này được tính là cùng một làng |
 | `activeRange` | `128` | Làng chỉ hoạt động khi có người chơi trong khoảng này |
 | `freeBedThreshold` | `0` | Bắt đầu xây khi số giường trống ≤ giá trị này |
-| `maxHousesPerVillage` | `10` | Số nhà mod xây tối đa cho mỗi làng |
+| `maxHousesPerVillage` | `10` | Số công trình mod xây tối đa cho mỗi làng. Chỉ dùng khi tắt cấp làng; bật thì theo cấp |
 | `cooldownTicks` | `24000` | Thời gian chờ sau khi xây xong một nhà (24000 = một ngày) |
-| `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Khoảng cách từ chuông tới nhà mới |
+| `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Khoảng cách từ chuông tới công trình mới (bật cấp làng thì bán kính của cấp thay cho giá trị tối đa) |
 | `siteAttempts` | `48` | Số chỗ thử mỗi lần tìm vị trí |
 | `margin` | `2` | Khoảng trống chừa quanh nhà |
 | `maxHeightDifference` | `3` | Độ chênh cao tối đa của mặt đất ở chỗ xây |
@@ -101,15 +107,40 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `attackPenalty` | `10` | Điểm an ninh mất cho mỗi lần quái tấn công dân gần đây |
 | `attackHalfLifeTicks` | `24000` | Số lần bị tấn công giảm một nửa sau thời gian này |
 | `moodEffectTicks` | `72000` | Ảnh hưởng của sự kiện lên tâm trạng nhạt dần hết sau thời gian này |
-| `needThreshold` | `40` | Nhu cầu dưới mức này là chưa đủ (dùng từ v2-GĐ 3) |
+| `needThreshold` | `40` | Nhu cầu dưới mức này là chưa đủ, và trưởng làng sẽ xây để bù |
 | `leaderAbsentTicks` | `12000` | Trưởng làng vắng mặt lâu hơn thế thì được thay |
-| `workTimeoutTicks` | `600` | Thời gian dân làng được đi tới chỗ làm việc (ví dụ trồng cây) trước khi việc được làm mà không cần họ |
+| `workTimeoutTicks` | `600` | Thời gian dân làng được đi tới chỗ làm việc trước khi bỏ việc đó (cây non khi đó được trồng thẳng) |
+| `levelsEnabled` | `true` | Cấp làng (cần `needsEnabled`); tắt thì giới hạn là `maxHousesPerVillage` |
+| `levelRequirements` | 8 dân, 3 nghề / 20, 6, thủ thư / 35, 10, thủ thư và mục sư | Điều kiện lên Làng, Thị trấn, Thành phố |
+| `levelMaxBuildings` | `[4, 10, 20, 32]` | Số công trình mod được xây ở mỗi cấp |
+| `buildRadiusByLevel` | `[48, 64, 80, 96]` | Khoảng cách xa nhất tới chuông ở mỗi cấp |
+| `levelCanDecrease` | `false` | Cho làng tụt cấp khi không còn đủ điều kiện |
+| `workEnabled` | `true` | Việc làm của các nghề |
+| `workIntervalTicks` | `600` | Bao lâu dân làng được chọn việc một lần |
+| `workChance` | `0.5` | Xác suất chọn việc mỗi lần (×1,25 khi hạnh phúc, ×0,75 khi khốn khó) |
+| `professionWork` | tất cả `true` | Bật/tắt từng nghề |
+| `maxAnimalsPerType` | `[6, 8, 12, 16]` | Số gia súc mỗi loại tối đa làng cho sinh sản, theo cấp |
+| `maxFishInBarrel` | `16` | Số cá ngư dân để trong thùng |
+| `toolsmithBuildSpeedBonus` / `toolsmithBuildSpeedMax` | `0.1` / `0.3` | Tốc độ xây mỗi thợ rèn công cụ thêm vào, và tối đa |
+| `cartographerRadiusBonus` | `16` | Bán kính xây thêm khi có người vẽ bản đồ |
+| `smithSafetyBonus` / `smithSafetyMax` | `5` / `20` | Điểm an ninh mỗi thợ rèn giáp hoặc vũ khí thêm vào, và tối đa |
+| `clericCureZombies` | `true` | Mục sư chữa dân làng zombie |
+| `clericCuresPerDay` | `1` | Số lần chữa mỗi mục sư mỗi ngày |
+| `clericCureRange` | `4` | Khoảng cách mục sư đứng cách dân làng zombie |
+| `nameVillagers` / `nameGuards` | `true` / `true` | Đặt tên cho dân làng và lính gác |
+| `showEntryTitle` | `true` | Tiêu đề khi người chơi bước vào làng |
+| `greetingCooldownTicks` | `6000` | Thời gian trước khi cùng một làng chào lại cùng một người chơi |
+| `voiceEnabled` | `true` | Dân làng nói chuyện |
+| `voiceRange` | `24` | Dân làng trong khoảng này quanh người chơi mới nói |
+| `voiceIntervalTicks` / `voiceChance` | `200` / `0.35` | Bao lâu làng được nói một lần, và xác suất (dân ngốc gấp đôi) |
+| `maxBubblesPerVillage` | `2` | Số câu hiện cùng lúc mỗi làng |
+| `bubbleDurationTicks` | `80` | Thời gian một câu hiện trên đầu |
 
 ## Tương thích
 
-- **Better Village:** hỗ trợ sẵn, không cần cài đặt gì thêm. Mẫu nhà của Better Village tự được dùng. Nhà có khối nghề (lò rèn, thư viện…) bị bỏ qua dù Better Village có đặt giường trong đó.
+- **Better Village:** hỗ trợ sẵn, không cần cài đặt gì thêm. Mẫu của Better Village tự được dùng và phân loại như trên. Better Village đặt giường vào hầu hết công trình nghề, nên có khối nghề là xưởng; giường trong xưởng, nông trại, chuồng vẫn được tính vào nhà ở sau khi xây.
 - **Regrowth:** tường, hàng rào, đường và đuốc của Regrowth được coi như khối bình thường. Mod không chọn chỗ xây đè lên chúng, và khối Regrowth đặt vào công trường thì được bỏ qua, không bị ghi đè.
-- **Guard Villagers:** lính gác không phải dân làng nên không bao giờ được chọn làm thợ xây.
+- **Guard Villagers:** lính gác không phải dân làng: không làm thợ xây hay trưởng làng, không tính vào dân số, nhưng được tính vào an ninh, có tên và có câu nói riêng. Mục sư chỉ chữa cho dân làng, vì Guard Villagers đã tự chữa cho lính gác.
 - Datapack sửa bộ nhà làng cũng dùng được. Mẫu nhà rộng hơn 24×24 hoặc cao hơn 20 khối bị bỏ qua.
 
 ## Hiệu năng
@@ -125,4 +156,4 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 ## Gỡ mod
 
-Nhà đã xây vẫn còn như khối bình thường, và dân làng giữ tên mà mod đã đặt. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.
+Công trình đã xây vẫn còn như khối bình thường, và dân làng giữ tên mà mod đã đặt. Câu nói đang hiện lúc gỡ mod sẽ nằm lại giữa không trung; xóa bằng `/kill @e[tag=livingvillages_bubble]`. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.

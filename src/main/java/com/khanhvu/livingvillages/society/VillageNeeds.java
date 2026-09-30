@@ -3,6 +3,7 @@ package com.khanhvu.livingvillages.society;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -63,7 +64,8 @@ public record VillageNeeds(int housing, int food, int jobs, int safety) {
 		// Safety: an undefended but peaceful village is neutral (50); enough defenders make it 100; recent attacks lower it.
 		int defenders = countDefenders(level, bell, radius);
 		double wantedDefenders = Math.max(1.0, adultCount * config.defendersPerVillager);
-		int base = 50 + percent(defenders, wantedDefenders) / 2;
+		// Armorers and weaponsmiths make the village sturdier (v2-GĐ 4).
+		int base = 50 + percent(defenders, wantedDefenders) / 2 + ProfessionWork.bonuses(adults).safety();
 		double attacks = AttackTracker.currentScore(village, level.getGameTime());
 		int safety = Mth.clamp((int) Math.round(base - attacks * config.attackPenalty), 0, 100);
 

@@ -59,7 +59,7 @@ public final class BuildOrder {
 	private BuildOrder() {
 	}
 
-	public static List<BuildStep> create(HouseTemplate house, BuildSite site, BlockState foundation) {
+	public static List<BuildStep> create(BuildingTemplate house, BuildSite site, BlockState foundation) {
 		int floorY = site.floorY(house);
 		BoundingBox footprint = site.footprint();
 
@@ -70,7 +70,7 @@ public final class BuildOrder {
 			if (info.state().isAir()) {
 				continue; // clearing already empties the house volume
 			}
-			BlockPos pos = HouseTemplate.toWorld(info.pos(), site.origin(), site.rotation());
+			BlockPos pos = BuildingTemplate.toWorld(info.pos(), site.origin(), site.rotation());
 			placements.put(pos, new BuildStep.Placement(pos, info.state().rotate(site.rotation()), info.nbt()));
 			long column = BlockPos.asLong(pos.getX(), 0, pos.getZ());
 			int lowest = pos.getY() < floorY ? pos.getY() : Integer.MAX_VALUE;

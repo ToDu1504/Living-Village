@@ -1,0 +1,10 @@
+{
+	"pattern": "%s",
+	"names": {
+		"plains": ["Silverbrook", "Greenfield", "Meadowbrook", "Willowford", "Oakridge", "Brightwater", "Goldenfield", "Millbrook", "Harvest Hollow", "Clearwater", "Amberfield", "Stillwater"],
+		"desert": ["Sandhollow", "Sweetwell", "Sunreach", "Dunecrest", "Oasis Rest", "Redrock", "Dustvale", "Cactus Bend", "Goldensand", "Mirage Point"],
+		"savanna": ["Acacia Rise", "Tallgrass", "Duskfield", "Windplain", "Redearth", "Lonetree", "Sunset Flats", "Dryford", "Wildhorse", "Amber Plain"],
+		"snowy": ["Frosthold", "Whitepeak", "Icemere", "Northwind", "Snowfall", "Hearthstone", "Pinefrost", "Glacier Rest", "Wintervale", "Coldbrook"],
+		"taiga": ["Pinewood", "Coldspring", "Mossvale", "Mistridge", "Sprucehill", "Foxden", "Stonecleft", "Fernhollow", "Shadepine", "Timberfall"]
+	}
+}

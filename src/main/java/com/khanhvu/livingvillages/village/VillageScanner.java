@@ -2,6 +2,7 @@ package com.khanhvu.livingvillages.village;
 
 import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -87,6 +88,7 @@ public final class VillageScanner {
 		VillageRecord record = registry.register(bell);
 		VillageAnalyzer.Stats stats = VillageAnalyzer.analyze(level, record);
 		VillageAnalyzer.ensureVillageType(record, stats, registry);
+		VillageLevel.update(level, record, stats); // first computation: sets the starting level silently
 		LivingVillages.debug("Registered village {} at {} ({}), {} adults, {} beds",
 				record.getId(), bell, record.getVillageType(), stats.adultVillagers(), stats.totalBeds());
 	}

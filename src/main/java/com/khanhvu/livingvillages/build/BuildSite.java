@@ -14,7 +14,7 @@ import java.util.List;
  * order stays deterministic.
  */
 public record BuildSite(BlockPos origin, Rotation rotation, BoundingBox footprint, List<BlockPos> treeRoots) {
-	public static BuildSite of(HouseTemplate house, BlockPos origin, Rotation rotation) {
+	public static BuildSite of(BuildingTemplate house, BlockPos origin, Rotation rotation) {
 		return new BuildSite(origin.immutable(), rotation, house.worldBox(origin, rotation), List.of());
 	}
 
@@ -27,7 +27,7 @@ public record BuildSite(BlockPos origin, Rotation rotation, BoundingBox footprin
 	}
 
 	/** World y of the house floor, the first free block above the ground. */
-	public int floorY(HouseTemplate house) {
+	public int floorY(BuildingTemplate house) {
 		return origin.getY() + house.floorY();
 	}
 }

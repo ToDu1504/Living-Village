@@ -39,7 +39,7 @@ public class BuildProject {
 
 	// Runtime state, not saved.
 	@Nullable
-	private HouseTemplate house;
+	private BuildingTemplate house;
 	@Nullable
 	private List<BuildStep> steps;
 	private int totalBlocks;
@@ -58,7 +58,7 @@ public class BuildProject {
 		this.treeRoots = List.copyOf(treeRoots);
 	}
 
-	public static BuildProject create(HouseTemplate house, BuildSite site) {
+	public static BuildProject create(BuildingTemplate house, BuildSite site) {
 		return new BuildProject(house.id(), site.origin(), site.rotation(), site.footprint(), site.treeRoots());
 	}
 
@@ -113,7 +113,7 @@ public class BuildProject {
 		if (steps != null) {
 			return true;
 		}
-		HouseTemplate found = HouseTemplateProvider.findById(level, type, templateId);
+		BuildingTemplate found = BuildingTemplateProvider.findById(level, type, templateId);
 		if (found == null) {
 			return false;
 		}
@@ -166,7 +166,7 @@ public class BuildProject {
 	}
 
 	@Nullable
-	public HouseTemplate getHouse() {
+	public BuildingTemplate getHouse() {
 		return house;
 	}
 

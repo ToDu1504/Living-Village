@@ -2,7 +2,7 @@
 
 *[Tiếng Việt](README.vi.md)*
 
-A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. When a village runs out of free beds, a villager becomes a builder, walks to a free spot near the bell and builds a new house block by block. The house comes from the village's own house pool, so it always matches the village style. If Better Village is installed, the new houses use Better Village designs.
+A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village.
 
 No new blocks, items, entities or textures. Players do not need the mod on their client.
 
@@ -22,13 +22,18 @@ No new blocks, items, entities or textures. Players do not need the mod on their
 ## How it works
 
 - **Villages** are found by their bell (the "meeting point"). Each bell is one village. The village style (plains, desert, savanna, snowy, taiga) is taken from its villagers the first time it is seen and never changes. Jungle and swamp villagers count as plains.
-- **A new house starts** when all of these are true:
-  - the village has at least 2 adult villagers;
-  - it has no free bed (see `freeBedThreshold`);
-  - it has built fewer than `maxHousesPerVillage` houses;
-  - one Minecraft day (`cooldownTicks`) has passed since its last house.
-- **House designs** are read at runtime from the pool `minecraft:village/<style>/houses`. Only houses with a bed and no job-site block are used, so no smithies or farms. Datapacks and mods that change these pools are picked up automatically.
-- **The building site** is flat, dry, natural ground within 12–64 blocks of the bell. The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
+- **Building designs** are read at runtime from the pool `minecraft:village/<style>/houses` and sorted by what is inside them: a **workshop** has a job-site block (it is a workshop for that profession), a **farm** has farmland and a composter, a **pen** is a fenced enclosure without beds, a **house** has a bed. Other pieces (decorations, meeting points) are never built. Datapacks and mods that change these pools are picked up automatically.
+- **What to build** is decided by the leader, at most once per Minecraft day (`cooldownTicks`) and only with at least 2 adult villagers. The first unmet need wins:
+  1. housing below `needThreshold` → a house;
+  2. food below `needThreshold` → a farm (not while a composter still waits for a farmer: then the village lacks people, not farms);
+  3. jobs below `needThreshold` → a workshop for the profession the village has fewest of;
+  4. animal keepers (shepherd, butcher, leatherworker, fletcher) but none of their animals nearby → a pen, which gets a pair of those animals when finished;
+  5. otherwise nothing (`status` says why: the village is fine, or it must grow before building more).
+- **Village levels:** Hamlet, Village, Town, City. A level needs a number of adults and of different professions (Town also a librarian, City a librarian and a cleric) and sets how many buildings the mod may build (4 / 10 / 20 / 32) and how far from the bell (48 / 64 / 80 / 96 blocks). The level is computed as soon as a village is found, so an existing vanilla village often starts above Hamlet. Levels only go up; nearby players see a title when a village levels up.
+- **Professions at work** (during their working hours): shepherds breed and shear sheep, butchers breed pigs and put raw meat and charcoal into their own smoker, leatherworkers breed cows and refill their own cauldron, fletchers breed chickens, fishermen fish at nearby water and put cod or salmon into their own barrel, clerics heal hurt villagers and cure zombie villagers in the village (at most once a day each; never named or leashed ones, or ones kept by a player), cartographers walk around the edge of the village. Armorers and weaponsmiths make the village safer, toolsmiths make it build faster (+10% each, up to +30%), a cartographer widens the building radius by 16. Animals are bred only up to a limit per kind that grows with the level, and are never killed; named or leashed animals are left alone.
+- **Names:** every village gets a name that fits its style. Each house is a household with a family name, and villagers are named after the household of their bed. Names set with a name tag or by another mod are never replaced. Guard Villagers guards are named "Guard <name>". Walking into a village shows its name, level, population and mood as a title.
+- **Speech:** now and then a villager near a player says a short line above their head, picked from what really happens: unmet needs, a building going up, a new baby, a death, their own work, the leader's plans, the mood, or a greeting. The text is a vanilla text display that disappears after a few seconds; leftover text (for example after a crash) is removed as soon as it loads.
+- **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
 - **Trees:** up to 4 natural trees growing inside the footprint are felled first, with no item drops, and sites without trees are preferred. A tree counts as natural only if it has natural (non-persistent) leaves, so log houses and trees decorated with player-placed leaves are never touched. Giant trees and trees with a bee nest stay. After the house is done, one sapling of the same kind per felled tree is replanted 3–8 blocks away; a farmer walks there to plant it if the village has one.
 - **Build order:** foundation, then clearing plants and levelling earth, then the structure layer by layer from the bottom, then doors, beds, torches, carpets and other decorations. A block is only ever placed into air or a replaceable block such as grass. Anything a player put in the way is left alone. Chests get no loot.
 - **The builder:** unemployed villagers are chosen first, then masons, then anyone except nitwits and children. The builder must be within `builderReach` blocks of the work, and swings its arm and holds the block it places. If the builder dies or cannot reach the site for 60 seconds, another villager takes over. If nobody is available, the house builds itself at half speed.
@@ -46,12 +51,13 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 | Command | Effect |
 |---|---|
-| `/livingvillages status` | Nearest village: bell position, style, villagers, beds (total/free), houses built, current project (house, progress, builder), cooldown left, the four needs as bars, mood, and the leader with what they want to do |
+| `/livingvillages status` | Nearest village: name, bell position, style, villagers, beds (total/free), buildings built and the limit, level, current project (design, progress, builder), cooldown left, the four needs as bars, mood, what the professions add, and the leader with what they want to build and why |
 | `/livingvillages list` | All villages known in this dimension |
-| `/livingvillages build` | Start a house now in the nearest village, ignoring beds and cooldown (the house limit still applies) |
-| `/livingvillages build instant` | Same, but place the whole house at once (or finish the running project at once). For testing |
+| `/livingvillages build` | Start what the leader wants now (a house if nothing is needed), ignoring cooldown and past failed searches (the building limit still applies) |
+| `/livingvillages build instant` | Same, but place the whole building at once (or finish the running project at once). For testing |
 | `/livingvillages cancel` | Stop the current project. Blocks already placed stay |
-| `/livingvillages templates [style]` | List the house designs found for the nearest village, or for a style: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
+| `/livingvillages templates [style]` | List the building designs, grouped by kind, for the nearest village or for a style: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
+| `/livingvillages rename <name>` | Rename the nearest village |
 | `/livingvillages pause` / `resume` | Stop or restart the whole mod (saved as `enabled` in the config) |
 | `/livingvillages speed <0.1–10>` | Build speed multiplier (saved in the config) |
 | `/livingvillages reload` | Reload `config/livingvillages.json` |
@@ -65,15 +71,15 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `language` | `vi_vn` | Language of all texts: `vi_vn` or `en_us` |
 | `enabled` | `true` | Master switch (`pause`/`resume`) |
 | `scanIntervalTicks` | `100` | How often to look for bells around players |
-| `manageIntervalTicks` | `40` | How often each village checks whether to start a house |
+| `manageIntervalTicks` | `40` | How often each village updates its needs, level and leader and decides what to build |
 | `scanRadius` | `64` | Bell search radius around each player |
 | `villageRadius` | `48` | Radius around the bell for counting villagers and beds (widened automatically to cover houses the mod built) |
 | `villageMergeRadius` | `48` | Bells closer than this belong to the same village |
 | `activeRange` | `128` | A village only works while a player is this close |
 | `freeBedThreshold` | `0` | Start building when free beds ≤ this |
-| `maxHousesPerVillage` | `10` | Houses the mod builds per village, at most |
+| `maxHousesPerVillage` | `10` | Buildings the mod builds per village, at most. Only used when levels are off; otherwise the level decides |
 | `cooldownTicks` | `24000` | Wait after a finished house (24000 = one day) |
-| `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Distance from the bell for new houses |
+| `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Distance from the bell for new buildings (with levels on, the level's radius replaces the maximum) |
 | `siteAttempts` | `48` | Candidate spots tried per search |
 | `margin` | `2` | Free border around a house |
 | `maxHeightDifference` | `3` | Largest ground height difference allowed on a site |
@@ -98,15 +104,40 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `attackPenalty` | `10` | Safety lost per recent monster attack on a villager |
 | `attackHalfLifeTicks` | `24000` | Recent attacks fade by half over this time |
 | `moodEffectTicks` | `72000` | Mood effects of events fade to nothing over this time |
-| `needThreshold` | `40` | A need below this counts as unmet (used from v2 stage 3) |
+| `needThreshold` | `40` | A need below this counts as unmet, and the leader builds for it |
 | `leaderAbsentTicks` | `12000` | A leader away this long is replaced |
-| `workTimeoutTicks` | `600` | How long a villager may take to walk to a task (e.g. replanting) before it is done without them |
+| `workTimeoutTicks` | `600` | How long a villager may take to walk to a task before it is dropped (a sapling is then planted without them) |
+| `levelsEnabled` | `true` | Village levels (needs `needsEnabled`); off = the limit is `maxHousesPerVillage` |
+| `levelRequirements` | 8 adults, 3 professions / 20, 6, librarian / 35, 10, librarian and cleric | What Village, Town and City need |
+| `levelMaxBuildings` | `[4, 10, 20, 32]` | Buildings the mod may build at each level |
+| `buildRadiusByLevel` | `[48, 64, 80, 96]` | Farthest distance from the bell at each level |
+| `levelCanDecrease` | `false` | Let a village lose a level when it no longer qualifies |
+| `workEnabled` | `true` | Profession work |
+| `workIntervalTicks` | `600` | How often villagers may pick a task |
+| `workChance` | `0.5` | Chance to pick a task each time (×1.25 when happy, ×0.75 when miserable) |
+| `professionWork` | all `true` | Switch per profession |
+| `maxAnimalsPerType` | `[6, 8, 12, 16]` | Animals of one kind the village breeds up to, by level |
+| `maxFishInBarrel` | `16` | Fish a fisherman keeps in their barrel |
+| `toolsmithBuildSpeedBonus` / `toolsmithBuildSpeedMax` | `0.1` / `0.3` | Build speed per toolsmith, and the most in total |
+| `cartographerRadiusBonus` | `16` | Extra building radius with a cartographer |
+| `smithSafetyBonus` / `smithSafetyMax` | `5` / `20` | Safety per armorer or weaponsmith, and the most in total |
+| `clericCureZombies` | `true` | Clerics cure zombie villagers |
+| `clericCuresPerDay` | `1` | Cures per cleric per day |
+| `clericCureRange` | `4` | Distance the cleric keeps from the zombie villager |
+| `nameVillagers` / `nameGuards` | `true` / `true` | Give names to villagers and guards |
+| `showEntryTitle` | `true` | Title when a player walks into a village |
+| `greetingCooldownTicks` | `6000` | Time before the same village greets the same player again |
+| `voiceEnabled` | `true` | Villagers talk |
+| `voiceRange` | `24` | Villagers this close to a player may talk |
+| `voiceIntervalTicks` / `voiceChance` | `200` / `0.35` | How often a village may say something, and the chance (twice for nitwits) |
+| `maxBubblesPerVillage` | `2` | Lines shown at once per village |
+| `bubbleDurationTicks` | `80` | How long a line stays |
 
 ## Compatibility
 
-- **Better Village:** supported with no extra setup. Its house designs are used automatically. Houses with job sites (smithies, libraries…) are skipped even though Better Village gives them beds.
+- **Better Village:** supported with no extra setup. Its designs are used automatically and sorted the same way. Better Village puts beds in most work buildings, so a job site always makes a building a workshop; beds in workshops, farms and pens still count for housing once built.
 - **Regrowth:** its walls, fences, paths and torches are treated like any other block. Sites are not placed on them, and a block Regrowth puts on a construction site is simply skipped.
-- **Guard Villagers:** guards are not villagers, so they are never chosen as builders.
+- **Guard Villagers:** guards are not villagers: they never become builders or leaders and do not count as population, but they count for safety, get names and say their own lines. Clerics only heal villagers, since Guard Villagers already heals its guards.
 - Datapacks that edit the village house pools also work. Designs larger than 24×24 or taller than 20 blocks are ignored.
 
 ## Performance
@@ -122,4 +153,4 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 ## Removing the mod
 
-Houses that were built stay as ordinary blocks, and villagers keep the names the mod gave them. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.
+Buildings that were built stay as ordinary blocks, and villagers keep the names the mod gave them. A line of speech that was showing when the mod was removed stays in the air; remove it with `/kill @e[tag=livingvillages_bubble]`. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.

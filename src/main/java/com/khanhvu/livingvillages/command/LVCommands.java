@@ -2,10 +2,13 @@ package com.khanhvu.livingvillages.command;
 
 import com.khanhvu.livingvillages.build.BlockPlacer;
 import com.khanhvu.livingvillages.build.BuildProject;
-import com.khanhvu.livingvillages.build.HouseTemplate;
-import com.khanhvu.livingvillages.build.HouseTemplateProvider;
+import com.khanhvu.livingvillages.build.BuildingKind;
+import com.khanhvu.livingvillages.build.BuildingTemplate;
+import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.NamePool;
+import com.khanhvu.livingvillages.identity.VillageIdentity;
+import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.society.VillageLeader;
 import com.khanhvu.livingvillages.society.VillageMood;
@@ -16,6 +19,7 @@ import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -58,6 +62,8 @@ public final class LVCommands {
 				.then(Commands.literal("pause").executes(ctx -> setEnabled(ctx, false)))
 				.then(Commands.literal("resume").executes(ctx -> setEnabled(ctx, true)))
 				.then(Commands.literal("reload").executes(LVCommands::reload))
+				.then(Commands.literal("rename")
+						.then(Commands.argument("name", StringArgumentType.greedyString()).executes(LVCommands::rename)))
 				.then(Commands.literal("speed")
 						.then(Commands.argument("multiplier", DoubleArgumentType.doubleArg(0.1, 10.0))
 								.executes(LVCommands::speed)))
@@ -86,13 +92,17 @@ public final class LVCommands {
 				: Math.max(0, record.getLastBuildTick() + config.cooldownTicks - level.getGameTime());
 
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.header",
-				formatPos(bell), typeName(record.getVillageType()), stateName(record)), false);
+				VillageIdentity.displayName(record), formatPos(bell), typeName(record.getVillageType()), stateName(record)), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.villagers",
 				stats.adultVillagers()), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.beds",
 				stats.totalBeds(), stats.freeBeds()), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.houses",
-				record.getHousesBuilt(), config.maxHousesPerVillage), false);
+				record.getHousesBuilt(), VillageLevel.buildLimit(record)), false);
+		if (VillageLevel.enabled() && record.getLevel() >= 0) {
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.level",
+					LVText.tr(VillageLevel.langKey(record.getLevel())), VillageLevel.buildLimit(record), VillageLevel.buildRadius(record)), false);
+		}
 		source.sendSuccess(() -> projectLine(level, record), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.cooldown",
 				cooldownLeft, cooldownLeft / 20), false);
@@ -111,8 +121,13 @@ public final class LVCommands {
 				VillageSociety.bar(needs.jobs()), VillageSociety.bar(needs.safety())), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.mood",
 				LVText.tr(VillageMood.Level.of(mood).langKey()), mood), false);
+		if (LVConfig.get().workEnabled) {
+			ProfessionWork.Bonuses bonuses = ProfessionWork.bonuses(stats.adults());
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.work",
+					bonuses.safety(), Math.round(bonuses.buildSpeed() * 100), bonuses.radius()), false);
+		}
 		Component leader = VillageLeader.displayName(level, record);
-		Component wish = VillageSociety.describeWish(level, record, stats);
+		Component wish = VillageSociety.describeWish(level, record, stats, needs);
 		source.sendSuccess(() -> leader == null
 				? LVText.tr("livingvillages.command.status.leader_none", wish)
 				: LVText.tr("livingvillages.command.status.leader", leader, wish), false);
@@ -124,7 +139,7 @@ public final class LVCommands {
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.list.header", villages.size()), false);
 		for (VillageRecord record : villages) {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.list.entry",
-					formatPos(record.getBellPos()), typeName(record.getVillageType()),
+					VillageIdentity.displayName(record) + " (" + formatPos(record.getBellPos()) + ")", typeName(record.getVillageType()),
 					record.getHousesBuilt(), stateName(record)), false);
 		}
 		return villages.size();
@@ -145,21 +160,21 @@ public final class LVCommands {
 		VillageRegistry registry = VillageRegistry.get(level);
 		BuildProject project = record.getProject();
 		if (project == null) {
-			LVConfig config = LVConfig.get();
-			if (record.getHousesBuilt() >= config.maxHousesPerVillage) {
-				source.sendFailure(LVText.tr("livingvillages.command.build.max_houses", config.maxHousesPerVillage));
+			int limit = VillageLevel.buildLimit(record);
+			if (record.getHousesBuilt() >= limit) {
+				source.sendFailure(LVText.tr("livingvillages.command.build.max_houses", limit));
 				return 0;
 			}
 			VillageAnalyzer.ensureVillageType(record, VillageAnalyzer.analyze(level, record), registry);
 			VillageType type = VillageTicker.villageType(record);
-			int houseCount = HouseTemplateProvider.getHouses(level, type).size();
+			int houseCount = BuildingTemplateProvider.getHouses(level, type).size();
 			if (houseCount == 0) {
 				source.sendFailure(LVText.tr("livingvillages.command.build.no_template", typeName(type)));
 				return 0;
 			}
 			record.setFailedSiteAttempts(0);
 			record.setNextSiteAttemptTick(0);
-			project = VillageTicker.startProject(level, registry, record, true);
+			project = VillageTicker.startForced(level, registry, record);
 			if (project == null) {
 				source.sendFailure(LVText.tr("livingvillages.command.build.no_site", houseCount));
 				return 0;
@@ -211,6 +226,20 @@ public final class LVCommands {
 		return 1;
 	}
 
+	private static int rename(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		String name = StringArgumentType.getString(context, "name").trim();
+		record.setName(name);
+		VillageRegistry.get(source.getLevel()).setDirty();
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.rename.done", name), true);
+		return 1;
+	}
+
 	private static int reload(CommandContext<CommandSourceStack> context) {
 		CommandSourceStack source = context.getSource();
 		boolean ok = LVConfig.load();
@@ -255,16 +284,19 @@ public final class LVCommands {
 	}
 
 	private static int listTemplates(CommandSourceStack source, VillageType type) {
-		List<HouseTemplate> houses = HouseTemplateProvider.getHouses(source.getLevel(), type);
+		List<BuildingTemplate> buildings = BuildingTemplateProvider.getBuildings(source.getLevel(), type);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.templates.header",
-				houses.size(), typeName(type), type.getHousePool().toString()), false);
-		for (HouseTemplate house : houses) {
-			BoundingBox box = house.contentBox();
-			source.sendSuccess(() -> LVText.tr("livingvillages.command.templates.entry",
-					house.id().toString(), box.getXSpan() + "x" + box.getYSpan() + "x" + box.getZSpan(),
-					house.bedCount(), house.weight(), house.floorY()), false);
+				buildings.size(), typeName(type), type.getHousePool().toString()), false);
+		for (BuildingKind kind : BuildingKind.values()) {
+			for (BuildingTemplate building : BuildingTemplateProvider.ofKind(buildings, kind)) {
+				BoundingBox box = building.contentBox();
+				Component what = VillageSociety.buildingName(kind, building.profession());
+				source.sendSuccess(() -> LVText.tr("livingvillages.command.templates.entry",
+						what, building.id().getPath(), box.getXSpan() + "x" + box.getYSpan() + "x" + box.getZSpan(),
+						building.bedCount(), building.weight(), building.floorY()), false);
+			}
 		}
-		return houses.size();
+		return buildings.size();
 	}
 
 	/** Nearest registered village to the command source, within activeRange. */

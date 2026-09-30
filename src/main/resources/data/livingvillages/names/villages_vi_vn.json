@@ -1,0 +1,10 @@
+{
+	"pattern": "Làng %s",
+	"names": {
+		"plains": ["Suối Bạc", "Đồng Xanh", "Cánh Đồng", "Bến Cỏ", "Gió Mát", "Hoa Vàng", "Lúa Chín", "Đồi Thông", "Nắng Sớm", "Cầu Gỗ", "An Bình", "Bình Yên"],
+		"desert": ["Đồi Cát", "Giếng Ngọt", "Nắng Vàng", "Cát Trắng", "Ốc Đảo", "Sa Mạc Hồng", "Gió Cát", "Xương Rồng", "Mặt Trời", "Đá Đỏ"],
+		"savanna": ["Keo Vàng", "Đồng Cỏ Cao", "Hoàng Hôn", "Gió Lộng", "Đất Đỏ", "Cây Cô Đơn", "Nắng Chiều", "Thảo Nguyên", "Bầy Ngựa", "Suối Cạn"],
+		"snowy": ["Tuyết Trắng", "Băng Giá", "Núi Tuyết", "Gió Bấc", "Sương Mai", "Hồ Băng", "Tuyết Rơi", "Lửa Ấm", "Thông Tuyết", "Đêm Trắng"],
+		"taiga": ["Rừng Thông", "Suối Lạnh", "Nấm Đỏ", "Đồi Sương", "Gỗ Thơm", "Rêu Xanh", "Cây Vân Sam", "Hang Cáo", "Khe Đá", "Mù Sương"]
+	}
+}

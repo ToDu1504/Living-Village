@@ -1,6 +1,7 @@
 package com.khanhvu.livingvillages.build;
 
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import net.minecraft.Util;
@@ -40,7 +41,7 @@ public final class SiteFinder {
 	private SiteFinder() {
 	}
 
-	public static Optional<BuildSite> find(ServerLevel level, VillageRecord village, HouseTemplate house, RandomSource random) {
+	public static Optional<BuildSite> find(ServerLevel level, VillageRecord village, BuildingTemplate house, RandomSource random) {
 		LVConfig config = LVConfig.get();
 		VillageRegistry registry = VillageRegistry.get(level);
 		BlockPos bell = village.getBellPos();
@@ -49,8 +50,9 @@ public final class SiteFinder {
 		BuildSite best = null;
 		for (int i = 0; i < attempts; i++) {
 			// Rings from the inner to the outer radius: closer to the bell first.
+			int maxDistance = Math.max(config.minBuildDistance, VillageLevel.buildRadius(village));
 			double radius = attempts == 1 ? config.minBuildDistance
-					: config.minBuildDistance + (config.maxBuildDistance - config.minBuildDistance) * (double) i / (attempts - 1);
+					: config.minBuildDistance + (maxDistance - config.minBuildDistance) * (double) i / (attempts - 1);
 			double angle = random.nextDouble() * Math.PI * 2.0;
 			int x = bell.getX() + Mth.floor(Math.cos(angle) * radius);
 			int z = bell.getZ() + Mth.floor(Math.sin(angle) * radius);
@@ -85,7 +87,7 @@ public final class SiteFinder {
 		return state.isAir() || (state.canBeReplaced() && state.getFluidState().isEmpty());
 	}
 
-	private static BuildSite tryCandidate(ServerLevel level, VillageRegistry registry, HouseTemplate house,
+	private static BuildSite tryCandidate(ServerLevel level, VillageRegistry registry, BuildingTemplate house,
 			int centerX, int centerZ, Rotation rotation, LVConfig config) {
 		BoundingBox local = house.worldBox(BlockPos.ZERO, rotation);
 		int originX = centerX - (local.minX() + local.maxX()) / 2;

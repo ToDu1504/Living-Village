@@ -46,6 +46,11 @@ public final class LVText {
 		return Component.literal(format(key, args));
 	}
 
+	/** Whether a text exists for {@code key} (in the selected language or en_us). */
+	public static boolean has(String key) {
+		return selected.containsKey(key) || fallback.containsKey(key);
+	}
+
 	public static String format(String key, Object... args) {
 		String pattern = selected.get(key);
 		if (pattern == null) {
