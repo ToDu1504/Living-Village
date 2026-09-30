@@ -4,6 +4,7 @@ import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.build.TreeFeller;
+import com.khanhvu.livingvillages.care.TorchLighter;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.config.LVConfig;
@@ -127,18 +128,19 @@ public final class WallBuilder {
 
 	/** Walls are built unless switched off, or left to Regrowth when asked to (spec v3 §3). */
 	public static boolean enabled() {
-		LVConfig config = LVConfig.get();
-		if (!config.wallsEnabled) {
-			return false;
-		}
-		if (config.deferToRegrowth && FabricLoader.getInstance().isModLoaded(REGROWTH)) {
+		return LVConfig.get().wallsEnabled && !deferred();
+	}
+
+	/** deferToRegrowth is set and Regrowth is installed: walls and village care are left to it (spec v3 §3). */
+	public static boolean deferred() {
+		if (LVConfig.get().deferToRegrowth && FabricLoader.getInstance().isModLoaded(REGROWTH)) {
 			if (!deferLogged) {
 				deferLogged = true;
-				LivingVillages.LOGGER.info("[LivingVillages] Regrowth is installed: village walls are left to it (deferToRegrowth)");
+				LivingVillages.LOGGER.info("[LivingVillages] Regrowth is installed: walls and village care are left to it (deferToRegrowth)");
 			}
-			return false;
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/** Whether the villager is building a wall now (for what villagers say). */
@@ -1090,7 +1092,18 @@ public final class WallBuilder {
 				continue;
 			}
 			BlockPos pos = BlockPos.of(key);
-			if (!level.isLoaded(pos) || !SiteFinder.isClearable(level.getBlockState(pos))) {
+			if (!level.isLoaded(pos)) {
+				continue;
+			}
+			BlockState state = level.getBlockState(pos);
+			if (VillageWalls.ringOf(walls.getBlocks().get(key)) == TorchLighter.TORCH_RING) {
+				if (!state.is(Blocks.TORCH)) {
+					walls.getBlocks().remove(key); // a torch that is gone is simply forgotten; a dark spot gets a new one
+					registry.setDirty();
+				}
+				continue;
+			}
+			if (!SiteFinder.isClearable(state)) {
 				continue;
 			}
 			int value = walls.getBlocks().remove(key);

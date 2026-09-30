@@ -327,5 +327,6 @@
 	"livingvillages.command.build.scanning": "Looking for a spot inside the walls; the building starts as soon as one is found.",
 	"livingvillages.chronicle.outer_started": "The city has no room left: the leader ordered an outer wall.",
 	"livingvillages.chronicle.outer_finished": "The outer wall is finished; the old wall now guards the inner city.",
-	"livingvillages.command.status.walls_rings": "%s — outer ring, %s rings in all"
+	"livingvillages.command.status.walls_rings": "%s — outer ring, %s rings in all",
+	"livingvillages.command.status.torches": "Torches put up by the villagers: %s"
 }

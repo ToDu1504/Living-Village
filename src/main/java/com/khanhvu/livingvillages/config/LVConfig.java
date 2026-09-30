@@ -167,6 +167,11 @@ public class LVConfig {
 	public int outerRingMinLevel = 3;
 	public int maxRings = 3;
 	public int ringExpansion = 24;
+	/** Torches in dark spots beside roads, on the square and along the inside of the wall (v3-GĐ 5). */
+	public boolean torchesEnabled = true;
+	public int torchLightLevel = 7;
+	public int torchSpacing = 6;
+	public int torchIntervalTicks = 200;
 	/** Behind a city wall (v3-GĐ 3): free blocks along the inside of the wall, and between buildings. */
 	public int wallInnerBuffer = 2;
 	public int infillMargin = 1;
@@ -396,6 +401,9 @@ public class LVConfig {
 		cityWallHeight = checkInt("cityWallHeight", cityWallHeight, 2, 4, d.cityWallHeight);
 		cityWallHeightMax = checkInt("cityWallHeightMax", cityWallHeightMax, cityWallHeight, 4, Math.max(cityWallHeight, d.cityWallHeightMax));
 		towerSpacing = checkInt("towerSpacing", towerSpacing, 12, 256, d.towerSpacing);
+		torchLightLevel = checkInt("torchLightLevel", torchLightLevel, 0, 14, d.torchLightLevel);
+		torchSpacing = checkInt("torchSpacing", torchSpacing, 2, 32, d.torchSpacing);
+		torchIntervalTicks = checkInt("torchIntervalTicks", torchIntervalTicks, 20, 72000, d.torchIntervalTicks);
 		outerRingMinLevel = checkInt("outerRingMinLevel", outerRingMinLevel, 0, 3, d.outerRingMinLevel);
 		maxRings = checkInt("maxRings", maxRings, 1, 5, d.maxRings);
 		ringExpansion = checkInt("ringExpansion", ringExpansion, 12, 64, d.ringExpansion);

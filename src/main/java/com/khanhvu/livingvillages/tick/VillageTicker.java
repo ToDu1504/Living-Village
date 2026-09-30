@@ -10,6 +10,7 @@ import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
+import com.khanhvu.livingvillages.care.TorchLighter;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.build.BuildingKind;
@@ -123,6 +124,7 @@ public final class VillageTicker {
 			RoadBuilder.tick(level, village);
 			WallBuilder.tick(level, registry, village, manage);
 			CitySites.tick(level, registry, village);
+			TorchLighter.tick(level, village);
 		}
 	}
 
