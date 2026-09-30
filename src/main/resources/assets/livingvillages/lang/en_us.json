@@ -281,5 +281,12 @@
 	"livingvillages.entity.cave_spider": "a cave spider",
 	"livingvillages.entity.creeper": "a creeper",
 	"livingvillages.entity.iron_golem": "an iron golem",
-	"livingvillages.entity.wolf": "a wolf"
+	"livingvillages.entity.wolf": "a wolf",
+	"livingvillages.festival.spring": "the Spring Flower Festival",
+	"livingvillages.festival.summer": "the Lantern Festival",
+	"livingvillages.festival.harvest": "the Harvest Festival",
+	"livingvillages.festival.winter": "the Winter Fire Festival",
+	"livingvillages.chronicle.festival": "The village celebrated %s.",
+	"livingvillages.command.festival.started": "A festival begins in %s.",
+	"livingvillages.command.festival.already": "A festival is already going on here."
 }

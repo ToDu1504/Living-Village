@@ -31,6 +31,10 @@ public final class VillageEvents {
 	public record LevelUp(ServerLevel level, VillageRecord village, int newLevel) {
 	}
 
+	/** A festival starts; {@code nameKey} is its lang key, e.g. the harvest festival. */
+	public record FestivalStarted(ServerLevel level, VillageRecord village, String nameKey) {
+	}
+
 	/** A baby villager was born in the village. */
 	public record Birth(ServerLevel level, VillageRecord village, Villager baby) {
 	}
@@ -44,6 +48,7 @@ public final class VillageEvents {
 	public static final Bus<Death> DEATH = new Bus<>();
 	public static final Bus<LeaderChanged> LEADER_CHANGED = new Bus<>();
 	public static final Bus<Birth> BIRTH = new Bus<>();
+	public static final Bus<FestivalStarted> FESTIVAL = new Bus<>();
 	public static final Bus<ZombieCured> ZOMBIE_CURED = new Bus<>();
 
 	private VillageEvents() {

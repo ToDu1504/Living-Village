@@ -79,6 +79,9 @@ public class VillageRecord {
 	/** New chronicle entries since the librarians' books were last written; not saved (books are rewritten after a restart). */
 	private boolean chronicleDirty = true;
 
+	// v2-GĐ 8: day of the last festival (saved); NEVER until the village is first seen at dusk
+	private long lastFestivalDay = NEVER;
+
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
 	private String recentBirthName;
@@ -350,6 +353,14 @@ public class VillageRecord {
 		this.graveCount = graveCount;
 	}
 
+	public long getLastFestivalDay() {
+		return lastFestivalDay;
+	}
+
+	public void setLastFestivalDay(long lastFestivalDay) {
+		this.lastFestivalDay = lastFestivalDay;
+	}
+
 	public boolean isLeaderGone() {
 		return leaderGone;
 	}
@@ -463,6 +474,7 @@ public class VillageRecord {
 			tag.put("Graveyard", boxTag(graveyard));
 		}
 		tag.putInt("GraveCount", graveCount);
+		tag.putLong("LastFestivalDay", lastFestivalDay);
 		return tag;
 	}
 
@@ -551,6 +563,7 @@ public class VillageRecord {
 			record.graveyard = readBox(tag.getIntArray("Graveyard"));
 		}
 		record.graveCount = tag.getInt("GraveCount");
+		record.lastFestivalDay = tag.contains("LastFestivalDay") ? tag.getLong("LastFestivalDay") : NEVER;
 		return record;
 	}
 

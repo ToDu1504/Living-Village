@@ -11,6 +11,7 @@ import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
@@ -112,6 +113,7 @@ public final class VillageTicker {
 			if (config.voiceEnabled) {
 				VillageVoice.tick(level, village);
 			}
+			Festival.tick(level, village); // also ends a running festival when festivals are switched off
 		}
 	}
 

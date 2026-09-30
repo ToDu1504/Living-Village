@@ -146,6 +146,8 @@ public final class Chronicle {
 		});
 		VillageEvents.LEVEL_UP.register(e -> add(e.level(), e.village(), Notice.BIG, "livingvillages.chronicle.level_up",
 				ChronicleEntry.keyArg(VillageLevel.langKey(e.newLevel()))));
+		VillageEvents.FESTIVAL.register(e -> add(e.level(), e.village(), Notice.BIG, "livingvillages.chronicle.festival",
+				ChronicleEntry.keyArg(e.nameKey())));
 		VillageEvents.LEADER_CHANGED.register(e -> {
 			if (e.newLeader() != null) {
 				add(e.level(), e.village(), Notice.NONE, "livingvillages.chronicle.leader", VillageSociety.baseName(e.village(), e.newLeader()));

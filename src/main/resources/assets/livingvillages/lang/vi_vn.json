@@ -281,5 +281,12 @@
 	"livingvillages.entity.cave_spider": "nhện hang",
 	"livingvillages.entity.creeper": "creeper",
 	"livingvillages.entity.iron_golem": "golem sắt",
-	"livingvillages.entity.wolf": "sói"
+	"livingvillages.entity.wolf": "sói",
+	"livingvillages.festival.spring": "Lễ hội hoa xuân",
+	"livingvillages.festival.summer": "Lễ hội đèn lồng",
+	"livingvillages.festival.harvest": "Lễ hội mùa màng",
+	"livingvillages.festival.winter": "Lễ hội sưởi lửa",
+	"livingvillages.chronicle.festival": "Làng mở %s.",
+	"livingvillages.command.festival.started": "Lễ hội bắt đầu ở %s.",
+	"livingvillages.command.festival.already": "Làng này đang có lễ hội rồi."
 }

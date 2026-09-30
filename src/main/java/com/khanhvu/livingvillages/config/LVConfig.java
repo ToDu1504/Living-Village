@@ -131,6 +131,11 @@ public class LVConfig {
 	public int chronicleMaxEntries = 100;
 	public boolean gravesEnabled = true;
 
+	// v2-GĐ 8: festival
+	public boolean festivalEnabled = true;
+	public int festivalIntervalDays = 7;
+	public int festivalDurationTicks = 2400;
+
 	private static Map<String, Boolean> defaultProfessionWork() {
 		Map<String, Boolean> map = new LinkedHashMap<>();
 		for (String id : List.of("shepherd", "butcher", "leatherworker", "fletcher", "fisherman", "cleric", "armorer",
@@ -275,6 +280,8 @@ public class LVConfig {
 		clericCuresPerDay = checkInt("clericCuresPerDay", clericCuresPerDay, 0, 100, d.clericCuresPerDay);
 		clericCureRange = checkInt("clericCureRange", clericCureRange, 1, 16, d.clericCureRange);
 		greetingCooldownTicks = checkInt("greetingCooldownTicks", greetingCooldownTicks, 0, 720000, d.greetingCooldownTicks);
+		festivalIntervalDays = checkInt("festivalIntervalDays", festivalIntervalDays, 1, 1000, d.festivalIntervalDays);
+		festivalDurationTicks = checkInt("festivalDurationTicks", festivalDurationTicks, 200, 12000, d.festivalDurationTicks);
 		chronicleMaxEntries = checkInt("chronicleMaxEntries", chronicleMaxEntries, 10, 1000, d.chronicleMaxEntries);
 		voiceRange = checkInt("voiceRange", voiceRange, 4, 128, d.voiceRange);
 		voiceIntervalTicks = checkInt("voiceIntervalTicks", voiceIntervalTicks, 20, 72000, d.voiceIntervalTicks);

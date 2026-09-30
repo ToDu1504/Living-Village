@@ -4,6 +4,7 @@ import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.command.LVCommands;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.society.VillageSociety;
@@ -39,6 +40,7 @@ public class LivingVillages implements ModInitializer {
 			BuildingTemplateProvider.clearCache();
 			VillageIdentity.clear();
 			Chronicle.clear();
+			Festival.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}
