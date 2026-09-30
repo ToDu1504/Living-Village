@@ -40,6 +40,8 @@ public class VillageRecord {
 	private long lastBuildTick = NEVER;
 	private int failedSiteAttempts;
 	private final List<BoundingBox> plots = new ArrayList<>();
+	/** The plots that are farms or pens: city walls leave them outside (spec v3 §4). */
+	private final List<BoundingBox> fieldPlots = new ArrayList<>();
 	@Nullable
 	private BuildProject project;
 	/** Saplings still to replant for trees felled on building sites, planted near {@code near}. */
@@ -180,6 +182,10 @@ public class VillageRecord {
 
 	public List<BoundingBox> getPlots() {
 		return plots;
+	}
+
+	public List<BoundingBox> getFieldPlots() {
+		return fieldPlots;
 	}
 
 	@Nullable
@@ -441,9 +447,12 @@ public class VillageRecord {
 		return pendingSaplings;
 	}
 
-	/** Bookkeeping when a house is finished: the plot is reserved and the cooldown starts. */
-	public void recordHouseBuilt(BoundingBox plot, long gameTime) {
+	/** Bookkeeping when a building is finished: the plot is reserved and the cooldown starts. */
+	public void recordHouseBuilt(BoundingBox plot, boolean field, long gameTime) {
 		plots.add(plot);
+		if (field) {
+			fieldPlots.add(plot);
+		}
 		housesBuilt++;
 		lastBuildTick = gameTime;
 		failedSiteAttempts = 0;
@@ -472,6 +481,11 @@ public class VillageRecord {
 			plotList.add(boxTag(box));
 		}
 		tag.put("Plots", plotList);
+		ListTag fieldList = new ListTag();
+		for (BoundingBox box : fieldPlots) {
+			fieldList.add(boxTag(box));
+		}
+		tag.put("FieldPlots", fieldList);
 		if (project != null) {
 			tag.put("Project", project.save());
 		}
@@ -588,6 +602,13 @@ public class VillageRecord {
 			BoundingBox box = readBox(plotList.getIntArray(i));
 			if (box != null) {
 				record.plots.add(box);
+			}
+		}
+		ListTag fieldList = tag.getList("FieldPlots", Tag.TAG_INT_ARRAY);
+		for (int i = 0; i < fieldList.size(); i++) {
+			BoundingBox box = readBox(fieldList.getIntArray(i));
+			if (box != null) {
+				record.fieldPlots.add(box);
 			}
 		}
 		if (tag.contains("Project", Tag.TAG_COMPOUND)) {

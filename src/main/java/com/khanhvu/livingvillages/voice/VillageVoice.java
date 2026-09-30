@@ -13,6 +13,8 @@ import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.wall.WallBuilder;
+import com.khanhvu.livingvillages.wall.WallRing;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -163,6 +165,13 @@ public final class VillageVoice {
 		if (ProfessionWork.isWorking(villager.getUUID())) {
 			String profession = BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()).getPath();
 			add(options, line("work." + profession, random));
+		}
+		if (WallBuilder.isWorking(villager.getUUID())) {
+			add(options, line("wall_work", random));
+		}
+		WallRing ring = village.getWalls().outer();
+		if (ring != null && ring.getType() == WallRing.Type.CITY && ring.isCompleted() && now - ring.getCompletedTick() < RECENT_TICKS) {
+			add(options, line("wall_done", random));
 		}
 		if (village.getRecentBirthName() != null && now - village.getRecentBirthTick() < RECENT_TICKS) {
 			add(options, line("birth", random, village.getRecentBirthName()));

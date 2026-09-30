@@ -1,6 +1,9 @@
 package com.khanhvu.livingvillages.wall;
 
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,9 +12,11 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * One ring of walls around a village (spec v3 §4): its outline and what happened to each column along it.
- * The column loop is rebuilt from the outline (deterministic), so only the outline and one status byte per column
- * are saved.
+ * One ring of walls around a village (spec v3 §4): its outline, what happened to each column along it, and its
+ * towers. The column loop is rebuilt from the outline (deterministic), so only the outline, one status byte per
+ * column and the towers are saved.
+ * <p>
+ * Work is done in units: units {@code 0..size()-1} are the columns, units {@code size()..} the towers.
  */
 public final class WallRing {
 	public enum Type implements StringRepresentable {
@@ -50,19 +55,88 @@ public final class WallRing {
 	public static final byte DONE = 1;
 	/** Left open: water, a cliff, a player's building, a block a player broke (a weak point). */
 	public static final byte WEAK = 2;
-	/** Left open on purpose: a road crosses here. */
+	/** A road crosses here: left open; a city wall still has to put the arch over it. */
 	public static final byte GATE = 3;
+	/** A gate whose arch stands (city walls). */
+	public static final byte GATE_DONE = 4;
+	/** Built, but the ground right outside is about as high as the wall top (a weak point all the same). */
+	public static final byte EXPOSED = 5;
+	/** Part of a tower: the tower builds it. */
+	public static final byte TOWER = 6;
+
+	/** A 5×5 watch tower whose inner face stands on the wall line (spec v3-GĐ 2). */
+	public static final class Tower {
+		/** The wall column in the middle of the tower's inner face (where the door is). */
+		public final int x;
+		public final int z;
+		/** Ground level of the door column; the tower floor. */
+		public final int baseY;
+		/** Horizontal direction from the wall line out of the village. */
+		public final Direction out;
+		byte status;
+
+		public Tower(int x, int z, int baseY, Direction out) {
+			this.x = x;
+			this.z = z;
+			this.baseY = baseY;
+			this.out = out;
+		}
+
+		public byte status() {
+			return status;
+		}
+
+		/** Centre of the 5×5 square. */
+		public int centerX() {
+			return x + out.getStepX() * 2;
+		}
+
+		public int centerZ() {
+			return z + out.getStepZ() * 2;
+		}
+
+		public boolean covers(int px, int pz) {
+			return Math.abs(px - centerX()) <= 2 && Math.abs(pz - centerZ()) <= 2;
+		}
+
+		CompoundTag save() {
+			CompoundTag tag = new CompoundTag();
+			tag.putInt("X", x);
+			tag.putInt("Z", z);
+			tag.putInt("Y", baseY);
+			tag.putString("Out", out.getSerializedName());
+			tag.putByte("Status", status);
+			return tag;
+		}
+
+		@Nullable
+		static Tower load(CompoundTag tag) {
+			Direction out = Direction.byName(tag.getString("Out"));
+			if (out == null || out.getAxis().isVertical()) {
+				return null;
+			}
+			Tower tower = new Tower(tag.getInt("X"), tag.getInt("Z"), tag.getInt("Y"), out);
+			tower.status = tag.getByte("Status");
+			return tower;
+		}
+	}
 
 	private final int id;
 	private final Type type;
 	private final int[] polygon;
 	private final byte[] status;
+	private final List<Tower> towers = new ArrayList<>();
 	private final long createdTick;
+	/** Wall height above the ground (city walls). */
+	private int height;
+	/** Battlements on top (city walls at level City). */
+	private boolean battlements;
 	/** The completion was announced once; repairs later do not announce it again. */
 	private boolean completed;
+	private long completedTick = Long.MIN_VALUE;
 	/** Column loop along the polygon; derived, not saved. */
 	private final int[] columns;
-	/** Column indices in building order; derived lazily from the gates. */
+	/** Units in building order; derived lazily. */
 	@Nullable
 	private int[] order;
 
@@ -96,6 +170,20 @@ public final class WallRing {
 		return createdTick;
 	}
 
+	public int getHeight() {
+		return height;
+	}
+
+	public boolean hasBattlements() {
+		return battlements;
+	}
+
+	public void setHeight(int height, boolean battlements) {
+		this.height = height;
+		this.battlements = battlements;
+	}
+
+	/** Number of columns. */
 	public int size() {
 		return status.length;
 	}
@@ -113,24 +201,109 @@ public final class WallRing {
 	}
 
 	public void setStatus(int column, byte value) {
-		byte old = status[column];
+		boolean wasGate = isGate(status[column]);
 		status[column] = value;
-		if (value == GATE || old == GATE) {
+		if (wasGate != isGate(value)) {
 			order = null; // the building order starts from the gates
 		}
+	}
+
+	public static boolean isGate(byte value) {
+		return value == GATE || value == GATE_DONE;
+	}
+
+	public static boolean isWeak(byte value) {
+		return value == WEAK || value == EXPOSED;
+	}
+
+	public List<Tower> getTowers() {
+		return towers;
+	}
+
+	public void addTower(Tower tower) {
+		towers.add(tower);
+		order = null;
 	}
 
 	public boolean isCompleted() {
 		return completed;
 	}
 
-	public void setCompleted(boolean completed) {
-		this.completed = completed;
+	public long getCompletedTick() {
+		return completedTick;
+	}
+
+	public void setCompleted(long tick) {
+		this.completed = true;
+		this.completedTick = tick;
 	}
 
 	public boolean contains(double x, double z) {
 		return VillageBoundary.contains(polygon, x, z);
 	}
+
+	// ---------------------------------------------------------------- units
+
+	public int units() {
+		return status.length + towers.size();
+	}
+
+	public boolean isTowerUnit(int unit) {
+		return unit >= status.length;
+	}
+
+	public Tower tower(int unit) {
+		return towers.get(unit - status.length);
+	}
+
+	public int towerUnit(Tower tower) {
+		return status.length + towers.indexOf(tower);
+	}
+
+	/** Whether the unit still needs work: a column not built, a city gate without its arch, a tower not finished. */
+	public boolean isOpen(int unit) {
+		if (isTowerUnit(unit)) {
+			return tower(unit).status == PENDING;
+		}
+		byte value = status[unit];
+		return value == PENDING || (value == GATE && type == Type.CITY);
+	}
+
+	/** Marks a unit to be worked on again (a lost block). */
+	public void reopen(int unit) {
+		if (isTowerUnit(unit)) {
+			tower(unit).status = PENDING;
+		} else if (status[unit] == GATE_DONE) {
+			status[unit] = GATE;
+		} else if (status[unit] != GATE && status[unit] != TOWER) {
+			status[unit] = PENDING;
+		}
+	}
+
+	public void setTowerStatus(int unit, byte value) {
+		tower(unit).status = value;
+	}
+
+	/** Where a worker stands for the unit: the column, or the tower door. */
+	public int unitX(int unit) {
+		return isTowerUnit(unit) ? tower(unit).x : x(unit);
+	}
+
+	public int unitZ(int unit) {
+		return isTowerUnit(unit) ? tower(unit).z : z(unit);
+	}
+
+	public int openUnits() {
+		int count = 0;
+		for (int unit = 0; unit < units(); unit++) {
+			if (isOpen(unit)) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	// ---------------------------------------------------------------- counts
 
 	public int count(byte value) {
 		int count = 0;
@@ -142,26 +315,39 @@ public final class WallRing {
 		return count;
 	}
 
-	/** Runs of consecutive columns with this status (the loop wraps around): gates, weak points. */
-	public int runs(byte value) {
+	/** Gates: runs of gate columns (the loop wraps around). */
+	public int gateCount() {
+		return runs(true);
+	}
+
+	/** Weak points: runs of open or exposed columns. */
+	public int weakCount() {
+		return runs(false);
+	}
+
+	private int runs(boolean gates) {
 		int n = status.length;
 		int runs = 0;
 		for (int i = 0; i < n; i++) {
-			if (status[i] == value && status[(i + n - 1) % n] != value) {
+			boolean here = gates ? isGate(status[i]) : isWeak(status[i]);
+			boolean before = gates ? isGate(status[(i + n - 1) % n]) : isWeak(status[(i + n - 1) % n]);
+			if (here && !before) {
 				runs++;
 			}
 		}
-		return runs == 0 && n > 0 && status[0] == value ? 1 : runs;
+		boolean all = n > 0 && (gates ? isGate(status[0]) : isWeak(status[0]));
+		return runs == 0 && all ? 1 : runs;
 	}
 
-	/** Share of the loop that is settled (built, gate or weak point), 0–100. */
+	/** Share of the work that is settled, 0–100. */
 	public int progressPercent() {
-		return status.length == 0 ? 100 : 100 * (status.length - count(PENDING)) / status.length;
+		int units = units();
+		return units == 0 ? 100 : 100 * (units - openUnits()) / units;
 	}
 
 	/**
-	 * Column indices in building order: from the gates outwards on both sides (spec v3 §5), so the wall grows from the
-	 * gates; without gates, around the loop from the first column.
+	 * Units in building order (spec v3 §5): towers first, then columns from the gates outwards on both sides, so the
+	 * wall grows from the gates; without gates, around the loop from the first column.
 	 */
 	public int[] order() {
 		if (order != null) {
@@ -172,7 +358,7 @@ public final class WallRing {
 		Arrays.fill(distance, Integer.MAX_VALUE);
 		List<Integer> queue = new ArrayList<>();
 		for (int i = 0; i < n; i++) {
-			if (status[i] == GATE) {
+			if (isGate(status[i])) {
 				distance[i] = 0;
 				queue.add(i);
 			}
@@ -191,7 +377,14 @@ public final class WallRing {
 				}
 			}
 		}
-		order = queue.stream().mapToInt(Integer::intValue).toArray();
+		int[] result = new int[towers.size() + queue.size()];
+		for (int t = 0; t < towers.size(); t++) {
+			result[t] = n + t;
+		}
+		for (int i = 0; i < queue.size(); i++) {
+			result[towers.size() + i] = queue.get(i);
+		}
+		order = result;
 		return order;
 	}
 
@@ -203,6 +396,14 @@ public final class WallRing {
 		tag.putByteArray("Status", status);
 		tag.putLong("Created", createdTick);
 		tag.putBoolean("Completed", completed);
+		tag.putLong("CompletedTick", completedTick);
+		tag.putInt("Height", height);
+		tag.putBoolean("Battlements", battlements);
+		ListTag towerList = new ListTag();
+		for (Tower tower : towers) {
+			towerList.add(tower.save());
+		}
+		tag.put("Towers", towerList);
 		return tag;
 	}
 
@@ -215,6 +416,16 @@ public final class WallRing {
 		}
 		WallRing ring = new WallRing(tag.getInt("Id"), type, polygon, tag.getByteArray("Status"), tag.getLong("Created"));
 		ring.completed = tag.getBoolean("Completed");
+		ring.completedTick = tag.contains("CompletedTick") ? tag.getLong("CompletedTick") : Long.MIN_VALUE;
+		ring.height = tag.getInt("Height");
+		ring.battlements = tag.getBoolean("Battlements");
+		ListTag towerList = tag.getList("Towers", Tag.TAG_COMPOUND);
+		for (int i = 0; i < towerList.size(); i++) {
+			Tower tower = Tower.load(towerList.getCompound(i));
+			if (tower != null) {
+				ring.towers.add(tower);
+			}
+		}
 		return ring;
 	}
 }

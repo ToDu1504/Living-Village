@@ -335,13 +335,13 @@ public final class VillageTicker {
 		project.getPlacer(level).flushUpdates();
 		BuilderAssignment.release(level, project);
 		queueReplants(village, project);
-		village.recordHouseBuilt(project.getFootprint(), level.getGameTime());
+		BuildingTemplate building = project.getHouse();
+		BuildingKind kind = building == null ? null : building.kind();
+		village.recordHouseBuilt(project.getFootprint(), kind == BuildingKind.FARM || kind == BuildingKind.PEN, level.getGameTime());
 		if (project.getTemplateId().equals(village.getBoostTemplate())) {
 			village.setBoostTemplate(null);
 			village.setSkipCooldown(true); // the next building starts without waiting
 		}
-		BuildingTemplate building = project.getHouse();
-		BuildingKind kind = building == null ? null : building.kind();
 		if (kind == BuildingKind.PEN) {
 			stockPen(level, village, project);
 		}

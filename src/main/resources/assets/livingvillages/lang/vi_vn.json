@@ -304,11 +304,20 @@
 	"livingvillages.chronicle.wall_finished": "Đã dựng xong %s quanh làng.",
 	"livingvillages.chronicle.wall_moving": "Làng đã lớn hơn hàng rào: dân làng dựng hàng rào mới rộng hơn.",
 	"livingvillages.chronicle.wall_moved": "Đã có %s mới bao cả làng, hàng rào cũ đã được gỡ.",
-	"livingvillages.command.status.walls": "Tường: %s, xong %s%% (%s cổng, %s điểm yếu)",
-	"livingvillages.command.status.walls_moving": "Tường: %s đang dời ra, xong %s%% (%s cổng, %s điểm yếu)",
+	"livingvillages.command.status.walls": "Tường: %s, xong %s%% (%s cổng, %s tháp, %s điểm yếu)",
+	"livingvillages.command.status.walls_moving": "Tường: %s đang thay vòng cũ, xong %s%% (%s cổng, %s tháp, %s điểm yếu)",
 	"livingvillages.command.status.walls_none": "Tường: chưa có (có hàng rào khi làng lên cấp Làng)",
 	"livingvillages.command.status.walls_paused": "Tường: đang dừng (/livingvillages walls on)",
 	"livingvillages.command.status.walls_disabled": "Tường: tắt (wallsEnabled, hoặc nhường cho Regrowth)",
 	"livingvillages.command.walls.on": "%s tiếp tục xây tường.",
-	"livingvillages.command.walls.off": "%s dừng xây tường."
+	"livingvillages.command.walls.off": "%s dừng xây tường.",
+	"livingvillages.chronicle.city_wall_started": "Làng đã thành thị trấn: dân làng bắt đầu xây tường thành bằng đá, có tháp canh.",
+	"livingvillages.chronicle.wall_raised": "Làng đã thành thành phố: tường thành được xây cao thêm và có lỗ châu mai.",
+	"livingvillages.voice.wall_work.1": "Thêm một viên đá nữa là xong đoạn này.",
+	"livingvillages.voice.wall_work.2": "Có tường thì zombie khỏi vào!",
+	"livingvillages.voice.wall_work.3": "Tường phải thẳng và chắc mới được.",
+	"livingvillages.voice.wall_work.4": "Đau lưng quá, nhưng tường thì cao dần.",
+	"livingvillages.voice.wall_done.1": "Nhìn tường thành kìa! Giờ mình là thị trấn thật rồi.",
+	"livingvillages.voice.wall_done.2": "Có tường đá, tối ngủ yên hơn hẳn.",
+	"livingvillages.voice.wall_done.3": "Bạn lên tháp chưa? Trên đó nhìn thấy hết cả vùng."
 }

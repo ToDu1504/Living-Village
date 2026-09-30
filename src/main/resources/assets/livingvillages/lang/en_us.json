@@ -304,11 +304,20 @@
 	"livingvillages.chronicle.wall_finished": "The %s around the village is finished.",
 	"livingvillages.chronicle.wall_moving": "The village has outgrown its palisade: a wider one is going up.",
 	"livingvillages.chronicle.wall_moved": "The new %s encloses the whole village; the old one was taken down.",
-	"livingvillages.command.status.walls": "Walls: %s, %s%% done (%s gate(s), %s weak point(s))",
-	"livingvillages.command.status.walls_moving": "Walls: %s moving out, %s%% done (%s gate(s), %s weak point(s))",
+	"livingvillages.command.status.walls": "Walls: %s, %s%% done (%s gate(s), %s tower(s), %s weak point(s))",
+	"livingvillages.command.status.walls_moving": "Walls: %s replacing the old ring, %s%% done (%s gate(s), %s tower(s), %s weak point(s))",
 	"livingvillages.command.status.walls_none": "Walls: none yet (a palisade comes at level Village)",
 	"livingvillages.command.status.walls_paused": "Walls: stopped (/livingvillages walls on)",
 	"livingvillages.command.status.walls_disabled": "Walls: off (wallsEnabled, or left to Regrowth)",
 	"livingvillages.command.walls.on": "%s builds its walls again.",
-	"livingvillages.command.walls.off": "%s stops building walls."
+	"livingvillages.command.walls.off": "%s stops building walls.",
+	"livingvillages.chronicle.city_wall_started": "The village has become a town: the villagers started building a stone city wall with watch towers.",
+	"livingvillages.chronicle.wall_raised": "The village has become a city: the city wall is being raised and given battlements.",
+	"livingvillages.voice.wall_work.1": "One more stone and this stretch is done.",
+	"livingvillages.voice.wall_work.2": "A wall keeps the zombies out!",
+	"livingvillages.voice.wall_work.3": "Straight and strong, that's how a wall should be.",
+	"livingvillages.voice.wall_work.4": "My back hurts, but the wall grows.",
+	"livingvillages.voice.wall_done.1": "Look at our walls! We are a real town now.",
+	"livingvillages.voice.wall_done.2": "I sleep better behind stone walls.",
+	"livingvillages.voice.wall_done.3": "Have you climbed the tower? You can see everything from up there."
 }

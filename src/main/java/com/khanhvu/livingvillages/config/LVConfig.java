@@ -156,6 +156,13 @@ public class LVConfig {
 	public boolean deferToRegrowth = false;
 	/** Level from which a village gets a palisade (1 = Village). */
 	public int palisadeMinLevel = 1;
+	/** Level from which the palisade becomes a stone city wall with towers (2 = Town); level City raises it. */
+	public int cityWallMinLevel = 2;
+	/** City wall height above the ground at level Town, and at level City (with battlements). */
+	public int cityWallHeight = 3;
+	public int cityWallHeightMax = 4;
+	/** Most wall columns between two towers. */
+	public int towerSpacing = 32;
 	/** Free blocks between the outermost building, bed or job site and the wall. */
 	public int wallMargin = 6;
 	public int wallMaxVertices = 16;
@@ -163,7 +170,7 @@ public class LVConfig {
 	/** A column higher or lower than the previous one by more than this is left open (a weak point). */
 	public int maxWallStep = 3;
 	/** Wall blocks each mason places per second; the village without a mason builds at half this rate. */
-	public double wallBlocksPerSecond = 0.5;
+	public double wallBlocksPerSecond = 1.0;
 	/** The palisade moves out at most once in this many ticks. */
 	public int palisadeMoveCooldown = 24000;
 	/** Wall blocks by village type (plains, desert, savanna, snowy, taiga). */
@@ -374,6 +381,10 @@ public class LVConfig {
 			roadBlocks = d.roadBlocks;
 		}
 		palisadeMinLevel = checkInt("palisadeMinLevel", palisadeMinLevel, 0, 3, d.palisadeMinLevel);
+		cityWallMinLevel = checkInt("cityWallMinLevel", cityWallMinLevel, 0, 3, d.cityWallMinLevel);
+		cityWallHeight = checkInt("cityWallHeight", cityWallHeight, 2, 4, d.cityWallHeight);
+		cityWallHeightMax = checkInt("cityWallHeightMax", cityWallHeightMax, cityWallHeight, 4, Math.max(cityWallHeight, d.cityWallHeightMax));
+		towerSpacing = checkInt("towerSpacing", towerSpacing, 12, 256, d.towerSpacing);
 		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
 		wallMaxVertices = checkInt("wallMaxVertices", wallMaxVertices, 3, 64, d.wallMaxVertices);
 		gateWidth = checkInt("gateWidth", gateWidth, 1, 9, d.gateWidth);
