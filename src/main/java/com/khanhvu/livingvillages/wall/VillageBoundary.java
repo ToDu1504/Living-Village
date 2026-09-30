@@ -58,6 +58,19 @@ public final class VillageBoundary {
 		if (points.size() < MIN_POINTS) {
 			return circle(bell.getX(), bell.getZ(), margin + CIRCLE_EXTRA_RADIUS);
 		}
+		return widenedHull(points, margin, config.wallMaxVertices);
+	}
+
+	/** The polygon widened by {@code by} blocks all around: the outline of an outer ring (spec v3-GĐ 4). */
+	public static int[] expand(int[] polygon, int by) {
+		List<long[]> points = new ArrayList<>();
+		for (int i = 0; i < polygon.length; i += 2) {
+			points.add(new long[] {polygon[i], polygon[i + 1]});
+		}
+		return widenedHull(points, by, LVConfig.get().wallMaxVertices);
+	}
+
+	private static int[] widenedHull(List<long[]> points, int margin, int maxVertices) {
 		List<long[]> widened = new ArrayList<>();
 		for (long[] p : points) {
 			for (int k = 0; k < WIDEN_CORNERS; k++) {
@@ -68,7 +81,7 @@ public final class VillageBoundary {
 			}
 		}
 		List<long[]> hull = hull(widened);
-		simplify(hull, config.wallMaxVertices);
+		simplify(hull, maxVertices);
 		int[] polygon = new int[hull.size() * 2];
 		for (int i = 0; i < hull.size(); i++) {
 			polygon[i * 2] = (int) hull.get(i)[0];

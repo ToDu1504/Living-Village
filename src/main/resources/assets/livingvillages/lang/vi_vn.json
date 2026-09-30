@@ -324,5 +324,8 @@
 	"livingvillages.chronicle.city_full": "Trong thành đã kín nhà.",
 	"livingvillages.command.status.city_room": "Trong thành: còn chỗ xây (ruộng và chuồng xây ngoài thành)",
 	"livingvillages.command.status.city_full": "Trong thành: đã kín, không xây thêm nhà/xưởng cho tới khi có thành ngoại",
-	"livingvillages.command.build.scanning": "Đang tìm chỗ trong thành; tìm được là khởi công ngay."
+	"livingvillages.command.build.scanning": "Đang tìm chỗ trong thành; tìm được là khởi công ngay.",
+	"livingvillages.chronicle.outer_started": "Trong thành đã kín: trưởng làng cho xây thành ngoại.",
+	"livingvillages.chronicle.outer_finished": "Thành ngoại đã hoàn thành; tường cũ giờ là thành nội.",
+	"livingvillages.command.status.walls_rings": "%s — thành ngoại, tổng %s vòng thành"
 }

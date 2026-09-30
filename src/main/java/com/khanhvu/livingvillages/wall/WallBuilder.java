@@ -215,7 +215,9 @@ public final class WallBuilder {
 		if (!ring.isCompleted()) {
 			ring.setCompleted(time);
 			registry.setDirty();
-			if (ring.getType() == WallRing.Type.CITY) {
+			if (walls.getRings().size() > 1) {
+				Chronicle.add(level, village, Chronicle.Notice.BIG, "livingvillages.chronicle.outer_finished");
+			} else if (ring.getType() == WallRing.Type.CITY) {
 				Chronicle.add(level, village, Chronicle.Notice.BIG, "livingvillages.chronicle.wall_finished", ChronicleEntry.keyArg(ring.getType().langKey()));
 			} else if (walls.getRetiring() == null) {
 				Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.wall_finished", ChronicleEntry.keyArg(ring.getType().langKey()));
@@ -257,6 +259,21 @@ public final class WallBuilder {
 				upgradeToCity(level, registry, village, walls, outer);
 			} else {
 				movePalisade(level, registry, village, walls, outer);
+			}
+			return;
+		}
+		// v3-GĐ 4: a full city builds an outer ring; the old one stays as the inner wall.
+		if (outer.isFull() && villageLevel >= config.outerRingMinLevel && walls.getRings().size() < config.maxRings
+				&& outer.openUnits() == 0 && walls.getRetiring() == null) {
+			// Few roads reach this far out: a gate faces every gate of the inner wall as well.
+			WallRing ring = createRing(level, village, walls, WallRing.Type.CITY, VillageBoundary.expand(outer.getPolygon(), config.ringExpansion), null,
+					CitySites.gateCenters(outer));
+			if (ring != null) {
+				walls.getRings().add(ring);
+				registry.setDirty();
+				Chronicle.add(level, village, Chronicle.Notice.BIG, "livingvillages.chronicle.outer_started");
+				LivingVillages.debug("Village {}: outer ring {} planned, {} columns, {} gate(s), {} tower(s)", village.getId(), walls.getRings().size(),
+						ring.size(), ring.gateCount(), ring.getTowers().size());
 			}
 			return;
 		}
@@ -337,6 +354,13 @@ public final class WallBuilder {
 	@Nullable
 	private static WallRing createRing(ServerLevel level, VillageRecord village, VillageWalls walls, WallRing.Type type, int[] polygon,
 			@Nullable WallRing gatesFrom) {
+		return createRing(level, village, walls, type, polygon, gatesFrom, List.of());
+	}
+
+	/** Also opens a gate at the column nearest to each of {@code facing} (x, z). */
+	@Nullable
+	private static WallRing createRing(ServerLevel level, VillageRecord village, VillageWalls walls, WallRing.Type type, int[] polygon,
+			@Nullable WallRing gatesFrom, List<int[]> facing) {
 		LVConfig config = LVConfig.get();
 		WallRing ring = new WallRing(walls.takeRingId(), type, polygon, level.getGameTime());
 		int n = ring.size();
@@ -362,6 +386,10 @@ public final class WallBuilder {
 					markGate(ring, i, half);
 					any = true;
 				}
+			}
+			for (int[] gate : facing) {
+				markGate(ring, nearestColumn(ring, new BlockPos(gate[0], 0, gate[1])), half);
+				any = true;
 			}
 			if (!any) {
 				markGate(ring, nearestColumn(ring, village.getBellPos()), half);

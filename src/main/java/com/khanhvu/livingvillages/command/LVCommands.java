@@ -335,8 +335,11 @@ public final class LVCommands {
 		if (ring == null) {
 			return LVText.tr("livingvillages.command.status.walls_none");
 		}
-		return LVText.tr(walls.getRetiring() != null ? "livingvillages.command.status.walls_moving" : "livingvillages.command.status.walls",
+		Component line = LVText.tr(walls.getRetiring() != null ? "livingvillages.command.status.walls_moving" : "livingvillages.command.status.walls",
 				LVText.tr(ring.getType().langKey()), ring.progressPercent(), ring.gateCount(), ring.getTowers().size(), ring.weakCount());
+		return walls.getRings().size() > 1
+				? LVText.compose("livingvillages.command.status.walls_rings", line, walls.getRings().size())
+				: line;
 	}
 
 	/** Stops or resumes the walls of the nearest village. */

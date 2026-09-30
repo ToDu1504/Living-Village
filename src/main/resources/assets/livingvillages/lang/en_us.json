@@ -324,5 +324,8 @@
 	"livingvillages.chronicle.city_full": "There is no room left inside the city walls.",
 	"livingvillages.command.status.city_room": "Inside the walls: room left for new buildings (farms and pens go outside)",
 	"livingvillages.command.status.city_full": "Inside the walls: full, no more houses or workshops until an outer ring",
-	"livingvillages.command.build.scanning": "Looking for a spot inside the walls; the building starts as soon as one is found."
+	"livingvillages.command.build.scanning": "Looking for a spot inside the walls; the building starts as soon as one is found.",
+	"livingvillages.chronicle.outer_started": "The city has no room left: the leader ordered an outer wall.",
+	"livingvillages.chronicle.outer_finished": "The outer wall is finished; the old wall now guards the inner city.",
+	"livingvillages.command.status.walls_rings": "%s — outer ring, %s rings in all"
 }

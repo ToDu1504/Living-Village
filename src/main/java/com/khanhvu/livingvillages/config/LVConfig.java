@@ -163,6 +163,10 @@ public class LVConfig {
 	public int cityWallHeightMax = 4;
 	/** Most wall columns between two towers. */
 	public int towerSpacing = 32;
+	/** A full city at this level builds an outer ring (3 = City), up to maxRings rings, ringExpansion blocks further out. */
+	public int outerRingMinLevel = 3;
+	public int maxRings = 3;
+	public int ringExpansion = 24;
 	/** Behind a city wall (v3-GĐ 3): free blocks along the inside of the wall, and between buildings. */
 	public int wallInnerBuffer = 2;
 	public int infillMargin = 1;
@@ -392,6 +396,9 @@ public class LVConfig {
 		cityWallHeight = checkInt("cityWallHeight", cityWallHeight, 2, 4, d.cityWallHeight);
 		cityWallHeightMax = checkInt("cityWallHeightMax", cityWallHeightMax, cityWallHeight, 4, Math.max(cityWallHeight, d.cityWallHeightMax));
 		towerSpacing = checkInt("towerSpacing", towerSpacing, 12, 256, d.towerSpacing);
+		outerRingMinLevel = checkInt("outerRingMinLevel", outerRingMinLevel, 0, 3, d.outerRingMinLevel);
+		maxRings = checkInt("maxRings", maxRings, 1, 5, d.maxRings);
+		ringExpansion = checkInt("ringExpansion", ringExpansion, 12, 64, d.ringExpansion);
 		wallInnerBuffer = checkInt("wallInnerBuffer", wallInnerBuffer, 0, 16, d.wallInnerBuffer);
 		infillMargin = checkInt("infillMargin", infillMargin, 0, 16, d.infillMargin);
 		plazaRadius = checkInt("plazaRadius", plazaRadius, 0, 32, d.plazaRadius);

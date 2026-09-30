@@ -233,6 +233,19 @@ public final class CitySites {
 		for (int[] gate : gateCenters(ring)) {
 			reserveGateWay(scan, reserved, gate[0], gate[1], bell, config.gateWidth / 2, plaza);
 		}
+		// Inner rings (v3-GĐ 4): their walls, towers and the walkway along them stay free.
+		int buffer = config.wallInnerBuffer;
+		for (WallRing inner : village.getWalls().getRings()) {
+			if (inner == ring) {
+				continue;
+			}
+			for (int c = 0; c < inner.size(); c++) {
+				reserveSquare(scan, reserved, inner.x(c), inner.z(c), buffer);
+			}
+			for (WallRing.Tower tower : inner.getTowers()) {
+				reserveSquare(scan, reserved, tower.centerX(), tower.centerZ(), 2 + buffer);
+			}
+		}
 		scan.reserved = reserved;
 		// Walking distance to the nearest road over the inside (to the bell when there is no road).
 		int[] distance = new int[total];
@@ -281,6 +294,17 @@ public final class CitySites {
 		}));
 		scan.candidates = spots.stream().mapToInt(Integer::intValue).toArray();
 		scan.phase = Phase.SEARCH;
+	}
+
+	private static void reserveSquare(Scan scan, boolean[] reserved, int x, int z, int radius) {
+		for (int dx = -radius; dx <= radius; dx++) {
+			for (int dz = -radius; dz <= radius; dz++) {
+				int i = scan.index(x + dx, z + dz);
+				if (i >= 0) {
+					reserved[i] = true;
+				}
+			}
+		}
 	}
 
 	/** Reserves a strip gateWidth wide from the gate towards the bell, until it meets a road or the square. */
@@ -428,8 +452,8 @@ public final class CitySites {
 		return best;
 	}
 
-	/** Middle column of every gate. */
-	private static List<int[]> gateCenters(WallRing ring) {
+	/** Middle column (x, z) of every gate. */
+	public static List<int[]> gateCenters(WallRing ring) {
 		List<int[]> gates = new ArrayList<>();
 		int n = ring.size();
 		for (int i = 0; i < n; i++) {
