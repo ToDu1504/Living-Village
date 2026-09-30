@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * One ring of walls around a village (spec v3-GĐ 5.1): its outline and what happened to each column along it.
+ * One ring of walls around a village (spec v3 §4): its outline and what happened to each column along it.
  * The column loop is rebuilt from the outline (deterministic), so only the outline and one status byte per column
  * are saved.
  */
@@ -160,7 +160,7 @@ public final class WallRing {
 	}
 
 	/**
-	 * Column indices in building order: from the gates outwards on both sides (spec 5.3), so the wall grows from the
+	 * Column indices in building order: from the gates outwards on both sides (spec v3 §5), so the wall grows from the
 	 * gates; without gates, around the loop from the first column.
 	 */
 	public int[] order() {

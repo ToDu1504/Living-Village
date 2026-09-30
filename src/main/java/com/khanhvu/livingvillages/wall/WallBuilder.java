@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Builds and keeps the walls of villages near players (spec v3-GĐ 5.2–5.3). Step 5A: a palisade from level Village,
+ * Builds and keeps the walls of villages near players (spec v3 §5). v3-GĐ 1: a palisade from level Village,
  * with a gate wherever a road crosses it, moved outwards when the village grows past it (new palisade first, then
  * the old one taken down). Masons build it, each at {@code wallBlocksPerSecond}; without a mason the village builds
  * at half that rate. Every block placed is remembered: one a player breaks stays open, one lost otherwise
@@ -98,7 +98,7 @@ public final class WallBuilder {
 	private WallBuilder() {
 	}
 
-	/** Walls are built unless switched off, or left to Regrowth when it is installed (spec v3 §1.4). */
+	/** Walls are built unless switched off, or left to Regrowth when it is installed (spec v3 §3). */
 	public static boolean enabled() {
 		LVConfig config = LVConfig.get();
 		if (!config.wallsEnabled) {
@@ -122,7 +122,7 @@ public final class WallBuilder {
 				VillageRegistry.get(e.level()).setDirty();
 			}
 		});
-		// A wall block a player breaks is theirs to leave open (spec 5.3).
+		// A wall block a player breaks is theirs to leave open (spec v3 §5).
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (!(world instanceof ServerLevel level)) {
 				return;
@@ -205,7 +205,7 @@ public final class WallBuilder {
 			}
 			return;
 		}
-		// 5.2a: the palisade follows the village, at most once per palisadeMoveCooldown, never while one is going up or down.
+		// v3-GĐ 1: the palisade follows the village, at most once per palisadeMoveCooldown, never while one is going up or down.
 		if (outer.getType() != WallRing.Type.PALISADE || !walls.isMoveWanted() || outer.count(WallRing.PENDING) > 0
 				|| walls.getRetiring() != null || level.getGameTime() - outer.getCreatedTick() < config.palisadeMoveCooldown) {
 			return;
@@ -585,7 +585,7 @@ public final class WallBuilder {
 		}
 	}
 
-	/** Takes the old palisade down, one block at a time, once the new one stands (spec 5.2a). Only the mod's own blocks. */
+	/** Takes the old palisade down, one block at a time, once the new one stands (spec v3-GĐ 1). Only the mod's own blocks. */
 	private static void takeDown(ServerLevel level, VillageRegistry registry, VillageRecord village, VillageWalls walls, Site site) {
 		WallRing old = walls.getRetiring();
 		if (site.takeDown == null) {

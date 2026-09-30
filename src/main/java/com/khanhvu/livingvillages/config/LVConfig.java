@@ -150,9 +150,9 @@ public class LVConfig {
 	public List<String> roadBlocks = List.of("minecraft:dirt_path", "minecraft:smooth_sandstone");
 	public int roadMaxNodes = 4000;
 
-	// v3-GĐ 5: walls
+	// v3: walls (village → citadel)
 	public boolean wallsEnabled = true;
-	/** With Regrowth installed, its village walls are used and this mod builds none (spec v3 §1.4). */
+	/** With Regrowth installed, its village walls are used and this mod builds none (spec v3 §3). */
 	public boolean deferToRegrowth = true;
 	/** Level from which a village gets a palisade (1 = Village). */
 	public int palisadeMinLevel = 1;

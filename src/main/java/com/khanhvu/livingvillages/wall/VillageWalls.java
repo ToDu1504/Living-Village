@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Walls of one village (spec v3-GĐ 5), saved with the village: its rings, every block the mod placed for them, and
+ * Walls of one village (spec v3), saved with the village: its rings, every block the mod placed for them, and
  * the blocks players broke (never placed again).
  */
 public final class VillageWalls {
@@ -22,7 +22,7 @@ public final class VillageWalls {
 
 	/** Rings from the innermost to the outermost. */
 	private final List<WallRing> rings = new ArrayList<>();
-	/** An old palisade taken down once the palisade that replaces it stands (spec 5.2a). */
+	/** An old palisade taken down once the palisade that replaces it stands (spec v3-GĐ 1). */
 	@Nullable
 	private WallRing retiring;
 	/** Block position → ring id and column of every block the mod placed for the walls. */

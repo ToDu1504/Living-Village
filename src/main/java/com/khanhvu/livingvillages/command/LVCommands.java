@@ -313,7 +313,7 @@ public final class LVCommands {
 		return 1;
 	}
 
-	/** Walls of the nearest village (spec v3-GĐ 5.3): the outermost ring, its progress, gates and weak points. */
+	/** Walls of the nearest village (spec v3 §5): the outermost ring, its progress, gates and weak points. */
 	private static Component wallLine(VillageRecord record) {
 		VillageWalls walls = record.getWalls();
 		if (!WallBuilder.enabled()) {

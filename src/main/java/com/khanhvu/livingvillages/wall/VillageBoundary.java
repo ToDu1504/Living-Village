@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * The outline of a village (spec v3-GĐ 5.1): the convex hull of its buildings, beds, job sites and bell on the XZ
+ * The outline of a village (spec v3 §4): the convex hull of its buildings, beds, job sites and bell on the XZ
  * plane, widened by {@code wallMargin} and simplified to at most {@code wallMaxVertices} corners. Also the geometry
  * the walls need: point-in-polygon tests and the 4-connected column loop along the outline.
  */

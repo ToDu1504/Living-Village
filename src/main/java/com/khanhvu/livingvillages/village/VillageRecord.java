@@ -100,7 +100,7 @@ public class VillageRecord {
 	/** The board is placed only once; a board broken by a player comes back only with the board place command. */
 	private boolean boardPlaced;
 
-	// v3-GĐ 5: walls (saved)
+	// v3: walls (saved)
 	private VillageWalls walls = new VillageWalls();
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
