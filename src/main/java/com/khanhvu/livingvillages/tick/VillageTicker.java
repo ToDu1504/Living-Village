@@ -12,8 +12,8 @@ import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
-import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.build.BuildingKind;
+import com.khanhvu.livingvillages.identity.LevelUpFireworks;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.road.RoadBuilder;
@@ -116,7 +116,7 @@ public final class VillageTicker {
 			if (config.voiceEnabled) {
 				VillageVoice.tick(level, village);
 			}
-			Festival.tick(level, village); // also ends a running festival when festivals are switched off
+			LevelUpFireworks.tick(level, village);
 			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
 			RoadBuilder.tick(level, village);
 		}

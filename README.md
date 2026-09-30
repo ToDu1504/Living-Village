@@ -2,7 +2,7 @@
 
 *[Tiếng Việt](README.vi.md)*
 
-A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village. The village keeps a chronicle, holds festivals, asks players for materials, and links new buildings with roads.
+A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village. The village keeps a chronicle, celebrates each new level with fireworks, asks players for materials, and links new buildings with roads.
 
 No new blocks, items, entities or textures. Players do not need the mod on their client.
 
@@ -18,7 +18,7 @@ Version 0.1 only built houses when a village ran out of beds. Now:
 - **Names:** village names, family names by household, villager and guard names, a title when you walk into a village.
 - **Speech:** villagers say short lines about what really happens in their village.
 - **Chronicle and graves:** the village keeps a chronicle (also as a book on the librarian's lectern) and gives named villagers a grave.
-- **Festivals:** every seven days at dusk, with villagers gathering by the bell and fireworks.
+- **Level-up fireworks:** a fireworks show over the square when the village reaches a new level.
 - **Material board:** trade the materials the village needs to its chief for emeralds and make it build faster.
 - **Roads:** new buildings get a road to the village streets, laid by a mason.
 
@@ -47,12 +47,11 @@ Every feature has a switch in the config; with all of them off the mod behaves l
   3. jobs below `needThreshold` → a workshop for the profession the village has fewest of;
   4. animal keepers (shepherd, butcher, leatherworker, fletcher) but none of their animals nearby → a pen, which gets a pair of those animals when finished;
   5. otherwise nothing (`status` says why: the village is fine, or it must grow before building more).
-- **Village levels:** Hamlet, Village, Town, City. A level needs a number of adults and of different professions (Town also a librarian, City a librarian and a cleric) and sets how many buildings the mod may build (4 / 10 / 20 / 32) and how far from the bell (48 / 64 / 80 / 96 blocks). The level is computed as soon as a village is found, so an existing vanilla village often starts above Hamlet. Levels only go up; nearby players see a title when a village levels up.
+- **Village levels:** Hamlet, Village, Town, City. A level needs a number of adults and of different professions (Town also a librarian, City a librarian and a cleric) and sets how many buildings the mod may build (4 / 10 / 20 / 32) and how far from the bell (48 / 64 / 80 / 96 blocks). The level is computed as soon as a village is found, so an existing vanilla village often starts above Hamlet. Levels only go up; nearby players see a title when a village levels up, and fireworks go up over the square (launched from open ground away from anyone, exploding high, so nobody is hurt and nothing burns).
 - **Professions at work** (during their working hours): shepherds breed and shear sheep, butchers breed pigs and put raw meat and charcoal into their own smoker, leatherworkers breed cows and refill their own cauldron, fletchers breed chickens, fishermen fish at nearby water and put cod or salmon into their own barrel, clerics heal hurt villagers and cure zombie villagers in the village (at most once a day each; never named or leashed ones, or ones kept by a player), cartographers walk around the edge of the village. Armorers and weaponsmiths make the village safer, toolsmiths make it build faster (+10% each, up to +30%), a cartographer widens the building radius by 16. Animals are bred only up to a limit per kind that grows with the level, and are never killed; named or leashed animals are left alone.
 - **Names:** every village gets a name that fits its style. Each house is a household with a family name, and villagers are named after the household of their bed. Names set with a name tag or by another mod are never replaced. Guard Villagers guards are named "Guard <name>". Walking into a village shows its name, level, population and mood as a title.
 - **Speech:** now and then a villager near a player says a short line above their head, picked from what really happens: unmet needs, a building going up, a new baby, a death, their own work, the leader's plans, the mood, or a greeting. The text is a vanilla text display that disappears after a few seconds; leftover text (for example after a crash) is removed as soon as it loads.
-- **Chronicle:** the village writes down what happens: births ("The Tran family has a new baby"), deaths and their cause, villagers turned into zombies or cured, villagers joining the guards, new buildings, level ups, new chiefs, raids won or lost, festivals and deliveries. The last `chronicleMaxEntries` entries are kept. Every librarian keeps a written book of the chronicle on their own lectern while it is empty; a lectern holding another book is never touched, and a book taken away is replaced at the next entry. Big events (level up, raid, festival) are announced in chat, small ones on the action bar. Named villagers and named guards who die get a grave (a stone wall and a sign with name, profession and day) in a 7×7 graveyard near the edge of the village; babies, zombified villagers and new guards get none.
-- **Festival:** every `festivalIntervalDays` days at dusk, when the village is not miserable, not raided and the weather is clear (otherwise it waits for the next dusk), villagers gather around the bell for `festivalDurationTicks`, the bell sounds, fireworks go up from open ground away from anyone, and villagers talk about the feast. It is named after the time of year. No block is placed.
+- **Chronicle:** the village writes down what happens: births ("The Tran family has a new baby"), deaths and their cause, villagers turned into zombies or cured, villagers joining the guards, new buildings, level ups, new chiefs, raids won or lost and deliveries. The last `chronicleMaxEntries` entries are kept. Every librarian keeps a written book of the chronicle on their own lectern while it is empty; a lectern holding another book is never touched, and a book taken away is replaced at the next entry. Big events (level up, raid) are announced in chat, small ones on the action bar. Named villagers and named guards who die get a grave (a stone wall and a sign with name, profession and day) in a 7×7 graveyard near the edge of the village; babies, zombified villagers and new guards get none.
 - **Material board:** the village asks for the three materials used most by the building it is building or has planned next, on a sign by the bell and as trades with the chief (material → emeralds, one use each). Every delivery cheers the village up and goes into the chronicle; when everything is delivered, that building goes up twice as fast and the next one starts without waiting. The village never needs the board: it only speeds things up.
 - **Roads:** a finished building is linked from its door to the nearest village road within `roadSearchRadius` (dirt path, smooth sandstone, and Regrowth's roads), or to the bell. A mason walks along and paves it (at half speed without a mason). Only grass, dirt, coarse dirt and podzol become dirt path, and sand becomes smooth sandstone in deserts; water, buildings and plots are avoided. A way that cannot be found is skipped.
 - **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
@@ -83,7 +82,6 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `/livingvillages chronicle` | The last 10 chronicle entries of the nearest village (every player) |
 | `/livingvillages board` | The material requests of the nearest village (every player) |
 | `/livingvillages board place` | Place the material board again (it is placed only once on its own) |
-| `/livingvillages festival` | Start a festival now, for testing |
 | `/livingvillages pause` / `resume` | Stop or restart the whole mod (saved as `enabled` in the config) |
 | `/livingvillages speed <0.1–10>` | Build speed multiplier (saved in the config) |
 | `/livingvillages reload` | Reload `config/livingvillages.json` |
@@ -162,8 +160,7 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `announceEvents` | `true` | Tell nearby players about events (chat or action bar) |
 | `chronicleMaxEntries` | `100` | Entries kept per village |
 | `gravesEnabled` | `true` | Graves for named villagers and guards |
-| `festivalEnabled` | `true` | Festivals |
-| `festivalIntervalDays` / `festivalDurationTicks` | `7` / `2400` | Days between festivals, and how long one lasts |
+| `levelUpFireworks` | `true` | Fireworks when a village reaches a new level |
 | `boardEnabled` | `true` | Material board and its trades (switching it off takes the trades back from the chief) |
 | `maxRequests` | `3` | Materials asked for at once (1–3) |
 | `requestExpireDays` | `3` | Undelivered requests are renewed after this many days |
@@ -190,7 +187,7 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 
 - Villages on steep ground may find no site. After `maxSiteFailures` failed searches such a village stops trying until `/livingvillages build`.
 - Only the five vanilla village styles are supported.
-- A road still being laid, a festival and a cure in progress are not saved: after a restart the road is dropped and the festival ends.
+- A road still being laid, a fireworks show and a cure in progress are not saved: after a restart the road is dropped and the show ends.
 - The chronicle, graves, level-up titles and speech were tested on a dedicated server without a real player; Guard Villagers could not be loaded in the development environment, so guard names, lines and graves are untested.
 
 ## Removing the mod

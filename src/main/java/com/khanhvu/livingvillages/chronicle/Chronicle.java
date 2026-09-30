@@ -146,8 +146,6 @@ public final class Chronicle {
 		});
 		VillageEvents.LEVEL_UP.register(e -> add(e.level(), e.village(), Notice.BIG, "livingvillages.chronicle.level_up",
 				ChronicleEntry.keyArg(VillageLevel.langKey(e.newLevel()))));
-		VillageEvents.FESTIVAL.register(e -> add(e.level(), e.village(), Notice.BIG, "livingvillages.chronicle.festival",
-				ChronicleEntry.keyArg(e.nameKey())));
 		VillageEvents.REQUEST_FULFILLED.register(e -> {
 			String item = ChronicleEntry.itemArg(BuiltInRegistries.ITEM.get(e.item()));
 			if (e.player() != null) {

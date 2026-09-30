@@ -80,9 +80,6 @@ public class VillageRecord {
 	/** New chronicle entries since the librarians' books were last written; not saved (books are rewritten after a restart). */
 	private boolean chronicleDirty = true;
 
-	// v2-GĐ 8: day of the last festival (saved); NEVER until the village is first seen at dusk
-	private long lastFestivalDay = NEVER;
-
 	// v2-GĐ 9: material board (saved)
 	private final List<MaterialRequest> requests = new ArrayList<>();
 	/** Template the requests were made for, and the day they were made. */
@@ -109,8 +106,6 @@ public class VillageRecord {
 	@Nullable
 	private String recentDeathName;
 	private long recentDeathTick = Long.MIN_VALUE;
-	/** A festival is going on (v2-GĐ 8); not saved. */
-	private boolean festivalActive;
 
 	// v2-GĐ 2: last computed values (not saved, recomputed every manage interval)
 	@Nullable
@@ -320,14 +315,6 @@ public class VillageRecord {
 		this.recentDeathTick = tick;
 	}
 
-	public boolean isFestivalActive() {
-		return festivalActive;
-	}
-
-	public void setFestivalActive(boolean festivalActive) {
-		this.festivalActive = festivalActive;
-	}
-
 	public int getLastAdultCount() {
 		return lastAdultCount;
 	}
@@ -371,14 +358,6 @@ public class VillageRecord {
 
 	public void setGraveCount(int graveCount) {
 		this.graveCount = graveCount;
-	}
-
-	public long getLastFestivalDay() {
-		return lastFestivalDay;
-	}
-
-	public void setLastFestivalDay(long lastFestivalDay) {
-		this.lastFestivalDay = lastFestivalDay;
 	}
 
 	public List<MaterialRequest> getRequests() {
@@ -555,7 +534,6 @@ public class VillageRecord {
 			tag.put("Graveyard", boxTag(graveyard));
 		}
 		tag.putInt("GraveCount", graveCount);
-		tag.putLong("LastFestivalDay", lastFestivalDay);
 		ListTag requestList = new ListTag();
 		for (MaterialRequest request : requests) {
 			requestList.add(request.save());
@@ -664,7 +642,6 @@ public class VillageRecord {
 			record.graveyard = readBox(tag.getIntArray("Graveyard"));
 		}
 		record.graveCount = tag.getInt("GraveCount");
-		record.lastFestivalDay = tag.contains("LastFestivalDay") ? tag.getLong("LastFestivalDay") : NEVER;
 		ListTag requestList = tag.getList("Requests", Tag.TAG_COMPOUND);
 		for (int i = 0; i < requestList.size(); i++) {
 			MaterialRequest request = MaterialRequest.load(requestList.getCompound(i));

@@ -31,10 +31,6 @@ public final class VillageEvents {
 	public record LevelUp(ServerLevel level, VillageRecord village, int newLevel) {
 	}
 
-	/** A festival starts; {@code nameKey} is its lang key, e.g. the harvest festival. */
-	public record FestivalStarted(ServerLevel level, VillageRecord village, String nameKey) {
-	}
-
 	/** A player traded a board request with the leader (v2-GĐ 9.4); {@code player} is null if not known. */
 	public record RequestFulfilled(ServerLevel level, VillageRecord village, @Nullable String player, ResourceLocation item, int count,
 			boolean allDone) {
@@ -54,7 +50,6 @@ public final class VillageEvents {
 	public static final Bus<LeaderChanged> LEADER_CHANGED = new Bus<>();
 	public static final Bus<Birth> BIRTH = new Bus<>();
 	public static final Bus<RequestFulfilled> REQUEST_FULFILLED = new Bus<>();
-	public static final Bus<FestivalStarted> FESTIVAL = new Bus<>();
 	public static final Bus<ZombieCured> ZOMBIE_CURED = new Bus<>();
 
 	private VillageEvents() {

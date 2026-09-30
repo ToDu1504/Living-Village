@@ -121,9 +121,6 @@ public final class ProfessionWork {
 	// ---------------------------------------------------------------- choosing
 
 	private static void pickTasks(ServerLevel level, VillageRecord village, long now) {
-		if (village.isFestivalActive()) {
-			return; // everyone is at the festival
-		}
 		LVConfig config = LVConfig.get();
 		int radius = VillageAnalyzer.areaRadius(village);
 		List<Villager> adults = VillageAnalyzer.getAdultVillagers(level, village.getBellPos(), radius);

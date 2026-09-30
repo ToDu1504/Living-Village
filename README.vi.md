@@ -2,7 +2,7 @@
 
 *[English](README.md)*
 
-Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng. Làng ghi biên niên sử, mở lễ hội, nhờ người chơi mang vật liệu, và nối công trình mới bằng đường làng.
+Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng. Làng ghi biên niên sử, bắn pháo hoa mừng mỗi lần lên cấp, nhờ người chơi mang vật liệu, và nối công trình mới bằng đường làng.
 
 Mod không thêm khối, vật phẩm, sinh vật hay texture mới. Người chơi không cần cài mod ở máy mình.
 
@@ -18,7 +18,7 @@ Bản 0.1 chỉ xây nhà khi làng hết giường. Giờ có thêm:
 - **Tên:** tên làng, họ theo hộ gia đình, tên dân và lính gác, tiêu đề chào khi bước vào làng.
 - **Lời nói:** dân làng nói những câu ngắn về chuyện đang thật sự xảy ra trong làng.
 - **Biên niên sử và bia mộ:** làng ghi biên niên sử (cả thành sách trên lectern của thủ thư) và dựng bia cho dân có tên khi mất.
-- **Lễ hội:** bảy ngày một lần lúc hoàng hôn, dân tụ tập quanh chuông và bắn pháo hoa.
+- **Pháo hoa mừng lên cấp:** làng lên cấp thì bắn một tràng pháo hoa trên quảng trường.
 - **Bảng vật liệu:** mang vật liệu làng cần tới đổi lấy ngọc với trưởng làng để làng xây nhanh hơn.
 - **Đường làng:** công trình mới được nối đường vào đường làng, do thợ đá lát.
 
@@ -49,12 +49,11 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
   3. việc làm dưới `needThreshold` → xưởng cho nghề mà làng có ít người nhất;
   4. có người chăn nuôi (chăn cừu, bán thịt, thuộc da, làm tên) nhưng quanh làng không có gia súc của họ → chuồng, xây xong có sẵn một cặp gia súc đó;
   5. còn lại thì không xây (`status` ghi lý do: làng đang ổn, hoặc làng cần lớn hơn để xây tiếp).
-- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố. Mỗi cấp cần đủ số dân trưởng thành và số nghề khác nhau (Thị trấn cần thêm thủ thư, Thành phố cần thủ thư và mục sư), và quyết định số công trình mod được xây (4 / 10 / 20 / 32) cùng khoảng cách xa nhất tới chuông (48 / 64 / 80 / 96 khối). Cấp được tính ngay khi mod thấy làng, nên làng vanilla có sẵn thường bắt đầu trên cấp Xóm. Cấp chỉ tăng; người chơi ở gần thấy tiêu đề khi làng lên cấp.
+- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố. Mỗi cấp cần đủ số dân trưởng thành và số nghề khác nhau (Thị trấn cần thêm thủ thư, Thành phố cần thủ thư và mục sư), và quyết định số công trình mod được xây (4 / 10 / 20 / 32) cùng khoảng cách xa nhất tới chuông (48 / 64 / 80 / 96 khối). Cấp được tính ngay khi mod thấy làng, nên làng vanilla có sẵn thường bắt đầu trên cấp Xóm. Cấp chỉ tăng; người chơi ở gần thấy tiêu đề khi làng lên cấp, và pháo hoa bắn lên trên quảng trường (phóng từ chỗ đất trống cách xa mọi người, nổ trên cao nên không ai bị thương, không cháy gì).
 - **Mỗi nghề một việc** (trong giờ làm việc): người chăn cừu cho cừu sinh sản và xén lông; người bán thịt cho lợn sinh sản và bỏ thịt sống cùng than củi vào lò hun khói của mình; thợ thuộc da cho bò sinh sản và đổ nước vào vạc của mình; thợ làm tên cho gà sinh sản; ngư dân câu cá ở chỗ nước gần đó rồi bỏ cá tuyết hoặc cá hồi vào thùng của mình; mục sư chữa dân bị thương và chữa dân làng zombie trong làng (mỗi người tối đa một lần mỗi ngày; không đụng con có tên, bị dắt dây hay được người chơi giữ lại); người vẽ bản đồ đi một vòng quanh rìa làng. Thợ rèn giáp và thợ rèn vũ khí làm làng an toàn hơn, thợ rèn công cụ giúp xây nhanh hơn (mỗi người +10%, tối đa +30%), có người vẽ bản đồ thì bán kính xây rộng thêm 16. Gia súc chỉ được cho sinh sản tới giới hạn mỗi loại (tăng theo cấp làng) và không bao giờ bị giết; con có tên hoặc bị dắt dây không bị đụng tới.
 - **Tên:** mỗi làng có một cái tên hợp với phong cách ("Làng Suối Bạc"). Mỗi nhà là một hộ có họ riêng, và dân làng mang họ của hộ có giường họ ngủ ("Trần Minh"). Tên đặt bằng name tag hoặc do mod khác đặt không bao giờ bị thay. Lính gác của Guard Villagers được đặt tên "Lính gác <tên>". Bước vào làng sẽ thấy tiêu đề ghi tên làng, cấp, số dân và tâm trạng.
 - **Lời nói:** thỉnh thoảng một dân làng gần người chơi nói một câu ngắn trên đầu, chọn theo điều đang thật sự xảy ra: nhu cầu chưa đủ, công trình đang xây, em bé mới sinh, người vừa mất, việc của nghề mình, dự định của trưởng làng, tâm trạng, hay lời chào. Chữ là một text display vanilla, tự biến mất sau vài giây; chữ còn sót lại (ví dụ sau khi game bị tắt đột ngột) bị xóa ngay khi được nạp.
-- **Biên niên sử:** làng ghi lại những gì xảy ra: sinh ("Nhà họ Trần vừa có thêm một em bé"), mất và nguyên nhân, dân bị biến thành zombie hay được chữa khỏi, dân gia nhập đội lính gác, công trình mới, lên cấp, trưởng làng mới, thắng hay thua cuộc đột kích, lễ hội và vật liệu được giao. Giữ `chronicleMaxEntries` mục mới nhất. Mỗi thủ thư giữ một cuốn sách biên niên sử trên lectern của mình khi lectern đó trống; lectern đang có sách khác không bao giờ bị đụng tới, sách bị lấy đi thì có cuốn mới ở mục tiếp theo. Sự kiện lớn (lên cấp, đột kích, lễ hội) báo trong chat, sự kiện nhỏ báo trên thanh hành động. Dân có tên và lính gác có tên khi mất có bia mộ (một khối tường đá và một tấm bảng ghi tên, nghề, ngày mất) trong nghĩa trang 7×7 ở rìa làng; em bé, dân bị zombie hóa và dân thành lính gác thì không.
-- **Lễ hội:** cứ `festivalIntervalDays` ngày, lúc hoàng hôn, nếu làng không khốn khó, không bị đột kích và trời không mưa (không thì chờ hoàng hôn hôm sau), dân tụ tập quanh chuông trong `festivalDurationTicks`, chuông vang, pháo hoa bắn lên từ chỗ đất trống cách xa mọi người, và dân nói chuyện lễ hội. Tên lễ hội theo thời điểm trong năm. Không đặt khối nào.
+- **Biên niên sử:** làng ghi lại những gì xảy ra: sinh ("Nhà họ Trần vừa có thêm một em bé"), mất và nguyên nhân, dân bị biến thành zombie hay được chữa khỏi, dân gia nhập đội lính gác, công trình mới, lên cấp, trưởng làng mới, thắng hay thua cuộc đột kích và vật liệu được giao. Giữ `chronicleMaxEntries` mục mới nhất. Mỗi thủ thư giữ một cuốn sách biên niên sử trên lectern của mình khi lectern đó trống; lectern đang có sách khác không bao giờ bị đụng tới, sách bị lấy đi thì có cuốn mới ở mục tiếp theo. Sự kiện lớn (lên cấp, đột kích) báo trong chat, sự kiện nhỏ báo trên thanh hành động. Dân có tên và lính gác có tên khi mất có bia mộ (một khối tường đá và một tấm bảng ghi tên, nghề, ngày mất) trong nghĩa trang 7×7 ở rìa làng; em bé, dân bị zombie hóa và dân thành lính gác thì không.
 - **Bảng vật liệu:** làng xin ba loại vật liệu dùng nhiều nhất của công trình đang xây hoặc sắp xây, ghi trên một tấm bảng cạnh chuông và thành giao dịch với trưởng làng (vật liệu → ngọc, mỗi giao dịch dùng một lần). Mỗi lần giao làm làng vui hơn và được ghi vào biên niên sử; giao đủ hết thì công trình đó xây nhanh gấp đôi và công trình sau bắt đầu không cần chờ. Làng không bao giờ cần bảng này: nó chỉ giúp làng lớn nhanh hơn.
 - **Đường làng:** công trình xây xong được nối từ cửa tới đường làng gần nhất trong `roadSearchRadius` (đường đất, sa thạch mịn và đường của Regrowth), hoặc về chuông. Thợ đá đi dọc và lát đường (không có thợ đá thì chậm một nửa). Chỉ đổi cỏ, đất, đất thô và podzol thành đường đất; ở sa mạc cát thành sa thạch mịn; tránh nước, công trình và đất của nhà khác. Không tìm được đường thì bỏ qua.
 - **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
@@ -86,7 +85,6 @@ Mọi lệnh cần quyền cấp 2 (OP), trừ `chronicle` và `board` ai cũng 
 | `/livingvillages chronicle` | 10 mục biên niên sử gần nhất của làng gần nhất (mọi người) |
 | `/livingvillages board` | Các yêu cầu vật liệu của làng gần nhất (mọi người) |
 | `/livingvillages board place` | Đặt lại bảng vật liệu (bảng chỉ tự đặt một lần) |
-| `/livingvillages festival` | Mở lễ hội ngay, để thử |
 | `/livingvillages pause` / `resume` | Tạm dừng / tiếp tục toàn bộ mod (lưu vào mục `enabled` của config) |
 | `/livingvillages speed <0.1–10>` | Hệ số tốc độ xây (lưu vào config) |
 | `/livingvillages reload` | Nạp lại `config/livingvillages.json` |
@@ -165,8 +163,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `announceEvents` | `true` | Báo sự kiện cho người chơi ở gần (chat hoặc thanh hành động) |
 | `chronicleMaxEntries` | `100` | Số mục giữ lại mỗi làng |
 | `gravesEnabled` | `true` | Bia mộ cho dân và lính gác có tên |
-| `festivalEnabled` | `true` | Lễ hội |
-| `festivalIntervalDays` / `festivalDurationTicks` | `7` / `2400` | Số ngày giữa hai lễ hội, và thời gian một lễ hội |
+| `levelUpFireworks` | `true` | Bắn pháo hoa khi làng lên cấp |
 | `boardEnabled` | `true` | Bảng vật liệu và giao dịch của nó (tắt thì giao dịch được gỡ khỏi trưởng làng) |
 | `maxRequests` | `3` | Số vật liệu xin cùng lúc (1–3) |
 | `requestExpireDays` | `3` | Yêu cầu chưa ai giao được làm mới sau số ngày này |
@@ -193,7 +190,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 - Làng trên đất dốc có thể không tìm được chỗ xây. Sau `maxSiteFailures` lần thất bại, làng ngừng thử cho tới khi có lệnh `/livingvillages build`.
 - Chỉ hỗ trợ 5 kiểu làng vanilla.
-- Đường đang làm dở, lễ hội và ca chữa đang diễn ra không được lưu: khởi động lại thì đường dở bị bỏ và lễ hội kết thúc.
+- Đường đang làm dở, màn pháo hoa và ca chữa đang diễn ra không được lưu: khởi động lại thì đường dở bị bỏ và pháo hoa dừng.
 - Biên niên sử, bia mộ, tiêu đề lên cấp và lời nói mới được test trên server không có người chơi thật; Guard Villagers không nạp được trong môi trường dev nên tên, câu nói và bia mộ của lính gác chưa được test.
 
 ## Gỡ mod

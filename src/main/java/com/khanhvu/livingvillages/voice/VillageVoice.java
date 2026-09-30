@@ -103,7 +103,7 @@ public final class VillageVoice {
 		}
 		long timeOfDay = level.getDayTime() % 24000L;
 		boolean night = timeOfDay > 12500 && timeOfDay < 23500;
-		if ((night && !village.isFestivalActive()) || activeBubbles(village) >= config.maxBubblesPerVillage) {
+		if (night || activeBubbles(village) >= config.maxBubblesPerVillage) {
 			return;
 		}
 		List<ServerPlayer> listeners = level.players().stream()
@@ -144,7 +144,7 @@ public final class VillageVoice {
 	}
 
 	/**
-	 * The most relevant groups first (festival, the leader's plans, own work, a recent birth or death, unmet needs,
+	 * The most relevant groups first (the leader's plans, own work, a recent birth or death, unmet needs,
 	 * building news, greeting a nearby player, mood), and a random pick among the two most relevant.
 	 */
 	@Nullable
@@ -154,9 +154,6 @@ public final class VillageVoice {
 		}
 		List<Component> options = new ArrayList<>();
 		RandomSource random = level.getRandom();
-		if (village.isFestivalActive()) {
-			add(options, line("festival", random));
-		}
 		if (villager.getUUID().equals(village.getLeaderUuid())) {
 			add(options, leaderLine(level, village, random));
 			if (village.getRequests().stream().anyMatch(r -> !r.isFulfilled())) {

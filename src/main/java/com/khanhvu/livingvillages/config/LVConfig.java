@@ -132,10 +132,8 @@ public class LVConfig {
 	public int chronicleMaxEntries = 100;
 	public boolean gravesEnabled = true;
 
-	// v2-GĐ 8: festival
-	public boolean festivalEnabled = true;
-	public int festivalIntervalDays = 7;
-	public int festivalDurationTicks = 2400;
+	/** Fireworks over the square when a village reaches a new level (replaces the v2-GĐ 8 festival). */
+	public boolean levelUpFireworks = true;
 
 	// v2-GĐ 9: material board
 	public boolean boardEnabled = true;
@@ -318,8 +316,6 @@ public class LVConfig {
 			warn("roadBlocks", roadBlocks);
 			roadBlocks = d.roadBlocks;
 		}
-		festivalIntervalDays = checkInt("festivalIntervalDays", festivalIntervalDays, 1, 1000, d.festivalIntervalDays);
-		festivalDurationTicks = checkInt("festivalDurationTicks", festivalDurationTicks, 200, 12000, d.festivalDurationTicks);
 		chronicleMaxEntries = checkInt("chronicleMaxEntries", chronicleMaxEntries, 10, 1000, d.chronicleMaxEntries);
 		voiceRange = checkInt("voiceRange", voiceRange, 4, 128, d.voiceRange);
 		voiceIntervalTicks = checkInt("voiceIntervalTicks", voiceIntervalTicks, 20, 72000, d.voiceIntervalTicks);

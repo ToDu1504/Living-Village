@@ -9,7 +9,6 @@ import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.config.LVConfig;
-import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
@@ -66,7 +65,6 @@ public final class LVCommands {
 						.executes(ctx -> build(ctx, false))
 						.then(Commands.literal("instant").executes(ctx -> build(ctx, true))))
 				.then(op("cancel").executes(LVCommands::cancel))
-				.then(op("festival").executes(LVCommands::festival))
 				.then(Commands.literal("board")
 						.executes(LVCommands::board)
 						.then(op("place").executes(LVCommands::boardPlace)))
@@ -84,23 +82,6 @@ public final class LVCommands {
 								.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
 										Arrays.stream(VillageType.values()).map(VillageType::getSerializedName), builder))
 								.executes(LVCommands::templatesForType))));
-	}
-
-	/** Starts a festival in the nearest village now, for testing (spec v2-GĐ 8). */
-	private static int festival(CommandContext<CommandSourceStack> context) {
-		CommandSourceStack source = context.getSource();
-		VillageRecord record = findNearestVillage(source);
-		if (record == null) {
-			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
-			return 0;
-		}
-		if (Festival.isRunning(record)) {
-			source.sendFailure(LVText.tr("livingvillages.command.festival.already"));
-			return 0;
-		}
-		Festival.start(source.getLevel(), record);
-		source.sendSuccess(() -> LVText.tr("livingvillages.command.festival.started", VillageIdentity.displayName(record)), true);
-		return 1;
 	}
 
 	/** The nearest village's material requests (spec v2-GĐ 9); open to every player. */
