@@ -152,8 +152,8 @@ public class LVConfig {
 
 	// v3: walls (village → citadel)
 	public boolean wallsEnabled = true;
-	/** With Regrowth installed, its village walls are used and this mod builds none (spec v3 §3). */
-	public boolean deferToRegrowth = true;
+	/** true: with Regrowth installed, its village walls are used and this mod builds none (spec v3 §3). Off by default: the mod does not rely on others. */
+	public boolean deferToRegrowth = false;
 	/** Level from which a village gets a palisade (1 = Village). */
 	public int palisadeMinLevel = 1;
 	/** Free blocks between the outermost building, bed or job site and the wall. */
