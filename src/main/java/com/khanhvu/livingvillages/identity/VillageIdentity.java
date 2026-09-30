@@ -163,6 +163,29 @@ public final class VillageIdentity {
 		return surname;
 	}
 
+	/** Surname of the household nearest to {@code pos} (e.g. where a baby was born), or null if none is close. */
+	@Nullable
+	public static String surnameNear(VillageRecord village, BlockPos pos) {
+		for (BoundingBox plot : village.getPlots()) {
+			if (plot.inflatedBy(HOUSEHOLD_RADIUS).isInside(pos)) {
+				String surname = village.getHouseholds().get(plot.getCenter().asLong());
+				if (surname != null) {
+					return surname;
+				}
+			}
+		}
+		String nearest = null;
+		double nearestDist = 2.0 * HOUSEHOLD_RADIUS * 2.0 * HOUSEHOLD_RADIUS;
+		for (Map.Entry<Long, String> household : village.getHouseholds().entrySet()) {
+			double dist = BlockPos.of(household.getKey()).distSqr(pos);
+			if (dist <= nearestDist) {
+				nearestDist = dist;
+				nearest = household.getValue();
+			}
+		}
+		return nearest;
+	}
+
 	/** A surname not yet used in the village when possible. */
 	private static String newSurname(VillageRecord village, ServerLevel level) {
 		Set<String> used = new HashSet<>(village.getHouseholds().values());

@@ -5,6 +5,7 @@ import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
+import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
@@ -22,6 +23,7 @@ import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -40,9 +42,11 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * /livingvillages command tree. All subcommands require permission level 2.
+ * /livingvillages command tree. Every subcommand requires permission level 2, except {@code chronicle}.
  */
 public final class LVCommands {
+	private static final int CHRONICLE_LINES = 10;
+
 	private LVCommands() {
 	}
 
@@ -52,27 +56,52 @@ public final class LVCommands {
 
 	private static void registerTree(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(Commands.literal("livingvillages")
-				.requires(source -> source.hasPermission(2))
-				.then(Commands.literal("status").executes(LVCommands::status))
-				.then(Commands.literal("list").executes(LVCommands::list))
-				.then(Commands.literal("build")
+				.then(Commands.literal("chronicle").executes(LVCommands::chronicle))
+				.then(op("status").executes(LVCommands::status))
+				.then(op("list").executes(LVCommands::list))
+				.then(op("build")
 						.executes(ctx -> build(ctx, false))
 						.then(Commands.literal("instant").executes(ctx -> build(ctx, true))))
-				.then(Commands.literal("cancel").executes(LVCommands::cancel))
-				.then(Commands.literal("pause").executes(ctx -> setEnabled(ctx, false)))
-				.then(Commands.literal("resume").executes(ctx -> setEnabled(ctx, true)))
-				.then(Commands.literal("reload").executes(LVCommands::reload))
-				.then(Commands.literal("rename")
+				.then(op("cancel").executes(LVCommands::cancel))
+				.then(op("pause").executes(ctx -> setEnabled(ctx, false)))
+				.then(op("resume").executes(ctx -> setEnabled(ctx, true)))
+				.then(op("reload").executes(LVCommands::reload))
+				.then(op("rename")
 						.then(Commands.argument("name", StringArgumentType.greedyString()).executes(LVCommands::rename)))
-				.then(Commands.literal("speed")
+				.then(op("speed")
 						.then(Commands.argument("multiplier", DoubleArgumentType.doubleArg(0.1, 10.0))
 								.executes(LVCommands::speed)))
-				.then(Commands.literal("templates")
+				.then(op("templates")
 						.executes(LVCommands::templatesForNearest)
 						.then(Commands.argument("type", StringArgumentType.word())
 								.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
 										Arrays.stream(VillageType.values()).map(VillageType::getSerializedName), builder))
 								.executes(LVCommands::templatesForType))));
+	}
+
+	/** Subcommand for operators (permission level 2). */
+	private static LiteralArgumentBuilder<CommandSourceStack> op(String name) {
+		return Commands.literal(name).requires(source -> source.hasPermission(2));
+	}
+
+	/** The latest chronicle entries of the nearest village (spec v2-GĐ 7.2); open to every player. */
+	private static int chronicle(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		List<ChronicleEntry> entries = record.getChronicle();
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.chronicle.header", VillageIdentity.displayName(record)), false);
+		if (entries.isEmpty()) {
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.chronicle.empty"), false);
+			return 0;
+		}
+		for (ChronicleEntry entry : entries.subList(Math.max(0, entries.size() - CHRONICLE_LINES), entries.size())) {
+			source.sendSuccess(entry::render, false);
+		}
+		return entries.size();
 	}
 
 	private static int status(CommandContext<CommandSourceStack> context) {

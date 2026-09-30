@@ -79,7 +79,7 @@ public final class VillageSociety {
 				VillageRegistry registry = VillageRegistry.get(level);
 				VillageRecord village = registry.findContaining(villager.blockPosition());
 				if (village != null && village.getKnownVillagers().containsKey(villager.getUUID())) {
-					VillageEvents.DEATH.post(new VillageEvents.Death(level, village, villager));
+					VillageEvents.DEATH.post(new VillageEvents.Death(level, village, villager, source));
 					forget(village, villager.getUUID());
 					registry.setDirty();
 				}
@@ -196,7 +196,7 @@ public final class VillageSociety {
 	}
 
 	/** The villager's name without the leader title. */
-	private static String baseName(VillageRecord village, Villager villager) {
+	public static String baseName(VillageRecord village, Villager villager) {
 		String base = village.getTitledBaseNames().get(villager.getUUID());
 		return base != null ? base : villager.getName().getString();
 	}

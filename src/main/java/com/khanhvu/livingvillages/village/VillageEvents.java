@@ -3,6 +3,7 @@ package com.khanhvu.livingvillages.village;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,7 @@ public final class VillageEvents {
 	}
 
 	/** A villager of the village died (killed, not converted). */
-	public record Death(ServerLevel level, VillageRecord village, Villager villager) {
+	public record Death(ServerLevel level, VillageRecord village, Villager villager, DamageSource source) {
 	}
 
 	public record LeaderChanged(ServerLevel level, VillageRecord village, @Nullable Villager oldLeader, @Nullable Villager newLeader) {

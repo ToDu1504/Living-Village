@@ -73,6 +73,72 @@ public final class SiteFinder {
 	}
 
 	/**
+	 * A flat square of natural ground with {@code clearHeight} free blocks above it, between {@code minDistance} and
+	 * {@code maxDistance} from the bell, away from plots, projects and POIs (spec v2-GĐ 7.4 graveyard). The box
+	 * returned spans the free layers above the ground; ground heights inside differ by at most one block.
+	 */
+	public static Optional<BoundingBox> findFlatArea(ServerLevel level, VillageRecord village, int size, int clearHeight,
+			int minDistance, int maxDistance, RandomSource random) {
+		LVConfig config = LVConfig.get();
+		VillageRegistry registry = VillageRegistry.get(level);
+		BlockPos bell = village.getBellPos();
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		candidates:
+		for (int i = 0; i < config.siteAttempts; i++) {
+			double radius = minDistance + (maxDistance - minDistance) * random.nextDouble();
+			double angle = random.nextDouble() * Math.PI * 2.0;
+			int minX = bell.getX() + Mth.floor(Math.cos(angle) * radius) - size / 2;
+			int minZ = bell.getZ() + Mth.floor(Math.sin(angle) * radius) - size / 2;
+			int maxX = minX + size - 1;
+			int maxZ = minZ + size - 1;
+			if (!allChunksLoaded(level, minX - 1, minZ - 1, maxX + 1, maxZ + 1)) {
+				continue;
+			}
+			for (VillageRecord other : registry.getVillages()) {
+				for (BoundingBox plot : other.getPlots()) {
+					if (plot.intersects(minX - 1, minZ - 1, maxX + 1, maxZ + 1)) {
+						continue candidates;
+					}
+				}
+				BuildProject project = other.getProject();
+				if (project != null && project.getFootprint().intersects(minX - 1, minZ - 1, maxX + 1, maxZ + 1)) {
+					continue candidates;
+				}
+			}
+			int low = Integer.MAX_VALUE;
+			int high = Integer.MIN_VALUE;
+			for (int x = minX; x <= maxX; x++) {
+				for (int z = minZ; z <= maxZ; z++) {
+					int groundY = groundTop(level, x, z, pos, false);
+					if (!isNaturalGround(level.getBlockState(pos.set(x, groundY, z)))) {
+						continue candidates;
+					}
+					for (int y = groundY + 1; y <= groundY + clearHeight; y++) {
+						if (!isClearable(level.getBlockState(pos.set(x, y, z)))) {
+							continue candidates;
+						}
+					}
+					low = Math.min(low, groundY);
+					high = Math.max(high, groundY);
+					if (high - low > 1) {
+						continue candidates;
+					}
+				}
+			}
+			if (containsPoi(level, minX, minZ, maxX, maxZ, low - POI_DEPTH, high + clearHeight)) {
+				continue;
+			}
+			return Optional.of(new BoundingBox(minX, low + 1, minZ, maxX, high + clearHeight, maxZ));
+		}
+		return Optional.empty();
+	}
+
+	/** Top ground block of a column (through snow layers and plants). The chunk must be loaded. */
+	public static int groundTop(ServerLevel level, int x, int z) {
+		return groundTop(level, x, z, new BlockPos.MutableBlockPos(), false);
+	}
+
+	/**
 	 * Ground a house may stand on or that may be levelled away inside its footprint. Everything else
 	 * (paths, planks, cobblestone, water, ice, logs...) is treated as something not to build over.
 	 */

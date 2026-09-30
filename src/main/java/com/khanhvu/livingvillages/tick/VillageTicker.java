@@ -9,6 +9,7 @@ import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
+import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
@@ -87,6 +88,9 @@ public final class VillageTicker {
 			}
 			if (manage) {
 				VillageAnalyzer.Stats stats = config.needsEnabled ? VillageSociety.update(level, registry, village) : null;
+				if (stats != null && Chronicle.enabled()) {
+					Chronicle.manage(level, village, stats);
+				}
 				if (!config.needsEnabled) {
 					VillageIdentity.ensureName(village, villageType(village), level);
 					VillageIdentity.nameVillagers(level, village);

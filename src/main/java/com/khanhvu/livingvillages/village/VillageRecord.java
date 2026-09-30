@@ -1,6 +1,7 @@
 package com.khanhvu.livingvillages.village;
 
 import com.khanhvu.livingvillages.build.BuildProject;
+import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.society.VillageNeeds;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.minecraft.core.BlockPos;
@@ -68,6 +69,15 @@ public class VillageRecord {
 	private final Map<UUID, String> givenNames = new HashMap<>();
 	/** Adults counted at the last update (for the entry greeting); not saved. */
 	private int lastAdultCount;
+
+	// v2-GĐ 7: chronicle and graveyard (saved)
+	private final List<ChronicleEntry> chronicle = new ArrayList<>();
+	/** The 7×7 graveyard, chosen at the first death of a named villager; null until then. */
+	@Nullable
+	private BoundingBox graveyard;
+	private int graveCount;
+	/** New chronicle entries since the librarians' books were last written; not saved (books are rewritten after a restart). */
+	private boolean chronicleDirty = true;
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
@@ -311,6 +321,35 @@ public class VillageRecord {
 		this.bonuses = bonuses;
 	}
 
+	public List<ChronicleEntry> getChronicle() {
+		return chronicle;
+	}
+
+	public boolean isChronicleDirty() {
+		return chronicleDirty;
+	}
+
+	public void setChronicleDirty(boolean chronicleDirty) {
+		this.chronicleDirty = chronicleDirty;
+	}
+
+	@Nullable
+	public BoundingBox getGraveyard() {
+		return graveyard;
+	}
+
+	public void setGraveyard(@Nullable BoundingBox graveyard) {
+		this.graveyard = graveyard;
+	}
+
+	public int getGraveCount() {
+		return graveCount;
+	}
+
+	public void setGraveCount(int graveCount) {
+		this.graveCount = graveCount;
+	}
+
 	public boolean isLeaderGone() {
 		return leaderGone;
 	}
@@ -351,7 +390,7 @@ public class VillageRecord {
 		tag.putInt("FailedSiteAttempts", failedSiteAttempts);
 		ListTag plotList = new ListTag();
 		for (BoundingBox box : plots) {
-			plotList.add(new IntArrayTag(new int[] {box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()}));
+			plotList.add(boxTag(box));
 		}
 		tag.put("Plots", plotList);
 		if (project != null) {
@@ -415,6 +454,15 @@ public class VillageRecord {
 			named.add(item);
 		}
 		tag.put("GivenNames", named);
+		ListTag entries = new ListTag();
+		for (ChronicleEntry entry : chronicle) {
+			entries.add(entry.save());
+		}
+		tag.put("Chronicle", entries);
+		if (graveyard != null) {
+			tag.put("Graveyard", boxTag(graveyard));
+		}
+		tag.putInt("GraveCount", graveCount);
 		return tag;
 	}
 
@@ -437,9 +485,9 @@ public class VillageRecord {
 		record.failedSiteAttempts = tag.getInt("FailedSiteAttempts");
 		ListTag plotList = tag.getList("Plots", Tag.TAG_INT_ARRAY);
 		for (int i = 0; i < plotList.size(); i++) {
-			int[] a = plotList.getIntArray(i);
-			if (a.length == 6) {
-				record.plots.add(new BoundingBox(a[0], a[1], a[2], a[3], a[4], a[5]));
+			BoundingBox box = readBox(plotList.getIntArray(i));
+			if (box != null) {
+				record.plots.add(box);
 			}
 		}
 		if (tag.contains("Project", Tag.TAG_COMPOUND)) {
@@ -495,6 +543,23 @@ public class VillageRecord {
 				record.givenNames.put(item.getUUID("Id"), item.getString("Name"));
 			}
 		}
+		ListTag entries = tag.getList("Chronicle", Tag.TAG_COMPOUND);
+		for (int i = 0; i < entries.size(); i++) {
+			record.chronicle.add(ChronicleEntry.load(entries.getCompound(i)));
+		}
+		if (tag.contains("Graveyard", Tag.TAG_INT_ARRAY)) {
+			record.graveyard = readBox(tag.getIntArray("Graveyard"));
+		}
+		record.graveCount = tag.getInt("GraveCount");
 		return record;
+	}
+
+	private static IntArrayTag boxTag(BoundingBox box) {
+		return new IntArrayTag(new int[] {box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()});
+	}
+
+	@Nullable
+	private static BoundingBox readBox(int[] a) {
+		return a.length == 6 ? new BoundingBox(a[0], a[1], a[2], a[3], a[4], a[5]) : null;
 	}
 }

@@ -125,6 +125,12 @@ public class LVConfig {
 	public int maxBubblesPerVillage = 2;
 	public int bubbleDurationTicks = 80;
 
+	// v2-GĐ 7: chronicle, events, graves
+	public boolean chronicleEnabled = true;
+	public boolean announceEvents = true;
+	public int chronicleMaxEntries = 100;
+	public boolean gravesEnabled = true;
+
 	private static Map<String, Boolean> defaultProfessionWork() {
 		Map<String, Boolean> map = new LinkedHashMap<>();
 		for (String id : List.of("shepherd", "butcher", "leatherworker", "fletcher", "fisherman", "cleric", "armorer",
@@ -269,6 +275,7 @@ public class LVConfig {
 		clericCuresPerDay = checkInt("clericCuresPerDay", clericCuresPerDay, 0, 100, d.clericCuresPerDay);
 		clericCureRange = checkInt("clericCureRange", clericCureRange, 1, 16, d.clericCureRange);
 		greetingCooldownTicks = checkInt("greetingCooldownTicks", greetingCooldownTicks, 0, 720000, d.greetingCooldownTicks);
+		chronicleMaxEntries = checkInt("chronicleMaxEntries", chronicleMaxEntries, 10, 1000, d.chronicleMaxEntries);
 		voiceRange = checkInt("voiceRange", voiceRange, 4, 128, d.voiceRange);
 		voiceIntervalTicks = checkInt("voiceIntervalTicks", voiceIntervalTicks, 20, 72000, d.voiceIntervalTicks);
 		voiceChance = checkDouble("voiceChance", voiceChance, 0.0, 1.0, d.voiceChance);
