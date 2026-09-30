@@ -2,7 +2,7 @@
 
 *[English](README.md)*
 
-Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng. Làng ghi biên niên sử, bắn pháo hoa mừng mỗi lần lên cấp, nhờ người chơi mang vật liệu, và nối công trình mới bằng đường làng.
+Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự lớn thành thành trì có tường thành. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Làng lớn dần thì tự quây hàng rào gỗ, rồi tường đá với tháp và cổng vòm, rồi chiếu sáng đường tối và giữ cho đường sá sạch sẽ. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village.
 
 Mod không thêm khối, vật phẩm, sinh vật hay texture mới. Người chơi không cần cài mod ở máy mình.
 
@@ -21,6 +21,12 @@ Bản 0.1 chỉ xây nhà khi làng hết giường. Giờ có thêm:
 - **Pháo hoa mừng lên cấp:** làng lên cấp thì bắn một tràng pháo hoa trên quảng trường.
 - **Bảng vật liệu:** mang vật liệu làng cần tới đổi lấy ngọc với trưởng làng để làng xây nhanh hơn.
 - **Đường làng:** công trình mới được nối đường vào đường làng, do thợ đá lát.
+- **Hàng rào gỗ:** từ cấp Làng, thợ đá dựng một vòng hàng rào gỗ quanh làng (bao hết mọi nhà và bàn nghề). Cổng mở ở chỗ đường cắt qua. Hàng rào dời ra khi làng có thêm nhà mới nằm ngoài.
+- **Tường đá, tháp và cổng vòm:** từ cấp Thị trấn, hàng rào gỗ được thay bằng tường đá: cùng hình đa giác, cao hơn, có tháp 5×5 ở các góc và dọc tường (cầu thang xoắn bên trong, cửa vào mặt trong), cổng có vòm. Ở cấp Thành phố, tường có thêm lỗ châu mai ở mọi con tiêu.
+- **Nhà xây trong tường:** khi tường đá đã dựng xong, nhà ở và xưởng được chọn chỗ bên trong tường; nông trại và chuồng ra ngoài gần cổng.
+- **Vòng tường ngoài:** ở cấp cao nhất, một vòng tường thứ hai mở rộng ra quanh vòng trong.
+- **Đuốc:** chỗ tối trên đường, sân chuông, bên trong tường và đỉnh tường được cắm đuốc tự động.
+- **Chăm sóc làng:** dân làng vá ổ gà đường, quét tuyết trên đường và cắt cỏ dại gần cửa nhà. Có thể bật thêm hàng rào vườn quanh nhà mod xây (`homeFences`).
 
 Tính năng nào cũng có công tắc trong config; tắt hết thì mod chạy như bản 0.1. Thế giới từ bản 0.1 nạp được, không mất dữ liệu.
 
@@ -56,7 +62,10 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
 - **Biên niên sử:** làng ghi lại những gì xảy ra: sinh ("Nhà họ Trần vừa có thêm một em bé"), mất và nguyên nhân, dân bị biến thành zombie hay được chữa khỏi, dân gia nhập đội lính gác, công trình mới, lên cấp, trưởng làng mới, thắng hay thua cuộc đột kích và vật liệu được giao. Giữ `chronicleMaxEntries` mục mới nhất. Mỗi thủ thư giữ một cuốn sách biên niên sử trên lectern của mình khi lectern đó trống; lectern đang có sách khác không bao giờ bị đụng tới, sách bị lấy đi thì có cuốn mới ở mục tiếp theo. Sự kiện lớn (lên cấp, đột kích) báo trong chat, sự kiện nhỏ báo trên thanh hành động. Dân có tên và lính gác có tên khi mất có bia mộ (một khối tường đá và một tấm bảng ghi tên, nghề, ngày mất) trong nghĩa trang 7×7 ở rìa làng; em bé, dân bị zombie hóa và dân thành lính gác thì không.
 - **Bảng vật liệu:** làng xin ba loại vật liệu dùng nhiều nhất của công trình đang xây hoặc sắp xây, ghi trên một tấm bảng cạnh chuông và thành giao dịch với trưởng làng (vật liệu → ngọc, mỗi giao dịch dùng một lần). Mỗi lần giao làm làng vui hơn và được ghi vào biên niên sử; giao đủ hết thì công trình đó xây nhanh gấp đôi và công trình sau bắt đầu không cần chờ. Làng không bao giờ cần bảng này: nó chỉ giúp làng lớn nhanh hơn.
 - **Đường làng:** công trình xây xong được nối từ cửa tới đường làng gần nhất trong `roadSearchRadius` (đường đất, sa thạch mịn và đường của Regrowth), hoặc về chuông. Thợ đá đi dọc và lát đường (không có thợ đá thì chậm một nửa). Chỉ đổi cỏ, đất, đất thô và podzol thành đường đất; ở sa mạc cát thành sa thạch mịn; tránh nước, công trình và đất của nhà khác. Không tìm được đường thì bỏ qua.
-- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
+- **Hàng rào và tường thành:** từ cấp Làng, thợ đá dựng vòng hàng rào gỗ quanh rìa ngoài của mọi nhà và bàn nghề. Cổng mở ở chỗ đường cắt qua. Lên cấp Thị trấn thì hàng rào được thay bằng tường đá gạch (sa thạch mịn ở sa mạc): tháp 5×5 ở các góc và dọc tường, cầu thang xoắn bên trong tháp, cửa vào từ mặt trong, cổng có vòm, có con tiêu. Lên Thành phố thì tường có thêm lỗ châu mai. Ở cấp cao nhất, một vòng tường thứ hai mở rộng ra. Mod không bao giờ đụng khối do người chơi đặt; ô bị người chơi phá vỡ được giữ mở, ô bị quái phá hoặc nổ thì được sửa lại. Tắt hẳn bằng `wallsEnabled = false`.
+- **Đuốc:** mỗi `torchIntervalTicks` tick, một ô tối trên đường, sân chuông, bên trong tường hoặc trên khối tường được cắm đuốc. Độ sáng đã trên `torchLightLevel` thì không cắm thêm.
+- **Chăm sóc làng:** mỗi `roadCareIntervalTicks` tick, một dân làng đang thức sửa vài thứ quanh họ: vá ổ gà (đất tự nhiên kẹp giữa hai đoạn đường), nâng đoạn đường bị lún, quét tuyết trên đường, cắt cỏ dại trên đường hoặc gần cửa nhà. `homeFences = true` thêm hàng rào vườn quanh từng nhà mod xây.
+- **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Khi tường đã dựng xong, nhà ở và xưởng được đặt bên trong tường; nông trại và chuồng ra ngoài gần cổng. Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
 - **Cây:** tối đa 4 cây tự nhiên mọc trong chỗ đặt nhà được chặt trước, không rơi đồ, và chỗ không có cây luôn được ưu tiên. Cây chỉ tính là tự nhiên khi có lá tự nhiên (không phải lá do người chơi đặt), nên nhà gỗ và cây trang trí của người chơi không bao giờ bị đụng tới. Cây khổng lồ và cây có tổ ong được giữ nguyên. Xây xong, mỗi cây đã chặt được trồng lại một cây non cùng loại, cách nhà 3–8 khối; nếu làng có nông dân thì một nông dân đi tới trồng.
 - **Thứ tự xây:** móng, rồi dọn cỏ và san đất, rồi dựng nhà từng tầng từ dưới lên, cuối cùng mới đặt cửa, giường, đuốc, thảm và đồ trang trí. Khối chỉ được đặt vào ô trống hoặc ô có thứ thay thế được như cỏ. Khối người chơi đặt chắn đường được giữ nguyên. Rương không có đồ bên trong.
 - **Thợ xây:** ưu tiên dân thất nghiệp, rồi thợ đá, rồi bất kỳ ai, trừ dân ngốc (nitwit) và trẻ con. Thợ xây phải đứng trong phạm vi `builderReach` khối mới đặt được, có vung tay và cầm khối đang đặt. Nếu thợ xây chết hoặc 60 giây không tới được công trường thì người khác thay. Không còn ai thì nhà tự xây với nửa tốc độ.
@@ -172,6 +181,30 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `roadSearchRadius` | `32` | Khoảng tìm đường làng để nối vào |
 | `roadBlocks` | `dirt_path`, `smooth_sandstone` | Khối được coi là đường (thêm khối đường của mod khác vào đây) |
 | `roadMaxNodes` | `4000` | Số bước tối đa khi tìm đường |
+| `wallsEnabled` | `true` | Hàng rào và tường thành |
+| `deferToRegrowth` | `false` | Khi `true` và có Regrowth, bỏ qua tường, hàng rào và đuốc (để Regrowth làm) |
+| `palisadeMinLevel` | `1` | Cấp làng cần có hàng rào gỗ |
+| `cityWallMinLevel` | `2` | Cấp làng cần có tường đá |
+| `cityWallHeight` | `3` | Chiều cao tường bình thường trên mặt đất |
+| `cityWallHeightMax` | `4` | Chiều cao tường khi có con tiêu (cấp Thành phố) |
+| `towerSpacing` | `32` | Số cột giữa hai tháp |
+| `wallMargin` | `6` | Lề nới ra quanh các nhà khi tính đa giác tường |
+| `gateWidth` | `3` | Độ rộng cổng |
+| `maxWallStep` | `3` | Độ chênh cao tối đa giữa hai cột tường liền nhau |
+| `wallBlocksPerSecond` | `1.0` | Tốc độ mỗi thợ đá xây tường |
+| `outerRingMinLevel` | `3` | Cấp làng cần có vòng tường ngoài |
+| `maxRings` | `3` | Số vòng tường tối đa cùng lúc |
+| `ringExpansion` | `24` | Mức nở rộng mỗi vòng tường ngoài |
+| `torchesEnabled` | `true` | Tự cắm đuốc vào chỗ tối |
+| `torchLightLevel` | `7` | Không cắm đuốc nếu độ sáng đã trên mức này |
+| `torchSpacing` | `6` | Khoảng cách tối thiểu giữa hai đuốc mod đặt |
+| `torchIntervalTicks` | `200` | Bao lâu tìm chỗ tối để cắm đuốc một lần |
+| `roadCareEnabled` | `true` | Vá ổ gà, quét tuyết, nâng đường lún |
+| `grassCuttingEnabled` | `true` | Cắt cỏ dại trên đường và gần cửa nhà |
+| `roadCareIntervalTicks` | `200` | Bao lâu chăm sóc đường một lần |
+| `careBlocksPerRun` | `4` | Số ô được sửa mỗi lần chăm sóc |
+| `homeFences` | `false` | Hàng rào vườn quanh nhà mod xây |
+| `homeFenceGap` | `1` | Khoảng cách từ hàng rào tới rìa nhà |
 
 ## Tương thích
 
@@ -192,6 +225,8 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 - Chỉ hỗ trợ 5 kiểu làng vanilla.
 - Đường đang làm dở, màn pháo hoa và ca chữa đang diễn ra không được lưu: khởi động lại thì đường dở bị bỏ và pháo hoa dừng.
 - Biên niên sử, bia mộ, tiêu đề lên cấp và lời nói mới được test trên server không có người chơi thật; Guard Villagers không nạp được trong môi trường dev nên tên, câu nói và bia mộ của lính gác chưa được test.
+- Các cột tường trên mặt nước, dung nham hoặc đất dốc quá được để là điểm yếu; tường vẫn đứng, chỉ các cột đó để hở.
+- Cầu thang xoắn trong tháp được thiết kế để dân làng leo lên được; điều này mới test headless. Khả năng pathfinding thực sự phụ thuộc vào các mod khác.
 
 ## Gỡ mod
 

@@ -2,7 +2,7 @@
 
 *[Tiếng Việt](README.vi.md)*
 
-A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village. The village keeps a chronicle, celebrates each new level with fireworks, asks players for materials, and links new buildings with roads.
+A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow into walled citadels on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. As the village levels up, it surrounds itself with a palisade fence, then a stone wall with towers and arched gates, then outer rings, lighting up dark spots with torches and keeping its streets tidy. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used.
 
 No new blocks, items, entities or textures. Players do not need the mod on their client.
 
@@ -21,6 +21,12 @@ Version 0.1 only built houses when a village ran out of beds. Now:
 - **Level-up fireworks:** a fireworks show over the square when the village reaches a new level.
 - **Material board:** trade the materials the village needs to its chief for emeralds and make it build faster.
 - **Roads:** new buildings get a road to the village streets, laid by a mason.
+- **Palisade:** from Village level, a wooden fence ring grows around the village, moving outward as new buildings are added. Gates appear where roads cross. Masons build and maintain it.
+- **Stone wall with towers and gates:** at Town level the palisade is replaced by a stone wall with 5×5 towers (spiral staircase inside), arched gates and battlements. At City level the wall gains embrasures on alternating merlons.
+- **Buildings inside the walls:** once a city wall stands, houses and workshops are placed inside it; farms and pens go outside near the gates.
+- **Outer rings:** at the highest level a second ring of walls expands around the first.
+- **Torches:** dark spots on roads, along the wall and on the bell square get a wall torch automatically.
+- **Village care:** villagers mend potholes in roads, sweep snow off paths and cut wild plants near doors. Garden fences around mod-built houses are optional (`homeFences`).
 
 Every feature has a switch in the config; with all of them off the mod behaves like 0.1. Worlds from 0.1 load without losing anything.
 
@@ -54,7 +60,10 @@ Every feature has a switch in the config; with all of them off the mod behaves l
 - **Chronicle:** the village writes down what happens: births ("The Tran family has a new baby"), deaths and their cause, villagers turned into zombies or cured, villagers joining the guards, new buildings, level ups, new chiefs, raids won or lost and deliveries. The last `chronicleMaxEntries` entries are kept. Every librarian keeps a written book of the chronicle on their own lectern while it is empty; a lectern holding another book is never touched, and a book taken away is replaced at the next entry. Big events (level up, raid) are announced in chat, small ones on the action bar. Named villagers and named guards who die get a grave (a stone wall and a sign with name, profession and day) in a 7×7 graveyard near the edge of the village; babies, zombified villagers and new guards get none.
 - **Material board:** the village asks for the three materials used most by the building it is building or has planned next, on a sign by the bell and as trades with the chief (material → emeralds, one use each). Every delivery cheers the village up and goes into the chronicle; when everything is delivered, that building goes up twice as fast and the next one starts without waiting. The village never needs the board: it only speeds things up.
 - **Roads:** a finished building is linked from its door to the nearest village road within `roadSearchRadius` (dirt path, smooth sandstone, and Regrowth's roads), or to the bell. A mason walks along and paves it (at half speed without a mason). Only grass, dirt, coarse dirt and podzol become dirt path, and sand becomes smooth sandstone in deserts; water, buildings and plots are avoided. A way that cannot be found is skipped.
-- **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
+- **Palisade and walls:** from Village level, masons build a wooden fence ring around the village (the outer edge of all its plots and POIs). Gates open where roads cross. When the village reaches Town level the palisade is replaced by a stone wall: same polygon, higher, with 5×5 towers at the corners and along the wall (spiral staircase inside, door facing inward, crenellations), and arched gates. At City level the wall gains embrasures at alternating merlons. At the highest level a second ring expands outward. The wall material is stone bricks (or cut sandstone in deserts). Blocks a player breaks are left open; blocks lost to explosions or mobs are repaired. The mod never touches player-placed blocks. Set `wallsEnabled = false` to disable entirely.
+- **Torches:** every `torchIntervalTicks` ticks a dark cell on a road, the bell square, the inside of the wall or a wall block gets a wall torch. Light above `torchLightLevel` is left alone.
+- **Village care:** every `roadCareIntervalTicks` ticks a random awake villager fixes a few things near them: fills a pothole (natural ground flanked by road blocks), raises a road segment sunk below its neighbours, sweeps snow off roads, cuts wild plants on roads or near doors. `homeFences = true` adds a wooden fence around each mod-built house.
+- **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). Inside a city wall, houses and workshops are placed within the wall; farms and pens go outside near a gate. The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
 - **Trees:** up to 4 natural trees growing inside the footprint are felled first, with no item drops, and sites without trees are preferred. A tree counts as natural only if it has natural (non-persistent) leaves, so log houses and trees decorated with player-placed leaves are never touched. Giant trees and trees with a bee nest stay. After the house is done, one sapling of the same kind per felled tree is replanted 3–8 blocks away; a farmer walks there to plant it if the village has one.
 - **Build order:** foundation, then clearing plants and levelling earth, then the structure layer by layer from the bottom, then doors, beds, torches, carpets and other decorations. A block is only ever placed into air or a replaceable block such as grass. Anything a player put in the way is left alone. Chests get no loot.
 - **The builder:** unemployed villagers are chosen first, then masons, then anyone except nitwits and children. The builder must be within `builderReach` blocks of the work, and swings its arm and holds the block it places. If the builder dies or cannot reach the site for 60 seconds, another villager takes over. If nobody is available, the house builds itself at half speed.
@@ -169,6 +178,30 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `roadSearchRadius` | `32` | How far to look for a road to join |
 | `roadBlocks` | `dirt_path`, `smooth_sandstone` | Blocks that count as road (add a road block of another mod here) |
 | `roadMaxNodes` | `4000` | Most steps the road search tries |
+| `wallsEnabled` | `true` | Palisade and stone walls |
+| `deferToRegrowth` | `false` | When true and Regrowth is loaded, skip walls, fences and torches (let Regrowth do them) |
+| `palisadeMinLevel` | `1` | Village level needed for the palisade |
+| `cityWallMinLevel` | `2` | Village level needed for the stone wall |
+| `cityWallHeight` | `3` | Normal wall height above the ground |
+| `cityWallHeightMax` | `4` | Wall height with battlements (City level) |
+| `towerSpacing` | `32` | Columns between towers |
+| `wallMargin` | `6` | Margin added around plots for the wall polygon |
+| `gateWidth` | `3` | Gate opening width |
+| `maxWallStep` | `3` | Largest height difference allowed between adjacent wall columns |
+| `wallBlocksPerSecond` | `1.0` | Rate at which each mason builds wall blocks |
+| `outerRingMinLevel` | `3` | Village level that triggers an outer ring |
+| `maxRings` | `3` | Most wall rings at once |
+| `ringExpansion` | `24` | How much each outer ring expands the polygon |
+| `torchesEnabled` | `true` | Auto-place torches in dark spots |
+| `torchLightLevel` | `7` | Do not place a torch if light is above this |
+| `torchSpacing` | `6` | Minimum distance between mod-placed torches |
+| `torchIntervalTicks` | `200` | How often to look for a dark spot to light |
+| `roadCareEnabled` | `true` | Fill potholes, sweep snow, raise sunk road segments |
+| `grassCuttingEnabled` | `true` | Cut wild plants on roads and near doors |
+| `roadCareIntervalTicks` | `200` | How often to do care work |
+| `careBlocksPerRun` | `4` | Blocks fixed per care run |
+| `homeFences` | `false` | Garden fences around mod-built houses |
+| `homeFenceGap` | `1` | Fence distance from the edge of the house |
 
 ## Compatibility
 
@@ -189,6 +222,8 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 - Only the five vanilla village styles are supported.
 - A road still being laid, a fireworks show and a cure in progress are not saved: after a restart the road is dropped and the show ends.
 - The chronicle, graves, level-up titles and speech were tested on a dedicated server without a real player; Guard Villagers could not be loaded in the development environment, so guard names, lines and graves are untested.
+- Wall columns over water, lava or very steep ground are left as weak points; the wall still stands, those columns are just open.
+- The spiral staircase inside towers was designed so villagers can walk up; this was tested headless. Actual pathfinding up the stairs may vary with other mods.
 
 ## Removing the mod
 
