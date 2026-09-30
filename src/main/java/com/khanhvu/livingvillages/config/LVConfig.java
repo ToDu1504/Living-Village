@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.khanhvu.livingvillages.LivingVillages;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
@@ -149,6 +150,25 @@ public class LVConfig {
 	public List<String> roadBlocks = List.of("minecraft:dirt_path", "minecraft:smooth_sandstone");
 	public int roadMaxNodes = 4000;
 
+	// v3-GĐ 5: walls
+	public boolean wallsEnabled = true;
+	/** With Regrowth installed, its village walls are used and this mod builds none (spec v3 §1.4). */
+	public boolean deferToRegrowth = true;
+	/** Level from which a village gets a palisade (1 = Village). */
+	public int palisadeMinLevel = 1;
+	/** Free blocks between the outermost building, bed or job site and the wall. */
+	public int wallMargin = 6;
+	public int wallMaxVertices = 16;
+	public int gateWidth = 3;
+	/** A column higher or lower than the previous one by more than this is left open (a weak point). */
+	public int maxWallStep = 3;
+	/** Wall blocks each mason places per second; the village without a mason builds at half this rate. */
+	public double wallBlocksPerSecond = 0.5;
+	/** The palisade moves out at most once in this many ticks. */
+	public int palisadeMoveCooldown = 24000;
+	/** Wall blocks by village type (plains, desert, savanna, snowy, taiga). */
+	public Map<String, WallBlockSet> wallBlocks = defaultWallBlocks();
+
 	private static Map<String, Integer> defaultItemsPerEmerald() {
 		Map<String, Integer> map = new LinkedHashMap<>();
 		map.put("wood", 16);
@@ -156,6 +176,43 @@ public class LVConfig {
 		map.put("glass", 8);
 		map.put("wool", 8);
 		map.put("default", 8);
+		return map;
+	}
+
+	public static class WallBlockSet {
+		public String main;
+		/** Low wall block on top: tower railings and battlements. */
+		public String top;
+		public String palisade;
+		public String foundation;
+
+		public WallBlockSet() {
+		}
+
+		public WallBlockSet(String main, String top, String palisade, String foundation) {
+			this.main = main;
+			this.top = top;
+			this.palisade = palisade;
+			this.foundation = foundation;
+		}
+
+		boolean isValid() {
+			return valid(main) && valid(top) && valid(palisade) && valid(foundation);
+		}
+
+		private static boolean valid(String id) {
+			ResourceLocation location = id == null ? null : ResourceLocation.tryParse(id);
+			return location != null && BuiltInRegistries.BLOCK.containsKey(location);
+		}
+	}
+
+	private static Map<String, WallBlockSet> defaultWallBlocks() {
+		Map<String, WallBlockSet> map = new LinkedHashMap<>();
+		map.put("plains", new WallBlockSet("minecraft:stone_bricks", "minecraft:stone_brick_wall", "minecraft:oak_fence", "minecraft:cobblestone"));
+		map.put("desert", new WallBlockSet("minecraft:cut_sandstone", "minecraft:sandstone_wall", "minecraft:birch_fence", "minecraft:sandstone"));
+		map.put("savanna", new WallBlockSet("minecraft:cobblestone", "minecraft:cobblestone_wall", "minecraft:acacia_fence", "minecraft:cobblestone"));
+		map.put("snowy", new WallBlockSet("minecraft:stone_bricks", "minecraft:stone_brick_wall", "minecraft:spruce_fence", "minecraft:cobblestone"));
+		map.put("taiga", new WallBlockSet("minecraft:mossy_cobblestone", "minecraft:mossy_cobblestone_wall", "minecraft:spruce_fence", "minecraft:cobblestone"));
 		return map;
 	}
 
@@ -315,6 +372,27 @@ public class LVConfig {
 		if (roadBlocks == null || roadBlocks.stream().anyMatch(id -> id == null || ResourceLocation.tryParse(id) == null)) {
 			warn("roadBlocks", roadBlocks);
 			roadBlocks = d.roadBlocks;
+		}
+		palisadeMinLevel = checkInt("palisadeMinLevel", palisadeMinLevel, 0, 3, d.palisadeMinLevel);
+		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
+		wallMaxVertices = checkInt("wallMaxVertices", wallMaxVertices, 3, 64, d.wallMaxVertices);
+		gateWidth = checkInt("gateWidth", gateWidth, 1, 9, d.gateWidth);
+		maxWallStep = checkInt("maxWallStep", maxWallStep, 1, 16, d.maxWallStep);
+		wallBlocksPerSecond = checkDouble("wallBlocksPerSecond", wallBlocksPerSecond, 0.01, 100.0, d.wallBlocksPerSecond);
+		palisadeMoveCooldown = checkInt("palisadeMoveCooldown", palisadeMoveCooldown, 0, 720000, d.palisadeMoveCooldown);
+		if (wallBlocks == null) {
+			warn("wallBlocks", null);
+			wallBlocks = d.wallBlocks;
+		}
+		wallBlocks = new LinkedHashMap<>(wallBlocks);
+		for (Map.Entry<String, WallBlockSet> entry : d.wallBlocks.entrySet()) {
+			WallBlockSet set = wallBlocks.get(entry.getKey());
+			if (set == null || !set.isValid()) {
+				if (set != null) {
+					warn("wallBlocks." + entry.getKey(), GSON.toJson(set));
+				}
+				wallBlocks.put(entry.getKey(), entry.getValue());
+			}
 		}
 		chronicleMaxEntries = checkInt("chronicleMaxEntries", chronicleMaxEntries, 10, 1000, d.chronicleMaxEntries);
 		voiceRange = checkInt("voiceRange", voiceRange, 4, 128, d.voiceRange);

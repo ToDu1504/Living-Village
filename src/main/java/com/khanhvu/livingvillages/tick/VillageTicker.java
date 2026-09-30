@@ -27,6 +27,7 @@ import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageScanner;
 import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -119,6 +120,7 @@ public final class VillageTicker {
 			LevelUpFireworks.tick(level, village);
 			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
 			RoadBuilder.tick(level, village);
+			WallBuilder.tick(level, registry, village, manage);
 		}
 	}
 
@@ -422,7 +424,16 @@ public final class VillageTicker {
 		return false;
 	}
 
-	private static boolean hasBudget(ServerLevel level) {
+	/** Takes one block from the global per-tick budget (walls share it with buildings); false when it is used up. */
+	public static boolean useBudget(ServerLevel level) {
+		if (!hasBudget(level)) {
+			return false;
+		}
+		budgetLeft--;
+		return true;
+	}
+
+	public static boolean hasBudget(ServerLevel level) {
 		int serverTick = level.getServer().getTickCount();
 		if (serverTick != budgetServerTick) {
 			budgetServerTick = serverTick;

@@ -297,5 +297,18 @@
 	"livingvillages.voice.board_all_done.3": "Now the building goes up fast!",
 	"livingvillages.voice.board_all_done.4": "You are a true friend, %s!",
 	"livingvillages.voice.board_all_done.5": "Builders, to work!",
-	"livingvillages.command.board.jobless_leader": "The chief has no job yet, so nobody can trade with them. A villager with a job becomes chief as soon as there is one."
+	"livingvillages.command.board.jobless_leader": "The chief has no job yet, so nobody can trade with them. A villager with a job becomes chief as soon as there is one.",
+	"livingvillages.wall.type.palisade": "palisade",
+	"livingvillages.wall.type.city": "city wall",
+	"livingvillages.chronicle.wall_started": "The villagers started building a %s around the village.",
+	"livingvillages.chronicle.wall_finished": "The %s around the village is finished.",
+	"livingvillages.chronicle.wall_moving": "The village has outgrown its palisade: a wider one is going up.",
+	"livingvillages.chronicle.wall_moved": "The new %s encloses the whole village; the old one was taken down.",
+	"livingvillages.command.status.walls": "Walls: %s, %s%% done (%s gate(s), %s weak point(s))",
+	"livingvillages.command.status.walls_moving": "Walls: %s moving out, %s%% done (%s gate(s), %s weak point(s))",
+	"livingvillages.command.status.walls_none": "Walls: none yet (a palisade comes at level Village)",
+	"livingvillages.command.status.walls_paused": "Walls: stopped (/livingvillages walls on)",
+	"livingvillages.command.status.walls_disabled": "Walls: off (wallsEnabled, or left to Regrowth)",
+	"livingvillages.command.walls.on": "%s builds its walls again.",
+	"livingvillages.command.walls.off": "%s stops building walls."
 }

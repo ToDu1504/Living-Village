@@ -138,6 +138,11 @@ public final class SiteFinder {
 		return groundTop(level, x, z, new BlockPos.MutableBlockPos(), false);
 	}
 
+	/** Like {@link #groundTop(ServerLevel, int, int)}, also looking through the trunk and leaves of a tree. */
+	public static int groundTopThroughTrees(ServerLevel level, int x, int z) {
+		return groundTop(level, x, z, new BlockPos.MutableBlockPos(), true);
+	}
+
 	/**
 	 * Ground a house may stand on or that may be levelled away inside its footprint. Everything else
 	 * (paths, planks, cobblestone, water, ice, logs...) is treated as something not to build over.

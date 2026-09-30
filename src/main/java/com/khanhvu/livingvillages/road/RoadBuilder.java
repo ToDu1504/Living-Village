@@ -437,7 +437,18 @@ public final class RoadBuilder {
 		}
 	}
 
-	private static Set<Block> roadBlocks() {
+	/** Whether the villager is paving a road now (masons also build walls). */
+	public static boolean isPaving(UUID villager) {
+		for (Job job : JOBS.values()) {
+			if (villager.equals(job.mason) && job.index < job.path.size()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The {@code roadBlocks} of the config as blocks. */
+	public static Set<Block> roadBlocks() {
 		Set<Block> blocks = new HashSet<>();
 		for (String id : LVConfig.get().roadBlocks) {
 			ResourceLocation location = ResourceLocation.tryParse(id);

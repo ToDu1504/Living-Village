@@ -4,6 +4,7 @@ import com.khanhvu.livingvillages.board.MaterialRequest;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.society.VillageNeeds;
+import com.khanhvu.livingvillages.wall.VillageWalls;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -98,6 +99,9 @@ public class VillageRecord {
 	private BlockPos boardPos;
 	/** The board is placed only once; a board broken by a player comes back only with the board place command. */
 	private boolean boardPlaced;
+
+	// v3-GĐ 5: walls (saved)
+	private VillageWalls walls = new VillageWalls();
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
@@ -429,6 +433,10 @@ public class VillageRecord {
 		this.leaderGone = leaderGone;
 	}
 
+	public VillageWalls getWalls() {
+		return walls;
+	}
+
 	public List<PendingSapling> getPendingSaplings() {
 		return pendingSaplings;
 	}
@@ -554,6 +562,7 @@ public class VillageRecord {
 			tag.putLong("BoardPos", boardPos.asLong());
 		}
 		tag.putBoolean("BoardPlaced", boardPlaced);
+		tag.put("Walls", walls.save());
 		return tag;
 	}
 
@@ -656,6 +665,9 @@ public class VillageRecord {
 		record.skipCooldown = tag.getBoolean("SkipCooldown");
 		record.boardPos = tag.contains("BoardPos") ? BlockPos.of(tag.getLong("BoardPos")) : null;
 		record.boardPlaced = tag.getBoolean("BoardPlaced");
+		if (tag.contains("Walls", Tag.TAG_COMPOUND)) {
+			record.walls = VillageWalls.load(tag.getCompound("Walls"));
+		}
 		return record;
 	}
 

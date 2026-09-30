@@ -13,6 +13,7 @@ import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -38,6 +39,7 @@ public class LivingVillages implements ModInitializer {
 		MaterialBoard.register();
 		LevelUpFireworks.register();
 		RoadBuilder.register();
+		WallBuilder.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> BuildingTemplateProvider.clearCache());
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> server.getAllLevels().forEach(VillageVoice::clear));
@@ -48,6 +50,7 @@ public class LivingVillages implements ModInitializer {
 			LevelUpFireworks.clear();
 			MaterialBoard.clear();
 			RoadBuilder.clear();
+			WallBuilder.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}

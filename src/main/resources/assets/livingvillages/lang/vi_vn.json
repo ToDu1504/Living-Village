@@ -297,5 +297,18 @@
 	"livingvillages.voice.board_all_done.3": "Giờ thì công trình lên nhanh rồi!",
 	"livingvillages.voice.board_all_done.4": "%s đúng là bạn của làng!",
 	"livingvillages.voice.board_all_done.5": "Thợ xây ơi, bắt tay vào việc!",
-	"livingvillages.command.board.jobless_leader": "Trưởng làng chưa có nghề nên chưa giao dịch được. Làng có người có nghề thì người đó sẽ làm trưởng làng."
+	"livingvillages.command.board.jobless_leader": "Trưởng làng chưa có nghề nên chưa giao dịch được. Làng có người có nghề thì người đó sẽ làm trưởng làng.",
+	"livingvillages.wall.type.palisade": "hàng rào",
+	"livingvillages.wall.type.city": "tường thành",
+	"livingvillages.chronicle.wall_started": "Dân làng bắt đầu dựng %s quanh làng.",
+	"livingvillages.chronicle.wall_finished": "Đã dựng xong %s quanh làng.",
+	"livingvillages.chronicle.wall_moving": "Làng đã lớn hơn hàng rào: dân làng dựng hàng rào mới rộng hơn.",
+	"livingvillages.chronicle.wall_moved": "Đã có %s mới bao cả làng, hàng rào cũ đã được gỡ.",
+	"livingvillages.command.status.walls": "Tường: %s, xong %s%% (%s cổng, %s điểm yếu)",
+	"livingvillages.command.status.walls_moving": "Tường: %s đang dời ra, xong %s%% (%s cổng, %s điểm yếu)",
+	"livingvillages.command.status.walls_none": "Tường: chưa có (có hàng rào khi làng lên cấp Làng)",
+	"livingvillages.command.status.walls_paused": "Tường: đang dừng (/livingvillages walls on)",
+	"livingvillages.command.status.walls_disabled": "Tường: tắt (wallsEnabled, hoặc nhường cho Regrowth)",
+	"livingvillages.command.walls.on": "%s tiếp tục xây tường.",
+	"livingvillages.command.walls.off": "%s dừng xây tường."
 }

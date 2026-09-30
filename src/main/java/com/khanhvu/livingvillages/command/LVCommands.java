@@ -22,6 +22,9 @@ import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.wall.VillageWalls;
+import com.khanhvu.livingvillages.wall.WallBuilder;
+import com.khanhvu.livingvillages.wall.WallRing;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import com.mojang.brigadier.CommandDispatcher;
@@ -69,6 +72,9 @@ public final class LVCommands {
 				.then(Commands.literal("board")
 						.executes(LVCommands::board)
 						.then(op("place").executes(LVCommands::boardPlace)))
+				.then(op("walls")
+						.then(Commands.literal("on").executes(ctx -> walls(ctx, true)))
+						.then(Commands.literal("off").executes(ctx -> walls(ctx, false))))
 				.then(op("pause").executes(ctx -> setEnabled(ctx, false)))
 				.then(op("resume").executes(ctx -> setEnabled(ctx, true)))
 				.then(op("reload").executes(LVCommands::reload))
@@ -192,6 +198,7 @@ public final class LVCommands {
 		if (config.needsEnabled) {
 			statusSociety(source, level, record, stats);
 		}
+		source.sendSuccess(() -> wallLine(record), false);
 		if (config.boardEnabled) {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.board"), false);
 			sendRequests(source, record);
@@ -303,6 +310,38 @@ public final class LVCommands {
 		String houseId = project.getTemplateId().toString();
 		VillageTicker.cancelProject(source.getLevel(), VillageRegistry.get(source.getLevel()), record);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.cancel.done", houseId), true);
+		return 1;
+	}
+
+	/** Walls of the nearest village (spec v3-GĐ 5.3): the outermost ring, its progress, gates and weak points. */
+	private static Component wallLine(VillageRecord record) {
+		VillageWalls walls = record.getWalls();
+		if (!WallBuilder.enabled()) {
+			return LVText.tr("livingvillages.command.status.walls_disabled");
+		}
+		if (walls.isPaused()) {
+			return LVText.tr("livingvillages.command.status.walls_paused");
+		}
+		WallRing ring = walls.outer();
+		if (ring == null) {
+			return LVText.tr("livingvillages.command.status.walls_none");
+		}
+		return LVText.tr(walls.getRetiring() != null ? "livingvillages.command.status.walls_moving" : "livingvillages.command.status.walls",
+				LVText.tr(ring.getType().langKey()), ring.progressPercent(), ring.runs(WallRing.GATE), ring.runs(WallRing.WEAK));
+	}
+
+	/** Stops or resumes the walls of the nearest village. */
+	private static int walls(CommandContext<CommandSourceStack> context, boolean on) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		record.getWalls().setPaused(!on);
+		VillageRegistry.get(source.getLevel()).setDirty();
+		source.sendSuccess(() -> LVText.tr(on ? "livingvillages.command.walls.on" : "livingvillages.command.walls.off",
+				VillageIdentity.displayName(record)), true);
 		return 1;
 	}
 
