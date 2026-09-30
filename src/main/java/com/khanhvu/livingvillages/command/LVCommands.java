@@ -8,6 +8,7 @@ import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.care.TorchLighter;
+import com.khanhvu.livingvillages.care.VillageCare;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.NamePool;
@@ -201,6 +202,10 @@ public final class LVCommands {
 			statusSociety(source, level, record, stats);
 		}
 		source.sendSuccess(() -> wallLine(record), false);
+		if (VillageCare.enabled()) {
+			int[] care = VillageCare.counts(record);
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.care", care[0], care[1]), false);
+		}
 		if (TorchLighter.enabled()) {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.torches", TorchLighter.count(record)), false);
 		}

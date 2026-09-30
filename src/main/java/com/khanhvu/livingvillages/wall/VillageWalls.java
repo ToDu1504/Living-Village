@@ -5,8 +5,10 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -19,6 +21,8 @@ import java.util.List;
 public final class VillageWalls {
 	private static final int COLUMN_BITS = 20;
 	private static final int COLUMN_MASK = (1 << COLUMN_BITS) - 1;
+	/** Highest ring id that fits; kept for garden fences, real rings count up from 1 (0 is torches). */
+	public static final int MAX_RING_ID = (1 << (32 - COLUMN_BITS)) - 1;
 
 	/** Rings from the innermost to the outermost. */
 	private final List<WallRing> rings = new ArrayList<>();
@@ -30,6 +34,8 @@ public final class VillageWalls {
 	/** Positions of wall blocks a player broke: they stay open. */
 	private final LongOpenHashSet abandoned = new LongOpenHashSet();
 	private int nextRingId = 1;
+	/** Houses whose garden fence is finished (v3-GĐ 6). */
+	private final List<BoundingBox> fencedPlots = new ArrayList<>();
 	/** Set by the walls off command. */
 	private boolean paused;
 	/** A building was finished outside the palisade: it moves at the next chance. */
@@ -83,6 +89,10 @@ public final class VillageWalls {
 		return value & COLUMN_MASK;
 	}
 
+	public List<BoundingBox> getFencedPlots() {
+		return fencedPlots;
+	}
+
 	public LongOpenHashSet getAbandoned() {
 		return abandoned;
 	}
@@ -127,6 +137,11 @@ public final class VillageWalls {
 		tag.putInt("NextRingId", nextRingId);
 		tag.putBoolean("Paused", paused);
 		tag.putBoolean("MoveWanted", moveWanted);
+		ListTag fenced = new ListTag();
+		for (BoundingBox box : fencedPlots) {
+			fenced.add(new IntArrayTag(new int[] {box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()}));
+		}
+		tag.put("FencedPlots", fenced);
 		return tag;
 	}
 
@@ -151,6 +166,13 @@ public final class VillageWalls {
 		walls.nextRingId = Math.max(1, tag.getInt("NextRingId"));
 		walls.paused = tag.getBoolean("Paused");
 		walls.moveWanted = tag.getBoolean("MoveWanted");
+		ListTag fenced = tag.getList("FencedPlots", Tag.TAG_INT_ARRAY);
+		for (int i = 0; i < fenced.size(); i++) {
+			int[] a = fenced.getIntArray(i);
+			if (a.length == 6) {
+				walls.fencedPlots.add(new BoundingBox(a[0], a[1], a[2], a[3], a[4], a[5]));
+			}
+		}
 		return walls;
 	}
 }

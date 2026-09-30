@@ -4,6 +4,7 @@ import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.build.TreeFeller;
+import com.khanhvu.livingvillages.care.HomeFences;
 import com.khanhvu.livingvillages.care.TorchLighter;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
@@ -1107,6 +1108,11 @@ public final class WallBuilder {
 				continue;
 			}
 			int value = walls.getBlocks().remove(key);
+			if (VillageWalls.ringOf(value) == HomeFences.FENCE_RING) {
+				HomeFences.onLost(walls, pos);
+				registry.setDirty();
+				continue;
+			}
 			WallRing ring = walls.ring(VillageWalls.ringOf(value));
 			if (ring != null && ring != walls.getRetiring() && VillageWalls.columnOf(value) < ring.units()) {
 				ring.reopen(VillageWalls.columnOf(value));

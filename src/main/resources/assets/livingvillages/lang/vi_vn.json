@@ -328,5 +328,6 @@
 	"livingvillages.chronicle.outer_started": "Trong thành đã kín: trưởng làng cho xây thành ngoại.",
 	"livingvillages.chronicle.outer_finished": "Thành ngoại đã hoàn thành; tường cũ giờ là thành nội.",
 	"livingvillages.command.status.walls_rings": "%s — thành ngoại, tổng %s vòng thành",
-	"livingvillages.command.status.torches": "Đuốc dân làng đã cắm: %s"
+	"livingvillages.command.status.torches": "Đuốc dân làng đã cắm: %s",
+	"livingvillages.command.status.care": "Chăm sóc làng từ lúc mở server: sửa %s ô đường, cắt %s bụi cỏ"
 }

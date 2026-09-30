@@ -191,8 +191,9 @@ public final class RoadBuilder {
 		level.setBlockAndUpdate(ground, road.defaultBlockState());
 	}
 
+	/** The road block natural ground turns into (dirt path, smooth sandstone on desert sand), or null if it stays. */
 	@Nullable
-	private static Block roadFor(VillageRecord village, BlockState ground) {
+	public static Block roadFor(VillageRecord village, BlockState ground) {
 		if (ground.is(Blocks.GRASS_BLOCK) || ground.is(Blocks.DIRT) || ground.is(Blocks.COARSE_DIRT) || ground.is(Blocks.PODZOL)) {
 			return Blocks.DIRT_PATH;
 		}

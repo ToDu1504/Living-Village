@@ -2,6 +2,7 @@ package com.khanhvu.livingvillages;
 
 import com.khanhvu.livingvillages.board.MaterialBoard;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
+import com.khanhvu.livingvillages.care.VillageCare;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.command.LVCommands;
 import com.khanhvu.livingvillages.config.LVConfig;
@@ -53,6 +54,7 @@ public class LivingVillages implements ModInitializer {
 			RoadBuilder.clear();
 			WallBuilder.clear();
 			CitySites.clear();
+			VillageCare.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}

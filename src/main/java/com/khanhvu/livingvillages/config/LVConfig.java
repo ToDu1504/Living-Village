@@ -172,6 +172,13 @@ public class LVConfig {
 	public int torchLightLevel = 7;
 	public int torchSpacing = 6;
 	public int torchIntervalTicks = 200;
+	/** Village care (v3-GĐ 6): villagers mend roads, sweep snow, cut grass; garden fences around the mod's houses (off by default). */
+	public boolean roadCareEnabled = true;
+	public int roadCareIntervalTicks = 200;
+	public boolean grassCuttingEnabled = true;
+	public int careBlocksPerRun = 4;
+	public boolean homeFences = false;
+	public int homeFenceGap = 1;
 	/** Behind a city wall (v3-GĐ 3): free blocks along the inside of the wall, and between buildings. */
 	public int wallInnerBuffer = 2;
 	public int infillMargin = 1;
@@ -401,6 +408,9 @@ public class LVConfig {
 		cityWallHeight = checkInt("cityWallHeight", cityWallHeight, 2, 4, d.cityWallHeight);
 		cityWallHeightMax = checkInt("cityWallHeightMax", cityWallHeightMax, cityWallHeight, 4, Math.max(cityWallHeight, d.cityWallHeightMax));
 		towerSpacing = checkInt("towerSpacing", towerSpacing, 12, 256, d.towerSpacing);
+		roadCareIntervalTicks = checkInt("roadCareIntervalTicks", roadCareIntervalTicks, 20, 72000, d.roadCareIntervalTicks);
+		careBlocksPerRun = checkInt("careBlocksPerRun", careBlocksPerRun, 1, 64, d.careBlocksPerRun);
+		homeFenceGap = checkInt("homeFenceGap", homeFenceGap, 0, 8, d.homeFenceGap);
 		torchLightLevel = checkInt("torchLightLevel", torchLightLevel, 0, 14, d.torchLightLevel);
 		torchSpacing = checkInt("torchSpacing", torchSpacing, 2, 32, d.torchSpacing);
 		torchIntervalTicks = checkInt("torchIntervalTicks", torchIntervalTicks, 20, 72000, d.torchIntervalTicks);
