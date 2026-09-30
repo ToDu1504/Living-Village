@@ -35,6 +35,10 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
 - **Mỗi nghề một việc** (trong giờ làm việc): người chăn cừu cho cừu sinh sản và xén lông; người bán thịt cho lợn sinh sản và bỏ thịt sống cùng than củi vào lò hun khói của mình; thợ thuộc da cho bò sinh sản và đổ nước vào vạc của mình; thợ làm tên cho gà sinh sản; ngư dân câu cá ở chỗ nước gần đó rồi bỏ cá tuyết hoặc cá hồi vào thùng của mình; mục sư chữa dân bị thương và chữa dân làng zombie trong làng (mỗi người tối đa một lần mỗi ngày; không đụng con có tên, bị dắt dây hay được người chơi giữ lại); người vẽ bản đồ đi một vòng quanh rìa làng. Thợ rèn giáp và thợ rèn vũ khí làm làng an toàn hơn, thợ rèn công cụ giúp xây nhanh hơn (mỗi người +10%, tối đa +30%), có người vẽ bản đồ thì bán kính xây rộng thêm 16. Gia súc chỉ được cho sinh sản tới giới hạn mỗi loại (tăng theo cấp làng) và không bao giờ bị giết; con có tên hoặc bị dắt dây không bị đụng tới.
 - **Tên:** mỗi làng có một cái tên hợp với phong cách ("Làng Suối Bạc"). Mỗi nhà là một hộ có họ riêng, và dân làng mang họ của hộ có giường họ ngủ ("Trần Minh"). Tên đặt bằng name tag hoặc do mod khác đặt không bao giờ bị thay. Lính gác của Guard Villagers được đặt tên "Lính gác <tên>". Bước vào làng sẽ thấy tiêu đề ghi tên làng, cấp, số dân và tâm trạng.
 - **Lời nói:** thỉnh thoảng một dân làng gần người chơi nói một câu ngắn trên đầu, chọn theo điều đang thật sự xảy ra: nhu cầu chưa đủ, công trình đang xây, em bé mới sinh, người vừa mất, việc của nghề mình, dự định của trưởng làng, tâm trạng, hay lời chào. Chữ là một text display vanilla, tự biến mất sau vài giây; chữ còn sót lại (ví dụ sau khi game bị tắt đột ngột) bị xóa ngay khi được nạp.
+- **Biên niên sử:** làng ghi lại những gì xảy ra: sinh ("Nhà họ Trần vừa có thêm một em bé"), mất và nguyên nhân, dân bị biến thành zombie hay được chữa khỏi, dân gia nhập đội lính gác, công trình mới, lên cấp, trưởng làng mới, thắng hay thua cuộc đột kích, lễ hội và vật liệu được giao. Giữ `chronicleMaxEntries` mục mới nhất. Mỗi thủ thư giữ một cuốn sách biên niên sử trên lectern của mình khi lectern đó trống; lectern đang có sách khác không bao giờ bị đụng tới, sách bị lấy đi thì có cuốn mới ở mục tiếp theo. Sự kiện lớn (lên cấp, đột kích, lễ hội) báo trong chat, sự kiện nhỏ báo trên thanh hành động. Dân có tên và lính gác có tên khi mất có bia mộ (một khối tường đá và một tấm bảng ghi tên, nghề, ngày mất) trong nghĩa trang 7×7 ở rìa làng; em bé, dân bị zombie hóa và dân thành lính gác thì không.
+- **Lễ hội:** cứ `festivalIntervalDays` ngày, lúc hoàng hôn, nếu làng không khốn khó, không bị đột kích và trời không mưa (không thì chờ hoàng hôn hôm sau), dân tụ tập quanh chuông trong `festivalDurationTicks`, chuông vang, pháo hoa bắn lên từ chỗ đất trống cách xa mọi người, và dân nói chuyện lễ hội. Tên lễ hội theo thời điểm trong năm. Không đặt khối nào.
+- **Bảng vật liệu:** làng xin ba loại vật liệu dùng nhiều nhất của công trình đang xây hoặc sắp xây, ghi trên một tấm bảng cạnh chuông và thành giao dịch với trưởng làng (vật liệu → ngọc, mỗi giao dịch dùng một lần). Mỗi lần giao làm làng vui hơn và được ghi vào biên niên sử; giao đủ hết thì công trình đó xây nhanh gấp đôi và công trình sau bắt đầu không cần chờ. Làng không bao giờ cần bảng này: nó chỉ giúp làng lớn nhanh hơn.
+- **Đường làng:** công trình xây xong được nối từ cửa tới đường làng gần nhất trong `roadSearchRadius` (đường đất, sa thạch mịn và đường của Regrowth), hoặc về chuông. Thợ đá đi dọc và lát đường (không có thợ đá thì chậm một nửa). Chỉ đổi cỏ, đất, đất thô và podzol thành đường đất; ở sa mạc cát thành sa thạch mịn; tránh nước, công trình và đất của nhà khác. Không tìm được đường thì bỏ qua.
 - **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
 - **Cây:** tối đa 4 cây tự nhiên mọc trong chỗ đặt nhà được chặt trước, không rơi đồ, và chỗ không có cây luôn được ưu tiên. Cây chỉ tính là tự nhiên khi có lá tự nhiên (không phải lá do người chơi đặt), nên nhà gỗ và cây trang trí của người chơi không bao giờ bị đụng tới. Cây khổng lồ và cây có tổ ong được giữ nguyên. Xây xong, mỗi cây đã chặt được trồng lại một cây non cùng loại, cách nhà 3–8 khối; nếu làng có nông dân thì một nông dân đi tới trồng.
 - **Thứ tự xây:** móng, rồi dọn cỏ và san đất, rồi dựng nhà từng tầng từ dưới lên, cuối cùng mới đặt cửa, giường, đuốc, thảm và đồ trang trí. Khối chỉ được đặt vào ô trống hoặc ô có thứ thay thế được như cỏ. Khối người chơi đặt chắn đường được giữ nguyên. Rương không có đồ bên trong.
@@ -50,7 +54,7 @@ Người chơi không cần cài mod, nên mọi chữ được tạo trên serv
 
 ## Lệnh
 
-Mọi lệnh cần quyền cấp 2 (OP). "Làng gần nhất" là làng đã ghi nhận gần bạn nhất, trong phạm vi `activeRange`.
+Mọi lệnh cần quyền cấp 2 (OP), trừ `chronicle` và `board` ai cũng dùng được. "Làng gần nhất" là làng đã ghi nhận gần bạn nhất, trong phạm vi `activeRange`.
 
 | Lệnh | Tác dụng |
 |---|---|
@@ -61,6 +65,10 @@ Mọi lệnh cần quyền cấp 2 (OP). "Làng gần nhất" là làng đã ghi
 | `/livingvillages cancel` | Hủy dự án hiện tại. Các khối đã đặt vẫn giữ nguyên |
 | `/livingvillages templates [kiểu]` | Liệt kê mẫu công trình theo nhóm, của làng gần nhất hoặc của một kiểu: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
 | `/livingvillages rename <tên>` | Đổi tên làng gần nhất |
+| `/livingvillages chronicle` | 10 mục biên niên sử gần nhất của làng gần nhất (mọi người) |
+| `/livingvillages board` | Các yêu cầu vật liệu của làng gần nhất (mọi người) |
+| `/livingvillages board place` | Đặt lại bảng vật liệu (bảng chỉ tự đặt một lần) |
+| `/livingvillages festival` | Mở lễ hội ngay, để thử |
 | `/livingvillages pause` / `resume` | Tạm dừng / tiếp tục toàn bộ mod (lưu vào mục `enabled` của config) |
 | `/livingvillages speed <0.1–10>` | Hệ số tốc độ xây (lưu vào config) |
 | `/livingvillages reload` | Nạp lại `config/livingvillages.json` |
@@ -135,11 +143,25 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `voiceIntervalTicks` / `voiceChance` | `200` / `0.35` | Bao lâu làng được nói một lần, và xác suất (dân ngốc gấp đôi) |
 | `maxBubblesPerVillage` | `2` | Số câu hiện cùng lúc mỗi làng |
 | `bubbleDurationTicks` | `80` | Thời gian một câu hiện trên đầu |
+| `chronicleEnabled` | `true` | Biên niên sử, sách và bia mộ (cần `needsEnabled`) |
+| `announceEvents` | `true` | Báo sự kiện cho người chơi ở gần (chat hoặc thanh hành động) |
+| `chronicleMaxEntries` | `100` | Số mục giữ lại mỗi làng |
+| `gravesEnabled` | `true` | Bia mộ cho dân và lính gác có tên |
+| `festivalEnabled` | `true` | Lễ hội |
+| `festivalIntervalDays` / `festivalDurationTicks` | `7` / `2400` | Số ngày giữa hai lễ hội, và thời gian một lễ hội |
+| `boardEnabled` | `true` | Bảng vật liệu và giao dịch của nó (tắt thì giao dịch được gỡ khỏi trưởng làng) |
+| `maxRequests` | `3` | Số vật liệu xin cùng lúc (1–3) |
+| `requestExpireDays` | `3` | Yêu cầu chưa ai giao được làm mới sau số ngày này |
+| `itemsPerEmerald` | gỗ 16, đá 16, kính 8, len 8, còn lại 8 | Số vật phẩm đổi một ngọc theo loại |
+| `buildRoads` | `true` | Làm đường từ công trình mới |
+| `roadSearchRadius` | `32` | Khoảng tìm đường làng để nối vào |
+| `roadBlocks` | `dirt_path`, `smooth_sandstone` | Khối được coi là đường (thêm khối đường của mod khác vào đây) |
+| `roadMaxNodes` | `4000` | Số bước tối đa khi tìm đường |
 
 ## Tương thích
 
 - **Better Village:** hỗ trợ sẵn, không cần cài đặt gì thêm. Mẫu của Better Village tự được dùng và phân loại như trên. Better Village đặt giường vào hầu hết công trình nghề, nên có khối nghề là xưởng; giường trong xưởng, nông trại, chuồng vẫn được tính vào nhà ở sau khi xây.
-- **Regrowth:** tường, hàng rào, đường và đuốc của Regrowth được coi như khối bình thường. Mod không chọn chỗ xây đè lên chúng, và khối Regrowth đặt vào công trường thì được bỏ qua, không bị ghi đè.
+- **Regrowth:** tường, hàng rào, đường và đuốc của Regrowth được coi như khối bình thường. Mod không chọn chỗ xây đè lên chúng, và khối Regrowth đặt vào công trường thì được bỏ qua, không bị ghi đè. Đường của Regrowth (đường đất, sa thạch mịn ở sa mạc) là đường làng: đường mới nối vào và không bao giờ thay chúng.
 - **Guard Villagers:** lính gác không phải dân làng: không làm thợ xây hay trưởng làng, không tính vào dân số, nhưng được tính vào an ninh, có tên và có câu nói riêng. Mục sư chỉ chữa cho dân làng, vì Guard Villagers đã tự chữa cho lính gác.
 - Datapack sửa bộ nhà làng cũng dùng được. Mẫu nhà rộng hơn 24×24 hoặc cao hơn 20 khối bị bỏ qua.
 
@@ -153,7 +175,9 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 
 - Làng trên đất dốc có thể không tìm được chỗ xây. Sau `maxSiteFailures` lần thất bại, làng ngừng thử cho tới khi có lệnh `/livingvillages build`.
 - Chỉ hỗ trợ 5 kiểu làng vanilla.
+- Đường đang làm dở, lễ hội và ca chữa đang diễn ra không được lưu: khởi động lại thì đường dở bị bỏ và lễ hội kết thúc.
+- Biên niên sử, bia mộ, tiêu đề lên cấp và lời nói mới được test trên server không có người chơi thật; Guard Villagers không nạp được trong môi trường dev nên tên, câu nói và bia mộ của lính gác chưa được test.
 
 ## Gỡ mod
 
-Công trình đã xây vẫn còn như khối bình thường, và dân làng giữ tên mà mod đã đặt. Câu nói đang hiện lúc gỡ mod sẽ nằm lại giữa không trung; xóa bằng `/kill @e[tag=livingvillages_bubble]`. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.
+Công trình đã xây vẫn còn như khối bình thường, và dân làng giữ tên mà mod đã đặt. Câu nói đang hiện lúc gỡ mod sẽ nằm lại giữa không trung; xóa bằng `/kill @e[tag=livingvillages_bubble]`. Giao dịch của bảng vật liệu còn trên trưởng làng sẽ ở lại và thành giao dịch một lần bình thường được vanilla làm mới; muốn gỡ thì tắt `boardEnabled` và vào làng một lần trước khi gỡ mod. Dữ liệu duy nhất của mod là file `data/livingvillages.dat` trong thư mục của mỗi chiều không gian, có thể xóa đi. Gỡ mod không làm hỏng thế giới.

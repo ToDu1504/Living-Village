@@ -33,6 +33,10 @@ No new blocks, items, entities or textures. Players do not need the mod on their
 - **Professions at work** (during their working hours): shepherds breed and shear sheep, butchers breed pigs and put raw meat and charcoal into their own smoker, leatherworkers breed cows and refill their own cauldron, fletchers breed chickens, fishermen fish at nearby water and put cod or salmon into their own barrel, clerics heal hurt villagers and cure zombie villagers in the village (at most once a day each; never named or leashed ones, or ones kept by a player), cartographers walk around the edge of the village. Armorers and weaponsmiths make the village safer, toolsmiths make it build faster (+10% each, up to +30%), a cartographer widens the building radius by 16. Animals are bred only up to a limit per kind that grows with the level, and are never killed; named or leashed animals are left alone.
 - **Names:** every village gets a name that fits its style. Each house is a household with a family name, and villagers are named after the household of their bed. Names set with a name tag or by another mod are never replaced. Guard Villagers guards are named "Guard <name>". Walking into a village shows its name, level, population and mood as a title.
 - **Speech:** now and then a villager near a player says a short line above their head, picked from what really happens: unmet needs, a building going up, a new baby, a death, their own work, the leader's plans, the mood, or a greeting. The text is a vanilla text display that disappears after a few seconds; leftover text (for example after a crash) is removed as soon as it loads.
+- **Chronicle:** the village writes down what happens: births ("The Tran family has a new baby"), deaths and their cause, villagers turned into zombies or cured, villagers joining the guards, new buildings, level ups, new chiefs, raids won or lost, festivals and deliveries. The last `chronicleMaxEntries` entries are kept. Every librarian keeps a written book of the chronicle on their own lectern while it is empty; a lectern holding another book is never touched, and a book taken away is replaced at the next entry. Big events (level up, raid, festival) are announced in chat, small ones on the action bar. Named villagers and named guards who die get a grave (a stone wall and a sign with name, profession and day) in a 7×7 graveyard near the edge of the village; babies, zombified villagers and new guards get none.
+- **Festival:** every `festivalIntervalDays` days at dusk, when the village is not miserable, not raided and the weather is clear (otherwise it waits for the next dusk), villagers gather around the bell for `festivalDurationTicks`, the bell sounds, fireworks go up from open ground away from anyone, and villagers talk about the feast. It is named after the time of year. No block is placed.
+- **Material board:** the village asks for the three materials used most by the building it is building or has planned next, on a sign by the bell and as trades with the chief (material → emeralds, one use each). Every delivery cheers the village up and goes into the chronicle; when everything is delivered, that building goes up twice as fast and the next one starts without waiting. The village never needs the board: it only speeds things up.
+- **Roads:** a finished building is linked from its door to the nearest village road within `roadSearchRadius` (dirt path, smooth sandstone, and Regrowth's roads), or to the bell. A mason walks along and paves it (at half speed without a mason). Only grass, dirt, coarse dirt and podzol become dirt path, and sand becomes smooth sandstone in deserts; water, buildings and plots are avoided. A way that cannot be found is skipped.
 - **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
 - **Trees:** up to 4 natural trees growing inside the footprint are felled first, with no item drops, and sites without trees are preferred. A tree counts as natural only if it has natural (non-persistent) leaves, so log houses and trees decorated with player-placed leaves are never touched. Giant trees and trees with a bee nest stay. After the house is done, one sapling of the same kind per felled tree is replanted 3–8 blocks away; a farmer walks there to plant it if the village has one.
 - **Build order:** foundation, then clearing plants and levelling earth, then the structure layer by layer from the bottom, then doors, beds, torches, carpets and other decorations. A block is only ever placed into air or a replaceable block such as grass. Anything a player put in the way is left alone. Chests get no loot.
@@ -47,7 +51,7 @@ Players do not need the mod, so all texts are produced on the server in the lang
 
 ## Commands
 
-All commands require permission level 2 (operator). "Nearest village" means the nearest registered village within `activeRange` of you.
+All commands require permission level 2 (operator), except `chronicle` and `board`, which every player may use. "Nearest village" means the nearest registered village within `activeRange` of you.
 
 | Command | Effect |
 |---|---|
@@ -58,6 +62,10 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `/livingvillages cancel` | Stop the current project. Blocks already placed stay |
 | `/livingvillages templates [style]` | List the building designs, grouped by kind, for the nearest village or for a style: `plains`, `desert`, `savanna`, `snowy`, `taiga` |
 | `/livingvillages rename <name>` | Rename the nearest village |
+| `/livingvillages chronicle` | The last 10 chronicle entries of the nearest village (every player) |
+| `/livingvillages board` | The material requests of the nearest village (every player) |
+| `/livingvillages board place` | Place the material board again (it is placed only once on its own) |
+| `/livingvillages festival` | Start a festival now, for testing |
 | `/livingvillages pause` / `resume` | Stop or restart the whole mod (saved as `enabled` in the config) |
 | `/livingvillages speed <0.1–10>` | Build speed multiplier (saved in the config) |
 | `/livingvillages reload` | Reload `config/livingvillages.json` |
@@ -132,11 +140,25 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 | `voiceIntervalTicks` / `voiceChance` | `200` / `0.35` | How often a village may say something, and the chance (twice for nitwits) |
 | `maxBubblesPerVillage` | `2` | Lines shown at once per village |
 | `bubbleDurationTicks` | `80` | How long a line stays |
+| `chronicleEnabled` | `true` | Chronicle, its books and graves (needs `needsEnabled`) |
+| `announceEvents` | `true` | Tell nearby players about events (chat or action bar) |
+| `chronicleMaxEntries` | `100` | Entries kept per village |
+| `gravesEnabled` | `true` | Graves for named villagers and guards |
+| `festivalEnabled` | `true` | Festivals |
+| `festivalIntervalDays` / `festivalDurationTicks` | `7` / `2400` | Days between festivals, and how long one lasts |
+| `boardEnabled` | `true` | Material board and its trades (switching it off takes the trades back from the chief) |
+| `maxRequests` | `3` | Materials asked for at once (1–3) |
+| `requestExpireDays` | `3` | Undelivered requests are renewed after this many days |
+| `itemsPerEmerald` | wood 16, stone 16, glass 8, wool 8, default 8 | Items per emerald by kind |
+| `buildRoads` | `true` | Roads from new buildings |
+| `roadSearchRadius` | `32` | How far to look for a road to join |
+| `roadBlocks` | `dirt_path`, `smooth_sandstone` | Blocks that count as road (add a road block of another mod here) |
+| `roadMaxNodes` | `4000` | Most steps the road search tries |
 
 ## Compatibility
 
 - **Better Village:** supported with no extra setup. Its designs are used automatically and sorted the same way. Better Village puts beds in most work buildings, so a job site always makes a building a workshop; beds in workshops, farms and pens still count for housing once built.
-- **Regrowth:** its walls, fences, paths and torches are treated like any other block. Sites are not placed on them, and a block Regrowth puts on a construction site is simply skipped.
+- **Regrowth:** its walls, fences, paths and torches are treated like any other block. Sites are not placed on them, and a block Regrowth puts on a construction site is simply skipped. Its roads (dirt path, smooth sandstone in deserts) are village roads: new roads join them and never replace them.
 - **Guard Villagers:** guards are not villagers: they never become builders or leaders and do not count as population, but they count for safety, get names and say their own lines. Clerics only heal villagers, since Guard Villagers already heals its guards.
 - Datapacks that edit the village house pools also work. Designs larger than 24×24 or taller than 20 blocks are ignored.
 
@@ -150,7 +172,9 @@ All commands require permission level 2 (operator). "Nearest village" means the 
 
 - Villages on steep ground may find no site. After `maxSiteFailures` failed searches such a village stops trying until `/livingvillages build`.
 - Only the five vanilla village styles are supported.
+- A road still being laid, a festival and a cure in progress are not saved: after a restart the road is dropped and the festival ends.
+- The chronicle, graves, level-up titles and speech were tested on a dedicated server without a real player; Guard Villagers could not be loaded in the development environment, so guard names, lines and graves are untested.
 
 ## Removing the mod
 
-Buildings that were built stay as ordinary blocks, and villagers keep the names the mod gave them. A line of speech that was showing when the mod was removed stays in the air; remove it with `/kill @e[tag=livingvillages_bubble]`. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.
+Buildings that were built stay as ordinary blocks, and villagers keep the names the mod gave them. A line of speech that was showing when the mod was removed stays in the air; remove it with `/kill @e[tag=livingvillages_bubble]`. Material board trades still on a chief stay there and become ordinary one-use trades that vanilla restocks; turn `boardEnabled` off and load the village once before removing the mod to take them back. The mod's only data is `data/livingvillages.dat` in each dimension folder, which can be deleted. Removing the mod does not damage the world.
