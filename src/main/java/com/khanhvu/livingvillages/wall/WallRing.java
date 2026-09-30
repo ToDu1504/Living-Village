@@ -134,6 +134,10 @@ public final class WallRing {
 	/** The completion was announced once; repairs later do not announce it again. */
 	private boolean completed;
 	private long completedTick = Long.MIN_VALUE;
+	/** No room left inside for another house or workshop (spec v3-GĐ 3). */
+	private boolean full;
+	/** "Full" was written in the chronicle once; a later check that finds it full again stays quiet. */
+	private boolean fullNoted;
 	/** Column loop along the polygon; derived, not saved. */
 	private final int[] columns;
 	/** Units in building order; derived lazily. */
@@ -236,6 +240,22 @@ public final class WallRing {
 	public void setCompleted(long tick) {
 		this.completed = true;
 		this.completedTick = tick;
+	}
+
+	public boolean isFull() {
+		return full;
+	}
+
+	public void setFull(boolean full) {
+		this.full = full;
+	}
+
+	/** Marks the ring full and tells whether this is the first time. */
+	public boolean noteFull() {
+		full = true;
+		boolean first = !fullNoted;
+		fullNoted = true;
+		return first;
 	}
 
 	public boolean contains(double x, double z) {
@@ -399,6 +419,8 @@ public final class WallRing {
 		tag.putLong("CompletedTick", completedTick);
 		tag.putInt("Height", height);
 		tag.putBoolean("Battlements", battlements);
+		tag.putBoolean("Full", full);
+		tag.putBoolean("FullNoted", fullNoted);
 		ListTag towerList = new ListTag();
 		for (Tower tower : towers) {
 			towerList.add(tower.save());
@@ -419,6 +441,8 @@ public final class WallRing {
 		ring.completedTick = tag.contains("CompletedTick") ? tag.getLong("CompletedTick") : Long.MIN_VALUE;
 		ring.height = tag.getInt("Height");
 		ring.battlements = tag.getBoolean("Battlements");
+		ring.full = tag.getBoolean("Full");
+		ring.fullNoted = tag.getBoolean("FullNoted");
 		ListTag towerList = tag.getList("Towers", Tag.TAG_COMPOUND);
 		for (int i = 0; i < towerList.size(); i++) {
 			Tower tower = Tower.load(towerList.getCompound(i));

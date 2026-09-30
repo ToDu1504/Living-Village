@@ -319,5 +319,10 @@
 	"livingvillages.voice.wall_work.4": "Đau lưng quá, nhưng tường thì cao dần.",
 	"livingvillages.voice.wall_done.1": "Nhìn tường thành kìa! Giờ mình là thị trấn thật rồi.",
 	"livingvillages.voice.wall_done.2": "Có tường đá, tối ngủ yên hơn hẳn.",
-	"livingvillages.voice.wall_done.3": "Bạn lên tháp chưa? Trên đó nhìn thấy hết cả vùng."
+	"livingvillages.voice.wall_done.3": "Bạn lên tháp chưa? Trên đó nhìn thấy hết cả vùng.",
+	"livingvillages.reason.city_full": "trong thành đã kín, cần xây thành ngoại",
+	"livingvillages.chronicle.city_full": "Trong thành đã kín nhà.",
+	"livingvillages.command.status.city_room": "Trong thành: còn chỗ xây (ruộng và chuồng xây ngoài thành)",
+	"livingvillages.command.status.city_full": "Trong thành: đã kín, không xây thêm nhà/xưởng cho tới khi có thành ngoại",
+	"livingvillages.command.build.scanning": "Đang tìm chỗ trong thành; tìm được là khởi công ngay."
 }

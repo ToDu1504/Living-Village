@@ -9,6 +9,7 @@ import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -284,6 +285,9 @@ public final class RoadBuilder {
 		@Nullable
 		final BlockPos target;
 		final boolean toBell;
+		/** A building outside the city wall is linked to the nearest gate, the way into the city (spec v3-GĐ 3). */
+		@Nullable
+		final BlockPos gate;
 		final PriorityQueue<long[]> open = new PriorityQueue<>((a, b) -> Double.compare(Double.longBitsToDouble(a[1]), Double.longBitsToDouble(b[1])));
 		final Map<Long, Long> cameFrom = new HashMap<>();
 		final Map<Long, Double> cost = new HashMap<>();
@@ -296,7 +300,8 @@ public final class RoadBuilder {
 			this.building = building;
 			this.village = village;
 			this.roadBlocks = roadBlocks();
-			this.target = nearestRoad(level, start);
+			this.gate = CitySites.gateFor(village, start);
+			this.target = gate != null ? gate : nearestRoad(level, start);
 			this.toBell = target == null;
 			cost.put(start.asLong(), 0.0);
 			open.add(new long[] {start.asLong(), Double.doubleToLongBits(heuristic(start))});
@@ -351,13 +356,16 @@ public final class RoadBuilder {
 				current = cameFrom.get(current);
 			}
 			Collections.reverse(cells);
-			if (!toBell && !cells.isEmpty()) {
+			if (!toBell && gate == null && !cells.isEmpty()) {
 				cells.remove(cells.size() - 1); // already a road
 			}
 			return cells;
 		}
 
 		private boolean isGoal(ServerLevel level, BlockPos feet) {
+			if (gate != null) {
+				return Math.abs(feet.getX() - gate.getX()) + Math.abs(feet.getZ() - gate.getZ()) <= 1;
+			}
 			if (toBell) {
 				BlockPos bell = village.getBellPos();
 				return Math.abs(feet.getX() - bell.getX()) + Math.abs(feet.getZ() - bell.getZ()) <= BELL_GOAL_DISTANCE;

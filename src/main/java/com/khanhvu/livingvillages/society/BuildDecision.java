@@ -7,6 +7,7 @@ import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.wall.CitySites;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -51,8 +52,14 @@ public record BuildDecision(@Nullable BuildingKind kind, @Nullable ResourceLocat
 			return new BuildDecision(null, null, "livingvillages.reason.limit");
 		}
 		int threshold = LVConfig.get().needThreshold;
+		// A city whose walls are full builds no more houses or workshops until an outer ring gives room (v3-GĐ 3).
+		boolean full = CitySites.isFull(village);
+		boolean fullBlocked = false;
 		if (needs.housing() < threshold && has(buildings, BuildingKind.HOUSE)) {
-			return new BuildDecision(BuildingKind.HOUSE, null, "livingvillages.reason.housing");
+			if (!full) {
+				return new BuildDecision(BuildingKind.HOUSE, null, "livingvillages.reason.housing");
+			}
+			fullBlocked = true;
 		}
 		// A composter nobody works at yet means the village lacks people, not farms: another farm would not help.
 		boolean farmWaiting = false;
@@ -64,14 +71,16 @@ public record BuildDecision(@Nullable BuildingKind kind, @Nullable ResourceLocat
 		}
 		if (needs.jobs() < threshold) {
 			ResourceLocation profession = rarestWorkshopProfession(stats.adults(), buildings);
-			if (profession != null) {
+			if (profession != null && !full) {
 				return new BuildDecision(BuildingKind.WORKSHOP, profession, "livingvillages.reason.jobs");
 			}
+			fullBlocked |= profession != null;
 		}
 		if (has(buildings, BuildingKind.PEN) && needsPen(level, village, stats.adults())) {
 			return new BuildDecision(BuildingKind.PEN, null, "livingvillages.reason.pen");
 		}
-		return new BuildDecision(null, null, farmWaiting ? "livingvillages.reason.food_wait" : "livingvillages.reason.ok");
+		return new BuildDecision(null, null, fullBlocked ? "livingvillages.reason.city_full"
+				: farmWaiting ? "livingvillages.reason.food_wait" : "livingvillages.reason.ok");
 	}
 
 	/** Templates matching the decision (workshops of the chosen profession only). */

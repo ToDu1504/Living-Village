@@ -13,6 +13,7 @@ import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.fabricmc.api.ModInitializer;
@@ -51,6 +52,7 @@ public class LivingVillages implements ModInitializer {
 			MaterialBoard.clear();
 			RoadBuilder.clear();
 			WallBuilder.clear();
+			CitySites.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}

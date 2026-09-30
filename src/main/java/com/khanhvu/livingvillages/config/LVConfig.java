@@ -163,6 +163,13 @@ public class LVConfig {
 	public int cityWallHeightMax = 4;
 	/** Most wall columns between two towers. */
 	public int towerSpacing = 32;
+	/** Behind a city wall (v3-GĐ 3): free blocks along the inside of the wall, and between buildings. */
+	public int wallInnerBuffer = 2;
+	public int infillMargin = 1;
+	/** Kept free around the bell inside the walls. */
+	public int plazaRadius = 6;
+	/** Farms and pens go outside the wall, at most this far from it. */
+	public int farmBeltWidth = 24;
 	/** Free blocks between the outermost building, bed or job site and the wall. */
 	public int wallMargin = 6;
 	public int wallMaxVertices = 16;
@@ -385,6 +392,10 @@ public class LVConfig {
 		cityWallHeight = checkInt("cityWallHeight", cityWallHeight, 2, 4, d.cityWallHeight);
 		cityWallHeightMax = checkInt("cityWallHeightMax", cityWallHeightMax, cityWallHeight, 4, Math.max(cityWallHeight, d.cityWallHeightMax));
 		towerSpacing = checkInt("towerSpacing", towerSpacing, 12, 256, d.towerSpacing);
+		wallInnerBuffer = checkInt("wallInnerBuffer", wallInnerBuffer, 0, 16, d.wallInnerBuffer);
+		infillMargin = checkInt("infillMargin", infillMargin, 0, 16, d.infillMargin);
+		plazaRadius = checkInt("plazaRadius", plazaRadius, 0, 32, d.plazaRadius);
+		farmBeltWidth = checkInt("farmBeltWidth", farmBeltWidth, 8, 48, d.farmBeltWidth);
 		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
 		wallMaxVertices = checkInt("wallMaxVertices", wallMaxVertices, 3, 64, d.wallMaxVertices);
 		gateWidth = checkInt("gateWidth", gateWidth, 1, 9, d.gateWidth);

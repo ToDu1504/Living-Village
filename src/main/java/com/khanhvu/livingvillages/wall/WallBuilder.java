@@ -78,6 +78,7 @@ public final class WallBuilder {
 	private static final int TOWER_SHIFT = 3;
 	/** Tower centres at least this far apart. */
 	private static final int TOWER_MIN_DISTANCE = 7;
+	private static final int MIN_TOWERS = 4;
 
 	/** What working on one unit did. */
 	private enum Result {
@@ -402,37 +403,38 @@ public final class WallBuilder {
 	// ---------------------------------------------------------------- towers
 
 	/**
-	 * Towers at the corners of the outline and at most towerSpacing columns apart, kept away from gates, moved a few
-	 * columns when a spot does not fit (water, a building, too steep) and left out when none does.
+	 * Towers evenly along the wall, towerSpacing columns apart at most (at least four), each moved to a corner of the
+	 * outline when one is near; kept away from gates, moved a few columns when a spot does not fit (water, a
+	 * building, too steep) and left out when none does.
 	 */
 	private static void placeTowers(ServerLevel level, VillageRecord village, VillageWalls walls, WallRing ring) {
 		LVConfig config = LVConfig.get();
 		int n = ring.size();
 		int[] polygon = ring.getPolygon();
-		TreeSet<Integer> wanted = new TreeSet<>();
+		List<Integer> corners = new ArrayList<>();
 		for (int v = 0; v < polygon.length / 2; v++) {
 			for (int i = 0; i < n; i++) {
 				if (ring.x(i) == polygon[v * 2] && ring.z(i) == polygon[v * 2 + 1]) {
-					wanted.add(i);
+					corners.add(i);
 					break;
 				}
 			}
 		}
-		if (wanted.isEmpty()) {
-			wanted.add(0);
-		}
-		List<Integer> corners = new ArrayList<>(wanted);
-		for (int k = 0; k < corners.size(); k++) {
-			int a = corners.get(k);
-			int b = corners.get((k + 1) % corners.size());
-			int gap = Math.floorMod(b - a, n);
-			if (gap == 0) {
-				gap = n;
+		int count = Math.max(MIN_TOWERS, (n + config.towerSpacing - 1) / config.towerSpacing);
+		int snap = config.towerSpacing / 4;
+		TreeSet<Integer> wanted = new TreeSet<>();
+		for (int k = 0; k < count; k++) {
+			int column = k * n / count;
+			int best = column;
+			int bestDistance = snap + 1;
+			for (int corner : corners) {
+				int distance = Math.min(Math.floorMod(corner - column, n), Math.floorMod(column - corner, n));
+				if (distance < bestDistance) {
+					bestDistance = distance;
+					best = corner;
+				}
 			}
-			int extra = (gap - 1) / config.towerSpacing;
-			for (int j = 1; j <= extra; j++) {
-				wanted.add(Math.floorMod(a + gap * j / (extra + 1), n));
-			}
+			wanted.add(best);
 		}
 		double cx = 0;
 		double cz = 0;

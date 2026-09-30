@@ -22,6 +22,7 @@ import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageType;
+import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.VillageWalls;
 import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.wall.WallRing;
@@ -199,6 +200,9 @@ public final class LVCommands {
 			statusSociety(source, level, record, stats);
 		}
 		source.sendSuccess(() -> wallLine(record), false);
+		if (CitySites.active(record)) {
+			source.sendSuccess(() -> LVText.tr(CitySites.isFull(record) ? "livingvillages.command.status.city_full" : "livingvillages.command.status.city_room"), false);
+		}
 		if (config.boardEnabled) {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.board"), false);
 			sendRequests(source, record);
@@ -268,7 +272,12 @@ public final class LVCommands {
 			}
 			record.setFailedSiteAttempts(0);
 			record.setNextSiteAttemptTick(0);
+			CitySites.resetFull(record); // look again, even in a city found full
 			project = VillageTicker.startForced(level, registry, record);
+			if (project == null && CitySites.isScanning(record)) {
+				source.sendSuccess(() -> LVText.tr("livingvillages.command.build.scanning"), true);
+				return 1;
+			}
 			if (project == null) {
 				source.sendFailure(LVText.tr("livingvillages.command.build.no_site", houseCount));
 				return 0;

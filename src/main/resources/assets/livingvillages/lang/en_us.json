@@ -319,5 +319,10 @@
 	"livingvillages.voice.wall_work.4": "My back hurts, but the wall grows.",
 	"livingvillages.voice.wall_done.1": "Look at our walls! We are a real town now.",
 	"livingvillages.voice.wall_done.2": "I sleep better behind stone walls.",
-	"livingvillages.voice.wall_done.3": "Have you climbed the tower? You can see everything from up there."
+	"livingvillages.voice.wall_done.3": "Have you climbed the tower? You can see everything from up there.",
+	"livingvillages.reason.city_full": "there is no room left inside the walls: an outer ring is needed",
+	"livingvillages.chronicle.city_full": "There is no room left inside the city walls.",
+	"livingvillages.command.status.city_room": "Inside the walls: room left for new buildings (farms and pens go outside)",
+	"livingvillages.command.status.city_full": "Inside the walls: full, no more houses or workshops until an outer ring",
+	"livingvillages.command.build.scanning": "Looking for a spot inside the walls; the building starts as soon as one is found."
 }

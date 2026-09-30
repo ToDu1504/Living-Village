@@ -4,6 +4,7 @@ import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.wall.CitySites;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
@@ -35,9 +36,15 @@ public final class VillageLevel {
 		return "livingvillages.level." + NAMES[Math.max(0, Math.min(MAX, level))];
 	}
 
-	/** Buildings the mod may build for the village in total. */
+	/**
+	 * Buildings the mod may build for the village in total. Behind city walls there is no count: the room inside
+	 * the walls is the limit (spec v3-GĐ 3).
+	 */
 	public static int buildLimit(VillageRecord village) {
 		LVConfig config = LVConfig.get();
+		if (enabled() && CitySites.active(village)) {
+			return Integer.MAX_VALUE;
+		}
 		return enabled() ? config.levelMaxBuildings.get(Math.max(0, village.getLevel())) : config.maxHousesPerVillage;
 	}
 

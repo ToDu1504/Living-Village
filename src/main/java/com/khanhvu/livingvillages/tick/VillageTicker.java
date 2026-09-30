@@ -27,6 +27,7 @@ import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageScanner;
 import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.voice.VillageVoice;
+import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
@@ -121,6 +122,7 @@ public final class VillageTicker {
 			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
 			RoadBuilder.tick(level, village);
 			WallBuilder.tick(level, registry, village, manage);
+			CitySites.tick(level, registry, village);
 		}
 	}
 
@@ -177,16 +179,23 @@ public final class VillageTicker {
 	/**
 	 * Picks a house (weighted like the pool) and a site, and makes it the village project. With
 	 * {@code tryAllTemplates} (commands), other houses are tried when the picked one fits nowhere.
-	 * A failed search counts toward maxSiteFailures. Returns null if no house or no site was found.
+	 * A failed search counts toward maxSiteFailures. Returns null if no house or no site was found, or while the
+	 * site is still being looked for inside the city walls (spec v3-GĐ 3; the project starts when one is found).
 	 */
 	@Nullable
 	public static BuildProject startProject(ServerLevel level, VillageRegistry registry, VillageRecord village,
 			List<BuildingTemplate> houses, boolean tryAllTemplates) {
-		LVConfig config = LVConfig.get();
 		// The building planned ahead for the material board comes first, if it is one of the candidates.
 		BuildingTemplate first = houses.stream().filter(b -> b.id().equals(village.getPlannedTemplate())).findFirst()
 				.orElseGet(() -> BuildingTemplateProvider.pickRandom(houses, level.getRandom()));
 		if (first == null) {
+			return null;
+		}
+		if (CitySites.active(village) && CitySites.insideKind(first.kind())) {
+			// Inside the walls the site is found by a scan over several ticks.
+			if (!CitySites.isScanning(village)) {
+				CitySites.request(level, village, first, houses);
+			}
 			return null;
 		}
 		List<BuildingTemplate> candidates = new ArrayList<>();
@@ -199,19 +208,33 @@ public final class VillageTicker {
 			}
 		}
 		for (BuildingTemplate house : candidates) {
-			Optional<BuildSite> site = SiteFinder.find(level, village, house, level.getRandom());
+			Optional<BuildSite> site = CitySites.active(village)
+					? CitySites.findOutside(level, village, house, level.getRandom())
+					: SiteFinder.find(level, village, house, level.getRandom());
 			if (site.isPresent()) {
-				BuildProject project = BuildProject.create(house, site.get());
-				village.setProject(project);
-				village.setFailedSiteAttempts(0);
-				village.setPlannedTemplate(null);
-				village.setSkipCooldown(false);
-				registry.setDirty();
-				LivingVillages.debug("Village {} starts {} at {} ({}), {} tree(s) to fell", village.getId(), house.id(),
-						site.get().origin(), site.get().rotation(), site.get().treeRoots().size());
-				return project;
+				return beginProject(level, registry, village, house, site.get());
 			}
 		}
+		siteFailed(level, registry, village, first);
+		return null;
+	}
+
+	/** Makes {@code house} at {@code site} the village project. */
+	public static BuildProject beginProject(ServerLevel level, VillageRegistry registry, VillageRecord village, BuildingTemplate house, BuildSite site) {
+		BuildProject project = BuildProject.create(house, site);
+		village.setProject(project);
+		village.setFailedSiteAttempts(0);
+		village.setPlannedTemplate(null);
+		village.setSkipCooldown(false);
+		registry.setDirty();
+		LivingVillages.debug("Village {} starts {} at {} ({}), {} tree(s) to fell", village.getId(), house.id(),
+				site.origin(), site.rotation(), site.treeRoots().size());
+		return project;
+	}
+
+	/** No site for {@code house}: counts toward maxSiteFailures and waits before the next search. */
+	public static void siteFailed(ServerLevel level, VillageRegistry registry, VillageRecord village, BuildingTemplate house) {
+		LVConfig config = LVConfig.get();
 		village.setFailedSiteAttempts(village.getFailedSiteAttempts() + 1);
 		village.setNextSiteAttemptTick(level.getGameTime() + SITE_RETRY_TICKS);
 		village.setPlannedTemplate(null); // plan another design next time
@@ -220,9 +243,8 @@ public final class VillageTicker {
 			LivingVillages.LOGGER.info("[LivingVillages] Village at {} found no building site {} times in a row; "
 					+ "it stops building until /livingvillages build", village.getBellPos(), config.maxSiteFailures);
 		} else {
-			LivingVillages.debug("Village {} found no site for {}", village.getId(), first.id());
+			LivingVillages.debug("Village {} found no site for {}", village.getId(), house.id());
 		}
-		return null;
 	}
 
 	private static void tickProject(ServerLevel level, VillageRegistry registry, VillageRecord village, BuildProject project,

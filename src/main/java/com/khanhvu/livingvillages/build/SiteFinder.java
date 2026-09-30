@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +58,7 @@ public final class SiteFinder {
 			int x = bell.getX() + Mth.floor(Math.cos(angle) * radius);
 			int z = bell.getZ() + Mth.floor(Math.sin(angle) * radius);
 			for (Rotation rotation : Util.shuffledCopy(Rotation.values(), random)) {
-				BuildSite site = tryCandidate(level, registry, house, x, z, rotation, config);
+				BuildSite site = tryCandidate(level, registry, house, x, z, rotation, config.margin);
 				if (site == null) {
 					continue;
 				}
@@ -158,13 +159,32 @@ public final class SiteFinder {
 		return state.isAir() || (state.canBeReplaced() && state.getFluidState().isEmpty());
 	}
 
+	/**
+	 * The footprint (content box, at y 0) the house would have with its content centred on (centerX, centerZ):
+	 * the same placement {@link #tryAt} checks, without reading the world.
+	 */
+	public static BoundingBox footprintAt(BuildingTemplate house, int centerX, int centerZ, Rotation rotation) {
+		BoundingBox local = house.worldBox(BlockPos.ZERO, rotation);
+		return local.moved(centerX - (local.minX() + local.maxX()) / 2, 0, centerZ - (local.minZ() + local.maxZ()) / 2);
+	}
+
+	/**
+	 * The site with the house content centred on (centerX, centerZ), keeping {@code margin} free around it, or null
+	 * when it does not fit there (same checks as {@link #find}).
+	 */
+	@Nullable
+	public static BuildSite tryAt(ServerLevel level, BuildingTemplate house, int centerX, int centerZ, Rotation rotation, int margin) {
+		return tryCandidate(level, VillageRegistry.get(level), house, centerX, centerZ, rotation, margin);
+	}
+
+	@Nullable
 	private static BuildSite tryCandidate(ServerLevel level, VillageRegistry registry, BuildingTemplate house,
-			int centerX, int centerZ, Rotation rotation, LVConfig config) {
+			int centerX, int centerZ, Rotation rotation, int margin) {
+		LVConfig config = LVConfig.get();
 		BoundingBox local = house.worldBox(BlockPos.ZERO, rotation);
 		int originX = centerX - (local.minX() + local.maxX()) / 2;
 		int originZ = centerZ - (local.minZ() + local.maxZ()) / 2;
 		BoundingBox content = local.moved(originX, 0, originZ);
-		int margin = config.margin;
 		int minX = content.minX() - margin;
 		int minZ = content.minZ() - margin;
 		int maxX = content.maxX() + margin;
