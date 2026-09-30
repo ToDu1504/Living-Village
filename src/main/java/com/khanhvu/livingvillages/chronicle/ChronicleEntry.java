@@ -9,6 +9,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
 public record ChronicleEntry(long day, String key, List<String> args) {
 	public static final String KEY_ARG = "@k:";
 	public static final String ENTITY_ARG = "@e:";
+	public static final String ITEM_ARG = "@i:";
 
 	public static String keyArg(String key) {
 		return KEY_ARG + key;
@@ -30,18 +32,33 @@ public record ChronicleEntry(long day, String key, List<String> args) {
 		return ENTITY_ARG + BuiltInRegistries.ENTITY_TYPE.getKey(type);
 	}
 
-	/** "Day 20: Tran Minh was born." */
+	public static String itemArg(Item item) {
+		return ITEM_ARG + BuiltInRegistries.ITEM.getKey(item);
+	}
+
+	/** "Day 20: Tran Minh was born." Item names stay translatable, so every player reads them in their language. */
 	public Component render() {
-		return LVText.tr("livingvillages.chronicle.entry", day, text());
+		return LVText.compose("livingvillages.chronicle.entry", day, message());
 	}
 
 	/** The entry without its day. */
-	public String text() {
+	public Component message() {
 		Object[] values = new Object[args.size()];
 		for (int i = 0; i < values.length; i++) {
-			values[i] = resolve(args.get(i));
+			String arg = args.get(i);
+			if (arg.startsWith(ITEM_ARG)) {
+				ResourceLocation id = ResourceLocation.tryParse(arg.substring(ITEM_ARG.length()));
+				values[i] = id == null ? arg : Component.translatable(BuiltInRegistries.ITEM.get(id).getDescriptionId());
+			} else {
+				values[i] = resolve(arg);
+			}
 		}
-		return LVText.format(key, values);
+		return LVText.compose(key, values);
+	}
+
+	/** The entry without its day, as plain text (logs). */
+	public String text() {
+		return message().getString();
 	}
 
 	private static String resolve(String arg) {

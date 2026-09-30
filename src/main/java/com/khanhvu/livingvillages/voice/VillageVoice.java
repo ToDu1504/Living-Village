@@ -5,6 +5,7 @@ import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.society.BuildDecision;
 import com.khanhvu.livingvillages.society.VillageMood;
+import com.khanhvu.livingvillages.society.VillageLeader;
 import com.khanhvu.livingvillages.society.VillageNeeds;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
@@ -67,6 +68,16 @@ public final class VillageVoice {
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
 			if (entity.getTags().contains(BUBBLE_TAG) && !BUBBLES.containsKey(entity.getUUID())) {
 				entity.discard(); // left over from a crash or an unload: never keep floating text
+			}
+		});
+		VillageEvents.REQUEST_FULFILLED.register(e -> {
+			Villager leader = VillageLeader.getLeader(e.level(), e.village());
+			if (leader == null || !LVConfig.get().voiceEnabled || leader.isVehicle()) {
+				return;
+			}
+			Component line = line(e.allDone() ? "board_all_done" : "board_thanks", e.level().getRandom(), e.player() == null ? "" : e.player());
+			if (line != null) {
+				say(e.level(), e.village(), leader, line, e.level().getGameTime());
 			}
 		});
 		VillageEvents.ZOMBIE_CURED.register(e -> {
@@ -148,6 +159,9 @@ public final class VillageVoice {
 		}
 		if (villager.getUUID().equals(village.getLeaderUuid())) {
 			add(options, leaderLine(level, village, random));
+			if (village.getRequests().stream().anyMatch(r -> !r.isFulfilled())) {
+				add(options, line("board", random)); // the leader reminds people of the board
+			}
 		}
 		if (ProfessionWork.isWorking(villager.getUUID())) {
 			String profession = BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()).getPath();

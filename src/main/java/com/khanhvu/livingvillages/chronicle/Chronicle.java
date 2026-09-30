@@ -148,6 +148,14 @@ public final class Chronicle {
 				ChronicleEntry.keyArg(VillageLevel.langKey(e.newLevel()))));
 		VillageEvents.FESTIVAL.register(e -> add(e.level(), e.village(), Notice.BIG, "livingvillages.chronicle.festival",
 				ChronicleEntry.keyArg(e.nameKey())));
+		VillageEvents.REQUEST_FULFILLED.register(e -> {
+			String item = ChronicleEntry.itemArg(BuiltInRegistries.ITEM.get(e.item()));
+			if (e.player() != null) {
+				add(e.level(), e.village(), Notice.SMALL, "livingvillages.chronicle.delivered", e.player(), String.valueOf(e.count()), item);
+			} else {
+				add(e.level(), e.village(), Notice.SMALL, "livingvillages.chronicle.delivered_someone", String.valueOf(e.count()), item);
+			}
+		});
 		VillageEvents.LEADER_CHANGED.register(e -> {
 			if (e.newLeader() != null) {
 				add(e.level(), e.village(), Notice.NONE, "livingvillages.chronicle.leader", VillageSociety.baseName(e.village(), e.newLeader()));
@@ -258,8 +266,8 @@ public final class Chronicle {
 	private static void announce(ServerLevel level, VillageRecord village, Notice notice, ChronicleEntry entry) {
 		double range = notice == Notice.BIG ? LVConfig.get().activeRange : VillageAnalyzer.areaRadius(village);
 		Component message = notice == Notice.BIG
-				? LVText.tr("livingvillages.chronicle.announce", VillageIdentity.displayName(village), entry.text())
-				: Component.literal(entry.text());
+				? LVText.compose("livingvillages.chronicle.announce", VillageIdentity.displayName(village), entry.message())
+				: entry.message();
 		for (ServerPlayer player : level.players()) {
 			if (village.horizontalDistSqr(player.blockPosition()) <= range * range) {
 				if (notice == Notice.BIG) {

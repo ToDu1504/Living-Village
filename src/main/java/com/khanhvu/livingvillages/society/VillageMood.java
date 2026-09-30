@@ -16,6 +16,7 @@ public final class VillageMood {
 	public static final int VILLAGER_DIED = -10;
 	public static final int LEVEL_UP = 15;
 	public static final int ZOMBIE_CURED = 5;
+	public static final int REQUEST_FULFILLED = 5;
 
 	public enum Level {
 		MISERABLE, NORMAL, HAPPY;

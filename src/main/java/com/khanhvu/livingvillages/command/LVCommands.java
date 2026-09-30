@@ -1,5 +1,7 @@
 package com.khanhvu.livingvillages.command;
 
+import com.khanhvu.livingvillages.board.MaterialBoard;
+import com.khanhvu.livingvillages.board.MaterialRequest;
 import com.khanhvu.livingvillages.build.BlockPlacer;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildingKind;
@@ -65,6 +67,9 @@ public final class LVCommands {
 						.then(Commands.literal("instant").executes(ctx -> build(ctx, true))))
 				.then(op("cancel").executes(LVCommands::cancel))
 				.then(op("festival").executes(LVCommands::festival))
+				.then(Commands.literal("board")
+						.executes(LVCommands::board)
+						.then(op("place").executes(LVCommands::boardPlace)))
 				.then(op("pause").executes(ctx -> setEnabled(ctx, false)))
 				.then(op("resume").executes(ctx -> setEnabled(ctx, true)))
 				.then(op("reload").executes(LVCommands::reload))
@@ -95,6 +100,49 @@ public final class LVCommands {
 		}
 		Festival.start(source.getLevel(), record);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.festival.started", VillageIdentity.displayName(record)), true);
+		return 1;
+	}
+
+	/** The nearest village's material requests (spec v2-GĐ 9); open to every player. */
+	private static int board(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.board.header", VillageIdentity.displayName(record)), false);
+		sendRequests(source, record);
+		return record.getRequests().size();
+	}
+
+	private static void sendRequests(CommandSourceStack source, VillageRecord record) {
+		List<MaterialRequest> requests = record.getRequests();
+		if (requests.isEmpty()) {
+			source.sendSuccess(() -> LVText.tr("livingvillages.board.enough"), false);
+			return;
+		}
+		for (MaterialRequest request : requests) {
+			String key = request.isFulfilled() ? "livingvillages.command.board.entry_done" : "livingvillages.command.board.entry";
+			source.sendSuccess(() -> LVText.compose(key, MaterialBoard.requestLine(request), request.reward()), false);
+		}
+	}
+
+	/** Places the board of the nearest village again (it is otherwise placed only once). */
+	private static int boardPlace(CommandContext<CommandSourceStack> context) {
+		CommandSourceStack source = context.getSource();
+		VillageRecord record = findNearestVillage(source);
+		if (record == null) {
+			source.sendFailure(LVText.tr("livingvillages.command.no_village"));
+			return 0;
+		}
+		if (!MaterialBoard.placeBoard(source.getLevel(), record)) {
+			source.sendFailure(LVText.tr("livingvillages.command.board.no_spot"));
+			return 0;
+		}
+		MaterialBoard.manage(source.getLevel(), record, null);
+		BlockPos pos = record.getBoardPos();
+		source.sendSuccess(() -> LVText.tr("livingvillages.command.board.placed", formatPos(pos)), true);
 		return 1;
 	}
 
@@ -135,7 +183,7 @@ public final class LVCommands {
 		LVConfig config = LVConfig.get();
 		VillageAnalyzer.Stats stats = VillageAnalyzer.analyze(level, record);
 		BlockPos bell = record.getBellPos();
-		long cooldownLeft = record.getLastBuildTick() == VillageRecord.NEVER
+		long cooldownLeft = record.getLastBuildTick() == VillageRecord.NEVER || record.isSkipCooldown()
 				? 0
 				: Math.max(0, record.getLastBuildTick() + config.cooldownTicks - level.getGameTime());
 
@@ -156,6 +204,10 @@ public final class LVCommands {
 				cooldownLeft, cooldownLeft / 20), false);
 		if (config.needsEnabled) {
 			statusSociety(source, level, record, stats);
+		}
+		if (config.boardEnabled) {
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.board"), false);
+			sendRequests(source, record);
 		}
 		return 1;
 	}

@@ -136,6 +136,23 @@ public class LVConfig {
 	public int festivalIntervalDays = 7;
 	public int festivalDurationTicks = 2400;
 
+	// v2-GĐ 9: material board
+	public boolean boardEnabled = true;
+	public int maxRequests = 3;
+	public int requestExpireDays = 3;
+	/** Items per emerald by group: wood, stone, glass, wool, default. */
+	public Map<String, Integer> itemsPerEmerald = defaultItemsPerEmerald();
+
+	private static Map<String, Integer> defaultItemsPerEmerald() {
+		Map<String, Integer> map = new LinkedHashMap<>();
+		map.put("wood", 16);
+		map.put("stone", 16);
+		map.put("glass", 8);
+		map.put("wool", 8);
+		map.put("default", 8);
+		return map;
+	}
+
 	private static Map<String, Boolean> defaultProfessionWork() {
 		Map<String, Boolean> map = new LinkedHashMap<>();
 		for (String id : List.of("shepherd", "butcher", "leatherworker", "fletcher", "fisherman", "cleric", "armorer",
@@ -280,6 +297,13 @@ public class LVConfig {
 		clericCuresPerDay = checkInt("clericCuresPerDay", clericCuresPerDay, 0, 100, d.clericCuresPerDay);
 		clericCureRange = checkInt("clericCureRange", clericCureRange, 1, 16, d.clericCureRange);
 		greetingCooldownTicks = checkInt("greetingCooldownTicks", greetingCooldownTicks, 0, 720000, d.greetingCooldownTicks);
+		maxRequests = checkInt("maxRequests", maxRequests, 1, 3, d.maxRequests);
+		requestExpireDays = checkInt("requestExpireDays", requestExpireDays, 1, 100, d.requestExpireDays);
+		if (itemsPerEmerald == null || !itemsPerEmerald.containsKey("default")
+				|| itemsPerEmerald.values().stream().anyMatch(n -> n == null || n < 1 || n > 64)) {
+			warn("itemsPerEmerald", itemsPerEmerald);
+			itemsPerEmerald = d.itemsPerEmerald;
+		}
 		festivalIntervalDays = checkInt("festivalIntervalDays", festivalIntervalDays, 1, 1000, d.festivalIntervalDays);
 		festivalDurationTicks = checkInt("festivalDurationTicks", festivalDurationTicks, 200, 12000, d.festivalDurationTicks);
 		chronicleMaxEntries = checkInt("chronicleMaxEntries", chronicleMaxEntries, 10, 1000, d.chronicleMaxEntries);

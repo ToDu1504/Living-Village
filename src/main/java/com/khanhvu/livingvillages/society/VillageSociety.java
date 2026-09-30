@@ -64,6 +64,7 @@ public final class VillageSociety {
 			e.village().setRecentBirth(e.baby().getName().getString(), e.level().getGameTime());
 			LivingVillages.debug("Village {}: {} was born", e.village().getId(), e.baby().getName().getString());
 		});
+		VillageEvents.REQUEST_FULFILLED.register(e -> VillageMood.addEffect(e.village(), VillageMood.REQUEST_FULFILLED, e.level().getGameTime()));
 		VillageEvents.ZOMBIE_CURED.register(e -> {
 			VillageIdentity.nameNow(e.level(), e.village(), e.villager()); // before the cleric's words, which use the name
 			VillageMood.addEffect(e.village(), VillageMood.ZOMBIE_CURED, e.level().getGameTime());
@@ -144,7 +145,8 @@ public final class VillageSociety {
 		}
 		Component what = buildingName(decision.kind(), decision.profession());
 		long now = level.getGameTime();
-		if (village.getLastBuildTick() != VillageRecord.NEVER && now - village.getLastBuildTick() < config.cooldownTicks) {
+		if (village.getLastBuildTick() != VillageRecord.NEVER && now - village.getLastBuildTick() < config.cooldownTicks
+				&& !village.isSkipCooldown()) {
 			long left = village.getLastBuildTick() + config.cooldownTicks - now;
 			return LVText.tr("livingvillages.wish.build_after_rest", what, reason, left / 20);
 		}

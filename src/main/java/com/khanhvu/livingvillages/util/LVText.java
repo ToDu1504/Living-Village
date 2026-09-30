@@ -17,6 +17,8 @@ import java.util.IllegalFormatException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Every text players see. The mod is server-side only, so vanilla clients have no livingvillages lang file:
@@ -29,6 +31,8 @@ public final class LVText {
 	private static Map<String, String> selected = Map.of();
 	private static Map<String, String> fallback = Map.of();
 	private static final Set<String> WARNED_KEYS = new HashSet<>();
+	/** "%s" or "%2$s". */
+	private static final Pattern PLACEHOLDER = Pattern.compile("%(?:(\\d+)\\$)?s");
 
 	private LVText() {
 	}
@@ -51,7 +55,28 @@ public final class LVText {
 		return selected.containsKey(key) || fallback.containsKey(key);
 	}
 
-	public static String format(String key, Object... args) {
+	/**
+	 * Like {@link #tr} but keeps component arguments as they are, so e.g. a vanilla item name stays translatable and
+	 * shows in each player's own language.
+	 */
+	public static MutableComponent compose(String key, Object... args) {
+		String pattern = pattern(key);
+		MutableComponent out = Component.empty();
+		Matcher matcher = PLACEHOLDER.matcher(pattern);
+		int start = 0;
+		int next = 0;
+		while (matcher.find()) {
+			out.append(pattern.substring(start, matcher.start()));
+			int index = matcher.group(1) != null ? Integer.parseInt(matcher.group(1)) - 1 : next++;
+			Object arg = index >= 0 && index < args.length ? args[index] : "";
+			out.append(arg instanceof Component component ? component : Component.literal(String.valueOf(arg)));
+			start = matcher.end();
+		}
+		out.append(pattern.substring(start));
+		return out;
+	}
+
+	private static String pattern(String key) {
 		String pattern = selected.get(key);
 		if (pattern == null) {
 			pattern = fallback.get(key);
@@ -60,6 +85,14 @@ public final class LVText {
 			if (WARNED_KEYS.add(key)) {
 				LivingVillages.LOGGER.warn("[LivingVillages] Missing text for key {}", key);
 			}
+			return key;
+		}
+		return pattern;
+	}
+
+	public static String format(String key, Object... args) {
+		String pattern = pattern(key);
+		if (pattern.equals(key)) {
 			return key;
 		}
 		Object[] plain = new Object[args.length];

@@ -1,5 +1,6 @@
 package com.khanhvu.livingvillages;
 
+import com.khanhvu.livingvillages.board.MaterialBoard;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.command.LVCommands;
@@ -33,6 +34,7 @@ public class LivingVillages implements ModInitializer {
 		ProfessionWork.register();
 		VillageVoice.register();
 		Chronicle.register();
+		MaterialBoard.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> BuildingTemplateProvider.clearCache());
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> server.getAllLevels().forEach(VillageVoice::clear));
@@ -41,6 +43,7 @@ public class LivingVillages implements ModInitializer {
 			VillageIdentity.clear();
 			Chronicle.clear();
 			Festival.clear();
+			MaterialBoard.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}

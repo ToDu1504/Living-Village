@@ -9,6 +9,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -86,14 +87,14 @@ public final class ChronicleBook {
 		List<ChronicleEntry> entries = village.getChronicle();
 		List<Filterable<Component>> pages = new ArrayList<>();
 		for (int start = 0; start < entries.size(); start += ENTRIES_PER_PAGE) {
-			StringBuilder page = new StringBuilder();
+			MutableComponent page = Component.empty();
 			for (int i = start; i < Math.min(entries.size(), start + ENTRIES_PER_PAGE); i++) {
-				if (!page.isEmpty()) {
+				if (i > start) {
 					page.append("\n\n");
 				}
-				page.append(entries.get(i).render().getString());
+				page.append(entries.get(i).render());
 			}
-			pages.add(Filterable.passThrough(Component.literal(page.toString())));
+			pages.add(Filterable.passThrough(page));
 		}
 		String title = LVText.format("livingvillages.chronicle.book_title", VillageIdentity.displayName(village));
 		if (title.length() > MAX_TITLE_LENGTH) {

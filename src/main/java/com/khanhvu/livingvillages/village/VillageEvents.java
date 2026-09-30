@@ -35,6 +35,11 @@ public final class VillageEvents {
 	public record FestivalStarted(ServerLevel level, VillageRecord village, String nameKey) {
 	}
 
+	/** A player traded a board request with the leader (v2-GĐ 9.4); {@code player} is null if not known. */
+	public record RequestFulfilled(ServerLevel level, VillageRecord village, @Nullable String player, ResourceLocation item, int count,
+			boolean allDone) {
+	}
+
 	/** A baby villager was born in the village. */
 	public record Birth(ServerLevel level, VillageRecord village, Villager baby) {
 	}
@@ -48,6 +53,7 @@ public final class VillageEvents {
 	public static final Bus<Death> DEATH = new Bus<>();
 	public static final Bus<LeaderChanged> LEADER_CHANGED = new Bus<>();
 	public static final Bus<Birth> BIRTH = new Bus<>();
+	public static final Bus<RequestFulfilled> REQUEST_FULFILLED = new Bus<>();
 	public static final Bus<FestivalStarted> FESTIVAL = new Bus<>();
 	public static final Bus<ZombieCured> ZOMBIE_CURED = new Bus<>();
 

@@ -1,6 +1,7 @@
 package com.khanhvu.livingvillages.tick;
 
 import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.board.MaterialBoard;
 import com.khanhvu.livingvillages.build.BlockPlacer;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildSite;
@@ -96,6 +97,7 @@ public final class VillageTicker {
 					VillageIdentity.ensureName(village, villageType(village), level);
 					VillageIdentity.nameVillagers(level, village);
 				}
+				MaterialBoard.manage(level, village, stats); // plans the next building first, so auto-start builds that one
 				if (village.getProject() == null) {
 					tryAutoStart(level, registry, village, time, stats);
 				}
@@ -114,6 +116,7 @@ public final class VillageTicker {
 				VillageVoice.tick(level, village);
 			}
 			Festival.tick(level, village); // also ends a running festival when festivals are switched off
+			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
 		}
 	}
 
@@ -127,7 +130,8 @@ public final class VillageTicker {
 		if (village.getHousesBuilt() >= VillageLevel.buildLimit(village)
 				|| village.getFailedSiteAttempts() >= config.maxSiteFailures
 				|| time < village.getNextSiteAttemptTick()
-				|| (village.getLastBuildTick() != VillageRecord.NEVER && time - village.getLastBuildTick() < config.cooldownTicks)) {
+				|| (village.getLastBuildTick() != VillageRecord.NEVER && time - village.getLastBuildTick() < config.cooldownTicks
+						&& !village.isSkipCooldown())) {
 			return;
 		}
 		if (stats == null) {
@@ -175,7 +179,9 @@ public final class VillageTicker {
 	public static BuildProject startProject(ServerLevel level, VillageRegistry registry, VillageRecord village,
 			List<BuildingTemplate> houses, boolean tryAllTemplates) {
 		LVConfig config = LVConfig.get();
-		BuildingTemplate first = BuildingTemplateProvider.pickRandom(houses, level.getRandom());
+		// The building planned ahead for the material board comes first, if it is one of the candidates.
+		BuildingTemplate first = houses.stream().filter(b -> b.id().equals(village.getPlannedTemplate())).findFirst()
+				.orElseGet(() -> BuildingTemplateProvider.pickRandom(houses, level.getRandom()));
 		if (first == null) {
 			return null;
 		}
@@ -194,6 +200,8 @@ public final class VillageTicker {
 				BuildProject project = BuildProject.create(house, site.get());
 				village.setProject(project);
 				village.setFailedSiteAttempts(0);
+				village.setPlannedTemplate(null);
+				village.setSkipCooldown(false);
 				registry.setDirty();
 				LivingVillages.debug("Village {} starts {} at {} ({}), {} tree(s) to fell", village.getId(), house.id(),
 						site.get().origin(), site.get().rotation(), site.get().treeRoots().size());
@@ -202,6 +210,7 @@ public final class VillageTicker {
 		}
 		village.setFailedSiteAttempts(village.getFailedSiteAttempts() + 1);
 		village.setNextSiteAttemptTick(level.getGameTime() + SITE_RETRY_TICKS);
+		village.setPlannedTemplate(null); // plan another design next time
 		registry.setDirty();
 		if (village.getFailedSiteAttempts() == config.maxSiteFailures) {
 			LivingVillages.LOGGER.info("[LivingVillages] Village at {} found no building site {} times in a row; "
@@ -240,7 +249,9 @@ public final class VillageTicker {
 		if (!builderless && (builder == null || !BuilderAssignment.isInReach(builder, step, project))) {
 			return; // the builder is on the way
 		}
-		double rate = config.blocksPerSecond * config.speedMultiplier / 20.0 * (builderless ? 0.5 : 1.0) * moodSpeedFactor(village)
+		// Every board request for this building delivered: twice as fast (spec v2-GĐ 9.4).
+		double boardFactor = project.getTemplateId().equals(village.getBoostTemplate()) ? 2.0 : 1.0;
+		double rate = config.blocksPerSecond * config.speedMultiplier / 20.0 * (builderless ? 0.5 : 1.0) * moodSpeedFactor(village) * boardFactor
 				* (1.0 + village.getBonuses().buildSpeed());
 		project.setBuildPoints(Math.min(MAX_BUILD_POINTS, project.getBuildPoints() + rate));
 
@@ -321,6 +332,10 @@ public final class VillageTicker {
 		BuilderAssignment.release(level, project);
 		queueReplants(village, project);
 		village.recordHouseBuilt(project.getFootprint(), level.getGameTime());
+		if (project.getTemplateId().equals(village.getBoostTemplate())) {
+			village.setBoostTemplate(null);
+			village.setSkipCooldown(true); // the next building starts without waiting
+		}
 		BuildingTemplate building = project.getHouse();
 		BuildingKind kind = building == null ? null : building.kind();
 		if (kind == BuildingKind.PEN) {

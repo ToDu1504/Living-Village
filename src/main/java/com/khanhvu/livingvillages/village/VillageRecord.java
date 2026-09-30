@@ -1,5 +1,6 @@
 package com.khanhvu.livingvillages.village;
 
+import com.khanhvu.livingvillages.board.MaterialRequest;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.society.VillageNeeds;
@@ -81,6 +82,25 @@ public class VillageRecord {
 
 	// v2-GĐ 8: day of the last festival (saved); NEVER until the village is first seen at dusk
 	private long lastFestivalDay = NEVER;
+
+	// v2-GĐ 9: material board (saved)
+	private final List<MaterialRequest> requests = new ArrayList<>();
+	/** Template the requests were made for, and the day they were made. */
+	@Nullable
+	private ResourceLocation requestTemplate;
+	private long requestDay;
+	/** Next building chosen ahead, so the board can ask for its materials before it starts. */
+	@Nullable
+	private ResourceLocation plannedTemplate;
+	/** Every request for this template was delivered: its project builds twice as fast. */
+	@Nullable
+	private ResourceLocation boostTemplate;
+	/** The boosted project is done: the next one starts without waiting for the cooldown. */
+	private boolean skipCooldown;
+	@Nullable
+	private BlockPos boardPos;
+	/** The board is placed only once; a board broken by a player comes back only with the board place command. */
+	private boolean boardPlaced;
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
@@ -361,6 +381,67 @@ public class VillageRecord {
 		this.lastFestivalDay = lastFestivalDay;
 	}
 
+	public List<MaterialRequest> getRequests() {
+		return requests;
+	}
+
+	@Nullable
+	public ResourceLocation getRequestTemplate() {
+		return requestTemplate;
+	}
+
+	public void setRequestTemplate(@Nullable ResourceLocation requestTemplate, long day) {
+		this.requestTemplate = requestTemplate;
+		this.requestDay = day;
+	}
+
+	public long getRequestDay() {
+		return requestDay;
+	}
+
+	@Nullable
+	public ResourceLocation getPlannedTemplate() {
+		return plannedTemplate;
+	}
+
+	public void setPlannedTemplate(@Nullable ResourceLocation plannedTemplate) {
+		this.plannedTemplate = plannedTemplate;
+	}
+
+	@Nullable
+	public ResourceLocation getBoostTemplate() {
+		return boostTemplate;
+	}
+
+	public void setBoostTemplate(@Nullable ResourceLocation boostTemplate) {
+		this.boostTemplate = boostTemplate;
+	}
+
+	public boolean isSkipCooldown() {
+		return skipCooldown;
+	}
+
+	public void setSkipCooldown(boolean skipCooldown) {
+		this.skipCooldown = skipCooldown;
+	}
+
+	@Nullable
+	public BlockPos getBoardPos() {
+		return boardPos;
+	}
+
+	public void setBoardPos(@Nullable BlockPos boardPos) {
+		this.boardPos = boardPos;
+	}
+
+	public boolean isBoardPlaced() {
+		return boardPlaced;
+	}
+
+	public void setBoardPlaced(boolean boardPlaced) {
+		this.boardPlaced = boardPlaced;
+	}
+
 	public boolean isLeaderGone() {
 		return leaderGone;
 	}
@@ -475,6 +556,26 @@ public class VillageRecord {
 		}
 		tag.putInt("GraveCount", graveCount);
 		tag.putLong("LastFestivalDay", lastFestivalDay);
+		ListTag requestList = new ListTag();
+		for (MaterialRequest request : requests) {
+			requestList.add(request.save());
+		}
+		tag.put("Requests", requestList);
+		if (requestTemplate != null) {
+			tag.putString("RequestTemplate", requestTemplate.toString());
+		}
+		tag.putLong("RequestDay", requestDay);
+		if (plannedTemplate != null) {
+			tag.putString("PlannedTemplate", plannedTemplate.toString());
+		}
+		if (boostTemplate != null) {
+			tag.putString("BoostTemplate", boostTemplate.toString());
+		}
+		tag.putBoolean("SkipCooldown", skipCooldown);
+		if (boardPos != null) {
+			tag.putLong("BoardPos", boardPos.asLong());
+		}
+		tag.putBoolean("BoardPlaced", boardPlaced);
 		return tag;
 	}
 
@@ -564,6 +665,20 @@ public class VillageRecord {
 		}
 		record.graveCount = tag.getInt("GraveCount");
 		record.lastFestivalDay = tag.contains("LastFestivalDay") ? tag.getLong("LastFestivalDay") : NEVER;
+		ListTag requestList = tag.getList("Requests", Tag.TAG_COMPOUND);
+		for (int i = 0; i < requestList.size(); i++) {
+			MaterialRequest request = MaterialRequest.load(requestList.getCompound(i));
+			if (request != null) {
+				record.requests.add(request);
+			}
+		}
+		record.requestTemplate = tag.contains("RequestTemplate") ? ResourceLocation.tryParse(tag.getString("RequestTemplate")) : null;
+		record.requestDay = tag.getLong("RequestDay");
+		record.plannedTemplate = tag.contains("PlannedTemplate") ? ResourceLocation.tryParse(tag.getString("PlannedTemplate")) : null;
+		record.boostTemplate = tag.contains("BoostTemplate") ? ResourceLocation.tryParse(tag.getString("BoostTemplate")) : null;
+		record.skipCooldown = tag.getBoolean("SkipCooldown");
+		record.boardPos = tag.contains("BoardPos") ? BlockPos.of(tag.getLong("BoardPos")) : null;
+		record.boardPlaced = tag.getBoolean("BoardPlaced");
 		return record;
 	}
 

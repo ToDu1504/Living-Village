@@ -103,7 +103,8 @@ public final class Graveyard {
 		};
 	}
 
-	private static Block signBlock(VillageRecord village) {
+	/** Sign wood that fits the village style (also used for the material board). */
+	public static Block signBlock(VillageRecord village) {
 		return switch (VillageTicker.villageType(village)) {
 			case DESERT -> Blocks.BIRCH_SIGN;
 			case SAVANNA -> Blocks.ACACIA_SIGN;
