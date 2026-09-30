@@ -2,9 +2,27 @@
 
 *[English](README.md)*
 
-Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng.
+Mod Fabric cho Minecraft 1.21.1, chạy phía server, giúp làng dân tự phát triển. Mỗi làng có một trưởng làng quyết định làng cần gì tiếp theo: nhà ở khi hết giường, nông trại khi thiếu nông dân, xưởng khi dân không có việc, chuồng cho gia súc. Một dân làng trở thành thợ xây, đi tới một chỗ trống gần chuông làng và xây dần từng khối. Mẫu công trình lấy từ chính bộ công trình của làng nên luôn đúng phong cách; nếu có cài Better Village thì dùng mẫu của Better Village. Dân làng còn làm việc của nghề mình mà người chơi nhìn thấy được, có tên và họ, và nói về chuyện đang xảy ra trong làng. Làng ghi biên niên sử, mở lễ hội, nhờ người chơi mang vật liệu, và nối công trình mới bằng đường làng.
 
 Mod không thêm khối, vật phẩm, sinh vật hay texture mới. Người chơi không cần cài mod ở máy mình.
+
+## Tính năng mới so với bản 0.1
+
+Bản 0.1 chỉ xây nhà khi làng hết giường. Giờ có thêm:
+
+- **Chặt cây** mọc trên chỗ xây (không rơi đồ) và trồng lại cây non quanh công trình mới.
+- **Nhu cầu, tâm trạng và trưởng làng:** nhà ở, thức ăn, việc làm, an ninh từ 0 đến 100, tâm trạng của làng, và một trưởng làng được chọn trong dân.
+- **Xây theo nhu cầu:** trưởng làng xây nhà ở, nông trại, xưởng cho nghề đang thiếu hoặc chuồng gia súc, tùy làng thiếu gì nhất.
+- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố; cấp càng cao càng được xây nhiều và xa hơn.
+- **Mỗi nghề một việc:** cho gia súc sinh sản và xén lông, lò hun khói, vạc nước, câu cá, chữa thương, mục sư chữa dân làng zombie, thợ rèn làm làng an toàn hơn hoặc xây nhanh hơn, người vẽ bản đồ mở rộng bán kính xây.
+- **Tên:** tên làng, họ theo hộ gia đình, tên dân và lính gác, tiêu đề chào khi bước vào làng.
+- **Lời nói:** dân làng nói những câu ngắn về chuyện đang thật sự xảy ra trong làng.
+- **Biên niên sử và bia mộ:** làng ghi biên niên sử (cả thành sách trên lectern của thủ thư) và dựng bia cho dân có tên khi mất.
+- **Lễ hội:** bảy ngày một lần lúc hoàng hôn, dân tụ tập quanh chuông và bắn pháo hoa.
+- **Bảng vật liệu:** mang vật liệu làng cần tới đổi lấy ngọc với trưởng làng để làng xây nhanh hơn.
+- **Đường làng:** công trình mới được nối đường vào đường làng, do thợ đá lát.
+
+Tính năng nào cũng có công tắc trong config; tắt hết thì mod chạy như bản 0.1. Thế giới từ bản 0.1 nạp được, không mất dữ liệu.
 
 ## Yêu cầu
 

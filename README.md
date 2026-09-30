@@ -2,9 +2,27 @@
 
 *[Tiếng Việt](README.vi.md)*
 
-A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village.
+A server-side Fabric mod for Minecraft 1.21.1 that lets villages grow on their own. Each village has a leader who decides what it needs next: a house when beds run out, a farm when farmers are missing, a workshop when villagers have no job, a pen for the animals. A villager becomes the builder, walks to a free spot near the bell and builds it block by block. The designs come from the village's own building pool, so they always match the village style; with Better Village installed, Better Village designs are used. Villagers also do visible work for their profession, have names and family names, and talk about what is going on in their village. The village keeps a chronicle, holds festivals, asks players for materials, and links new buildings with roads.
 
 No new blocks, items, entities or textures. Players do not need the mod on their client.
+
+## What's new since 0.1
+
+Version 0.1 only built houses when a village ran out of beds. Now:
+
+- **Trees are felled** on building sites (no drops) and saplings are replanted around the new building.
+- **Needs, mood and a chief:** housing, food, jobs and safety from 0 to 100, a village mood, and a chief chosen among the villagers.
+- **Building by need:** the chief builds a house, a farm, a workshop for a missing profession, or an animal pen, whichever the village lacks most.
+- **Village levels:** Hamlet, Village, Town, City, each allowing more buildings and a wider building radius.
+- **Every profession has a job:** breeding and shearing, smokers, cauldrons, fishing, healing, clerics curing zombie villagers, smiths making the village safer or faster to build, cartographers widening the building radius.
+- **Names:** village names, family names by household, villager and guard names, a title when you walk into a village.
+- **Speech:** villagers say short lines about what really happens in their village.
+- **Chronicle and graves:** the village keeps a chronicle (also as a book on the librarian's lectern) and gives named villagers a grave.
+- **Festivals:** every seven days at dusk, with villagers gathering by the bell and fireworks.
+- **Material board:** trade the materials the village needs to its chief for emeralds and make it build faster.
+- **Roads:** new buildings get a road to the village streets, laid by a mason.
+
+Every feature has a switch in the config; with all of them off the mod behaves like 0.1. Worlds from 0.1 load without losing anything.
 
 ## Requirements
 
