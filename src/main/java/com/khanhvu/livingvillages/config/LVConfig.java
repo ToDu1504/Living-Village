@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.khanhvu.livingvillages.LivingVillages;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -142,6 +143,13 @@ public class LVConfig {
 	public int requestExpireDays = 3;
 	/** Items per emerald by group: wood, stone, glass, wool, default. */
 	public Map<String, Integer> itemsPerEmerald = defaultItemsPerEmerald();
+
+	// v2-GĐ 10: village roads
+	public boolean buildRoads = true;
+	public int roadSearchRadius = 32;
+	/** Blocks that count as village road: dirt paths, and smooth sandstone (desert streets, Regrowth desert roads). */
+	public List<String> roadBlocks = List.of("minecraft:dirt_path", "minecraft:smooth_sandstone");
+	public int roadMaxNodes = 4000;
 
 	private static Map<String, Integer> defaultItemsPerEmerald() {
 		Map<String, Integer> map = new LinkedHashMap<>();
@@ -303,6 +311,12 @@ public class LVConfig {
 				|| itemsPerEmerald.values().stream().anyMatch(n -> n == null || n < 1 || n > 64)) {
 			warn("itemsPerEmerald", itemsPerEmerald);
 			itemsPerEmerald = d.itemsPerEmerald;
+		}
+		roadSearchRadius = checkInt("roadSearchRadius", roadSearchRadius, 4, 96, d.roadSearchRadius);
+		roadMaxNodes = checkInt("roadMaxNodes", roadMaxNodes, 100, 50000, d.roadMaxNodes);
+		if (roadBlocks == null || roadBlocks.stream().anyMatch(id -> id == null || ResourceLocation.tryParse(id) == null)) {
+			warn("roadBlocks", roadBlocks);
+			roadBlocks = d.roadBlocks;
 		}
 		festivalIntervalDays = checkInt("festivalIntervalDays", festivalIntervalDays, 1, 1000, d.festivalIntervalDays);
 		festivalDurationTicks = checkInt("festivalDurationTicks", festivalDurationTicks, 200, 12000, d.festivalDurationTicks);

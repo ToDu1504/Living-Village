@@ -8,6 +8,7 @@ import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
+import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVText;
@@ -35,6 +36,7 @@ public class LivingVillages implements ModInitializer {
 		VillageVoice.register();
 		Chronicle.register();
 		MaterialBoard.register();
+		RoadBuilder.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> BuildingTemplateProvider.clearCache());
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> server.getAllLevels().forEach(VillageVoice::clear));
@@ -44,6 +46,7 @@ public class LivingVillages implements ModInitializer {
 			Chronicle.clear();
 			Festival.clear();
 			MaterialBoard.clear();
+			RoadBuilder.clear();
 		});
 		LOGGER.info("[LivingVillages] loaded");
 	}

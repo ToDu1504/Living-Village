@@ -16,6 +16,7 @@ import com.khanhvu.livingvillages.festival.Festival;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
+import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.society.BuildDecision;
 import com.khanhvu.livingvillages.society.VillageMood;
 import com.khanhvu.livingvillages.society.VillageSociety;
@@ -117,6 +118,7 @@ public final class VillageTicker {
 			}
 			Festival.tick(level, village); // also ends a running festival when festivals are switched off
 			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
+			RoadBuilder.tick(level, village);
 		}
 	}
 
