@@ -179,7 +179,8 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `buildRoads` | `true` | Roads from new buildings |
 | `roadSearchRadius` | `32` | How far to look for a road to join |
 | `roadBlocks` | `dirt_path`, `smooth_sandstone` | Blocks that count as road (add a road block of another mod here) |
-| `roadMaxNodes` | `4000` | Most steps the road search tries |
+| `roadMaxNodes` | `8000` | Most steps the road search tries |
+| `roadWidth` | `3` | Width of a planned road in blocks (1–5; odd numbers only, even rounds down) |
 | `wallsEnabled` | `true` | Palisade and stone walls |
 | `deferToRegrowth` | `false` | When true and Regrowth is loaded, skip walls, fences and torches (let Regrowth do them) |
 | `palisadeMinLevel` | `1` | Village level needed for the palisade |

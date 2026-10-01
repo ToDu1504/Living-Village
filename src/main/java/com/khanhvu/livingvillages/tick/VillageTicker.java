@@ -93,7 +93,8 @@ public final class VillageTicker {
 			VillageIdentity.greetPlayers(level, registry);
 		}
 		for (VillageRecord village : registry.getVillages()) {
-			if (!village.isActive() || !level.isLoaded(village.getBellPos()) || !isNearPlayer(level, village, config.activeRange)) {
+			if (!village.isActive() || !level.isLoaded(village.getBellPos())
+					|| !isNearPlayer(level, village, config.activeRange)) {
 				continue;
 			}
 			if (manage) {

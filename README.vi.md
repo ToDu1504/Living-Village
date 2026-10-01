@@ -182,7 +182,8 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `buildRoads` | `true` | Làm đường từ công trình mới |
 | `roadSearchRadius` | `32` | Khoảng tìm đường làng để nối vào |
 | `roadBlocks` | `dirt_path`, `smooth_sandstone` | Khối được coi là đường (thêm khối đường của mod khác vào đây) |
-| `roadMaxNodes` | `4000` | Số bước tối đa khi tìm đường |
+| `roadMaxNodes` | `8000` | Số bước tối đa khi tìm đường |
+| `roadWidth` | `3` | Chiều rộng đường quy hoạch (1–5; số chẵn làm tròn xuống số lẻ) |
 | `wallsEnabled` | `true` | Hàng rào và tường thành |
 | `deferToRegrowth` | `false` | Khi `true` và có Regrowth, bỏ qua tường, hàng rào và đuốc (để Regrowth làm) |
 | `palisadeMinLevel` | `1` | Cấp làng cần có hàng rào gỗ |
