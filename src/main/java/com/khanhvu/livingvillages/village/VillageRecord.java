@@ -123,6 +123,12 @@ public class VillageRecord {
 	@Nullable
 	private VillageGrading grading;
 
+	/**
+	 * World-gen house pieces found to be player-modified, by their jigsaw placement position (spec v4 mini-update
+	 * M5): never checked again, so a restart does not re-risk a house the player has worked on.
+	 */
+	private final it.unimi.dsi.fastutil.longs.LongOpenHashSet keptPieces = new it.unimi.dsi.fastutil.longs.LongOpenHashSet();
+
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
 	private String recentBirthName;
@@ -488,6 +494,10 @@ public class VillageRecord {
 		return pendingSaplings;
 	}
 
+	public it.unimi.dsi.fastutil.longs.LongOpenHashSet getKeptPieces() {
+		return keptPieces;
+	}
+
 	/** Bookkeeping when a building is finished: the plot is reserved and the cooldown starts. */
 	public void recordHouseBuilt(BoundingBox plot, boolean field, long gameTime, @Nullable PlotBuild build) {
 		plots.add(plot);
@@ -656,6 +666,7 @@ public class VillageRecord {
 		if (grading != null) {
 			tag.put("Grading", grading.save());
 		}
+		tag.putLongArray("KeptPieces", keptPieces.toLongArray());
 		return tag;
 	}
 
@@ -785,6 +796,7 @@ public class VillageRecord {
 		if (tag.contains("Grading", Tag.TAG_COMPOUND)) {
 			record.grading = VillageGrading.load(tag.getCompound("Grading"));
 		}
+		record.keptPieces.addAll(it.unimi.dsi.fastutil.longs.LongArrayList.wrap(tag.getLongArray("KeptPieces")));
 		return record;
 	}
 

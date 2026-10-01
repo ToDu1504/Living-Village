@@ -10,6 +10,7 @@ import com.khanhvu.livingvillages.identity.NamePool;
 import com.khanhvu.livingvillages.identity.LevelUpFireworks;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.road.RoadBuilder;
+import com.khanhvu.livingvillages.road.VillageRelocator;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.util.LVLog;
@@ -43,6 +44,7 @@ public class LivingVillages implements ModInitializer {
 		MaterialBoard.register();
 		LevelUpFireworks.register();
 		RoadBuilder.register();
+		VillageRelocator.register();
 		WallBuilder.register();
 		LVCommands.register();
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> BuildingTemplateProvider.clearCache());
@@ -59,6 +61,7 @@ public class LivingVillages implements ModInitializer {
 			VillageCare.clear();
 			VillageTicker.clear();
 			JobSiteMatcher.clear();
+			VillageRelocator.clear();
 		});
 		LVLog.milestone("loaded");
 	}

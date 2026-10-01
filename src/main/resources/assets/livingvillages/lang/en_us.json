@@ -305,6 +305,7 @@
 	"livingvillages.wall.type.palisade": "palisade",
 	"livingvillages.wall.type.city": "city wall",
 	"livingvillages.chronicle.demolished": "A house was taken down to let a new street through.",
+	"livingvillages.chronicle.relocated": "An old house that blocked a street was rebuilt somewhere it fits.",
 	"livingvillages.chronicle.wall_started": "The villagers started building a %s around the village.",
 	"livingvillages.chronicle.wall_finished": "The %s around the village is finished.",
 	"livingvillages.chronicle.wall_moved": "The new %s encloses the whole village; the old one was taken down.",

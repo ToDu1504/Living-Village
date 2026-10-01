@@ -14,8 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-
-import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Takes a building of the mod's own back down so a new branch street can get through (spec v4 §8.4): the road wins
@@ -48,17 +47,37 @@ public final class Demolisher {
 		if (template == null) {
 			return false;
 		}
+		int[] counts = removeTemplateBlocks(level, template, build.origin(), build.rotation());
+		if (counts == null) {
+			return false; // come back when the whole building is loaded, so none of it is left half standing
+		}
+		village.removePlot(plot);
+		registry.setDirty();
+		Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.demolished");
+		LVLog.milestone(LVLog.Category.ROAD, village, "took down the building at {} for a road, {} blocks removed, {} left as found",
+				plot, counts[0], counts[1]);
+		return true;
+	}
+
+	/**
+	 * Removes every block of {@code template} placed at {@code origin}/{@code rotation} that still matches it
+	 * (by block type), nothing dropped. Shared by {@link #demolish} (the mod's own plots) and
+	 * {@code VillageRelocator} (a world-gen house, spec v4 mini-update M5), which has no {@link PlotBuild} to
+	 * look up since the mod never built it. Null if any of the building is in an unloaded chunk; otherwise
+	 * {blocks removed, blocks left because the world no longer matched there}.
+	 */
+	public static int[] removeTemplateBlocks(ServerLevel level, BuildingTemplate template, BlockPos origin, net.minecraft.world.level.block.Rotation rotation) {
 		int removed = 0;
 		int kept = 0;
 		for (StructureTemplate.StructureBlockInfo info : template.blocks()) {
 			if (info.state().isAir()) {
 				continue;
 			}
-			BlockPos pos = BuildingTemplate.toWorld(info.pos(), build.origin(), build.rotation());
+			BlockPos pos = BuildingTemplate.toWorld(info.pos(), origin, rotation);
 			if (!level.isLoaded(pos)) {
-				return false; // come back when the whole building is loaded, so none of it is left half standing
+				return null;
 			}
-			BlockState placed = info.state().rotate(build.rotation());
+			BlockState placed = info.state().rotate(rotation);
 			BlockState present = level.getBlockState(pos);
 			if (present.getBlock() != placed.getBlock()) {
 				kept++; // a player changed this block, or the ground took it: leave it alone
@@ -67,18 +86,18 @@ public final class Demolisher {
 			level.destroyBlock(pos, false);
 			removed++;
 		}
-		village.removePlot(plot);
-		registry.setDirty();
-		Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.demolished");
-		LVLog.milestone(LVLog.Category.ROAD, village, "took down the building at {} for a road, {} blocks removed, {} left as found",
-				plot, removed, kept);
-		return true;
+		return new int[] {removed, kept};
 	}
 
 	private static BuildingTemplate template(ServerLevel level, VillageRecord village, PlotBuild build) {
-		List<BuildingTemplate> all = BuildingTemplateProvider.getBuildings(level, VillageTicker.villageType(village));
-		for (BuildingTemplate candidate : all) {
-			if (candidate.id().equals(build.templateId())) {
+		return templateById(level, village, build.templateId());
+	}
+
+	/** The building template with this id in the village's pool, or null if none (e.g. a datapack change). */
+	@Nullable
+	public static BuildingTemplate templateById(ServerLevel level, VillageRecord village, net.minecraft.resources.ResourceLocation id) {
+		for (BuildingTemplate candidate : BuildingTemplateProvider.getBuildings(level, VillageTicker.villageType(village))) {
+			if (candidate.id().equals(id)) {
 				return candidate;
 			}
 		}

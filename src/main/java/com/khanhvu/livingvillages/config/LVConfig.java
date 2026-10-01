@@ -251,6 +251,18 @@ public class LVConfig {
 	public int maxWallStep = 3;
 	/** Wall blocks each mason places per second; the village without a mason builds at half this rate. */
 	public double wallBlocksPerSecond = 1.0;
+	/**
+	 * Demolishing and rebuilding a world-gen village house that blocks a planned road, once the village has a
+	 * frame and roads of its own (spec v4 mini-update M5). Off by default: taking down a world-gen building is
+	 * not reversible, and the "still original" check below is block-type only (see VillageRelocator).
+	 */
+	public boolean relocateVanillaHouses = false;
+	/** Village level from which relocation runs: by then there is a frame and roads to follow. */
+	public int relocateMinLevel = 2;
+	/** Share of a world-gen house's blocks that may differ from the template before it is treated as player-modified. */
+	public double relocateMaxDrift = 0.05;
+	/** Most world-gen houses relocated per village per Minecraft day. */
+	public int relocatePerDay = 1;
 	/** Wall blocks by village type (plains, desert, savanna, snowy, taiga). */
 	public Map<String, WallBlockSet> wallBlocks = defaultWallBlocks();
 
@@ -500,6 +512,9 @@ public class LVConfig {
 		gateWidth = checkInt("gateWidth", gateWidth, 1, 9, d.gateWidth);
 		maxWallStep = checkInt("maxWallStep", maxWallStep, 1, 16, d.maxWallStep);
 		wallBlocksPerSecond = checkDouble("wallBlocksPerSecond", wallBlocksPerSecond, 0.01, 100.0, d.wallBlocksPerSecond);
+		relocateMinLevel = checkInt("relocateMinLevel", relocateMinLevel, 0, 3, d.relocateMinLevel);
+		relocateMaxDrift = checkDouble("relocateMaxDrift", relocateMaxDrift, 0.0, 0.5, d.relocateMaxDrift);
+		relocatePerDay = checkInt("relocatePerDay", relocatePerDay, 0, 8, d.relocatePerDay);
 		if (wallBlocks == null) {
 			warn("wallBlocks", null);
 			wallBlocks = d.wallBlocks;

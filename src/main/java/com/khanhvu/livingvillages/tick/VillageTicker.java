@@ -20,6 +20,7 @@ import com.khanhvu.livingvillages.identity.LevelUpFireworks;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.road.RoadBuilder;
+import com.khanhvu.livingvillages.road.VillageRelocator;
 import com.khanhvu.livingvillages.society.BuildDecision;
 import com.khanhvu.livingvillages.society.VillageMood;
 import com.khanhvu.livingvillages.society.VillageSociety;
@@ -120,9 +121,10 @@ public final class VillageTicker {
 					VillageIdentity.nameVillagers(level, village);
 				}
 				MaterialBoard.manage(level, village, stats); // plans the next building first, so auto-start builds that one
-				if (village.getProject() == null) {
+				if (village.getProject() == null && !VillageRelocator.isBusy(village)) {
 					tryAutoStart(level, registry, village, time, stats);
 				}
+				VillageRelocator.tick(level, registry, village);
 				maybeSummarize(level, village, stats, time);
 			}
 			BuildProject project = village.getProject();
