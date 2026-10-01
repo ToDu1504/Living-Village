@@ -2,6 +2,7 @@ package com.khanhvu.livingvillages.village;
 
 import com.khanhvu.livingvillages.board.MaterialRequest;
 import com.khanhvu.livingvillages.build.BuildProject;
+import com.khanhvu.livingvillages.care.VillageGrading;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
 import com.khanhvu.livingvillages.road.VillageRoads;
 import com.khanhvu.livingvillages.society.VillageNeeds;
@@ -115,6 +116,10 @@ public class VillageRecord {
 
 	/** v4 §5.2: the planned roads inside the frame and how far along each the masons have got (saved). */
 	private VillageRoads roads = new VillageRoads();
+
+	/** v4 §8.1: the target ground height of every column inside the frame; null until it is planned (saved). */
+	@Nullable
+	private VillageGrading grading;
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
@@ -468,6 +473,15 @@ public class VillageRecord {
 		return roads;
 	}
 
+	@Nullable
+	public VillageGrading getGrading() {
+		return grading;
+	}
+
+	public void setGrading(VillageGrading grading) {
+		this.grading = grading;
+	}
+
 	public List<PendingSapling> getPendingSaplings() {
 		return pendingSaplings;
 	}
@@ -606,6 +620,9 @@ public class VillageRecord {
 			tag.putIntArray("Frame", frame);
 		}
 		tag.put("Roads", roads.save());
+		if (grading != null) {
+			tag.put("Grading", grading.save());
+		}
 		return tag;
 	}
 
@@ -724,6 +741,9 @@ public class VillageRecord {
 		}
 		if (tag.contains("Roads", Tag.TAG_COMPOUND)) {
 			record.roads = VillageRoads.load(tag.getCompound("Roads"));
+		}
+		if (tag.contains("Grading", Tag.TAG_COMPOUND)) {
+			record.grading = VillageGrading.load(tag.getCompound("Grading"));
 		}
 		return record;
 	}

@@ -374,7 +374,7 @@ public final class CitySites {
 				continue;
 			}
 			tries++;
-			BuildSite site = SiteFinder.tryAt(level, building, cx, cz, rotation, config.infillMargin);
+			BuildSite site = SiteFinder.tryAt(level, building, cx, cz, rotation, config.infillMargin, SiteFinder.insideFrameCut());
 			if (site != null) {
 				SCANS.remove(village.getId());
 				LivingVillages.debug("Village {}: site inside the walls for {} at {}", village.getId(), building.id(), site.origin());

@@ -50,6 +50,14 @@ public final class BuildOrder {
 	/** A foundation column never goes deeper than this below the floor. */
 	public static final int MAX_FOUNDATION_DEPTH = 8;
 
+	/**
+	 * How deep a foundation may reach. A site inside a frame may be up to {@code maxLevelCut} uneven (spec v4 §8.2),
+	 * so the foundation has to be able to reach that far down, however the player has set it.
+	 */
+	public static int foundationDepth() {
+		return Math.max(MAX_FOUNDATION_DEPTH, com.khanhvu.livingvillages.config.LVConfig.get().maxLevelCut);
+	}
+
 	/** Rising y, then x, then z. */
 	private static final Comparator<BuildStep.Place> BY_LAYER = Comparator
 			.comparingInt((BuildStep.Place p) -> p.anchor().getY())

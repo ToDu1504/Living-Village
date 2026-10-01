@@ -184,6 +184,23 @@ public class LVConfig {
 	public int plazaRadius = 6;
 	/** Farms and pens go outside the wall, at most this far from it. */
 	public int farmBeltWidth = 24;
+	// v4 §8: the village digs and fills inside its frame
+	/** Whole of v4 §8. Off: sites must already be flat (maxHeightDifference), as in v3. */
+	public boolean levelTerrain = true;
+	/** The coarse pass that smooths the whole inside of the frame. Off: only each building's own ground is levelled. */
+	public boolean gradeTerrain = true;
+	/** Most two neighbouring columns may differ by after smoothing. Smaller is flatter and moves more earth. */
+	public int maxSlope = 1;
+	/** Smoothing rounds over the target height field. A fixed count, so the result is deterministic. */
+	public int gradingPasses = 8;
+	/** Most a single column is dug or filled by the coarse pass; a column needing more is left as it is. */
+	public int maxGradeCut = 12;
+	/** How uneven a building site inside the frame may be: it is levelled rather than rejected. */
+	public int maxLevelCut = 6;
+	/** Most a road column is dug or filled, so a road can cut a small cliff or cross a stream. */
+	public int maxRoadCut = 4;
+	/** Fill water inside the frame. Off: water rejects a site, as in v3. */
+	public boolean fillWater = true;
 	/** Free blocks between the outermost building, bed or job site and the wall. */
 	public int wallMargin = 6;
 	/** Side of the fixed rectangle a village grows into (v4 §4), clamped to this range. */
@@ -417,6 +434,11 @@ public class LVConfig {
 		infillMargin = checkInt("infillMargin", infillMargin, 0, 16, d.infillMargin);
 		plazaRadius = checkInt("plazaRadius", plazaRadius, 0, 32, d.plazaRadius);
 		farmBeltWidth = checkInt("farmBeltWidth", farmBeltWidth, 8, 48, d.farmBeltWidth);
+		maxSlope = checkInt("maxSlope", maxSlope, 1, 4, d.maxSlope);
+		gradingPasses = checkInt("gradingPasses", gradingPasses, 1, 32, d.gradingPasses);
+		maxGradeCut = checkInt("maxGradeCut", maxGradeCut, 0, 48, d.maxGradeCut);
+		maxLevelCut = checkInt("maxLevelCut", maxLevelCut, 0, 32, d.maxLevelCut);
+		maxRoadCut = checkInt("maxRoadCut", maxRoadCut, 0, 16, d.maxRoadCut);
 		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
 		frameMinSize = checkInt("frameMinSize", frameMinSize, 32, 256, d.frameMinSize);
 		frameMaxSize = checkInt("frameMaxSize", frameMaxSize, frameMinSize, 256, Math.max(frameMinSize, d.frameMaxSize));

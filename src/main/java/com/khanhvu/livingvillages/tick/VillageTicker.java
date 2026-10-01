@@ -11,6 +11,7 @@ import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.build.Replanter;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.care.HomeFences;
+import com.khanhvu.livingvillages.care.TerrainGrader;
 import com.khanhvu.livingvillages.care.TorchLighter;
 import com.khanhvu.livingvillages.care.VillageCare;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
@@ -125,6 +126,7 @@ public final class VillageTicker {
 			MaterialBoard.tick(level, village); // also takes the offers back when the board is switched off
 			RoadBuilder.tick(level, village);
 			WallBuilder.tick(level, registry, village, manage);
+			TerrainGrader.tick(level, registry, village);
 			CitySites.tick(level, registry, village);
 			TorchLighter.tick(level, village);
 			VillageCare.tick(level, village);

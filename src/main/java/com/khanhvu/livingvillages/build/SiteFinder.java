@@ -58,7 +58,7 @@ public final class SiteFinder {
 			int x = bell.getX() + Mth.floor(Math.cos(angle) * radius);
 			int z = bell.getZ() + Mth.floor(Math.sin(angle) * radius);
 			for (Rotation rotation : Util.shuffledCopy(Rotation.values(), random)) {
-				BuildSite site = tryCandidate(level, registry, house, x, z, rotation, config.margin);
+				BuildSite site = tryCandidate(level, registry, house, x, z, rotation, config.margin, config.maxHeightDifference);
 				if (site == null) {
 					continue;
 				}
@@ -174,12 +174,27 @@ public final class SiteFinder {
 	 */
 	@Nullable
 	public static BuildSite tryAt(ServerLevel level, BuildingTemplate house, int centerX, int centerZ, Rotation rotation, int margin) {
-		return tryCandidate(level, VillageRegistry.get(level), house, centerX, centerZ, rotation, margin);
+		return tryAt(level, house, centerX, centerZ, rotation, margin, LVConfig.get().maxHeightDifference);
+	}
+
+	/** How uneven a site inside a village's frame may be: the mod levels it there rather than looking elsewhere. */
+	public static int insideFrameCut() {
+		LVConfig config = LVConfig.get();
+		return config.levelTerrain ? config.maxLevelCut : config.maxHeightDifference;
+	}
+
+	/**
+	 * As {@link #tryAt}, allowing the ground to be {@code maxCut} blocks uneven. Inside a village's frame the mod may
+	 * dig and fill (spec v4 §8.2), so a site there is held to {@code maxLevelCut} rather than {@code maxHeightDifference}.
+	 */
+	@Nullable
+	public static BuildSite tryAt(ServerLevel level, BuildingTemplate house, int centerX, int centerZ, Rotation rotation, int margin, int maxCut) {
+		return tryCandidate(level, VillageRegistry.get(level), house, centerX, centerZ, rotation, margin, maxCut);
 	}
 
 	@Nullable
 	private static BuildSite tryCandidate(ServerLevel level, VillageRegistry registry, BuildingTemplate house,
-			int centerX, int centerZ, Rotation rotation, int margin) {
+			int centerX, int centerZ, Rotation rotation, int margin, int maxCut) {
 		LVConfig config = LVConfig.get();
 		BoundingBox local = house.worldBox(BlockPos.ZERO, rotation);
 		int originX = centerX - (local.minX() + local.maxX()) / 2;
@@ -230,7 +245,7 @@ public final class SiteFinder {
 				surface[(x - minX) * sizeZ + (z - minZ)] = s;
 				minSurface = Math.min(minSurface, s);
 				maxSurface = Math.max(maxSurface, s);
-				if (maxSurface - minSurface > config.maxHeightDifference) {
+				if (maxSurface - minSurface > maxCut) {
 					return null;
 				}
 			}
@@ -240,7 +255,7 @@ public final class SiteFinder {
 		BuildSite site = BuildSite.of(house, new BlockPos(originX, floor - house.floorY() + config.templateYOffset, originZ), rotation);
 		BoundingBox footprint = site.footprint();
 		int floorY = site.floorY(house);
-		if (footprint.maxY() >= level.getMaxBuildHeight() || floorY - BuildOrder.MAX_FOUNDATION_DEPTH <= level.getMinBuildHeight()) {
+		if (footprint.maxY() >= level.getMaxBuildHeight() || floorY - BuildOrder.foundationDepth() <= level.getMinBuildHeight()) {
 			return null;
 		}
 

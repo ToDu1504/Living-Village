@@ -109,7 +109,7 @@ public class BlockPlacer {
 	private int foundation(BuildStep.Foundation step) {
 		int changed = 0;
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		for (int y = step.topY(); y > step.topY() - BuildOrder.MAX_FOUNDATION_DEPTH; y--) {
+		for (int y = step.topY(); y > step.topY() - BuildOrder.foundationDepth(); y--) {
 			pos.set(step.x(), y, step.z());
 			if (!canPlaceInto(level.getBlockState(pos))) {
 				break; // reached the ground

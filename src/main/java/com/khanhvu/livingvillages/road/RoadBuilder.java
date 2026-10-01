@@ -3,6 +3,7 @@ package com.khanhvu.livingvillages.road;
 import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
+import com.khanhvu.livingvillages.care.TerrainGrader;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
@@ -249,7 +250,11 @@ public final class RoadBuilder {
 		}
 	}
 
-	/** Paves one column beside the road at its own ground height; skipped when uneven or inside a plot. */
+	/**
+	 * Paves one column beside the road. Inside the village's frame the mod may move the ground (spec v4 §8.2), so a
+	 * side column up to {@code maxRoadCut} off is cut or filled level with the middle and the road is flat across its
+	 * width; elsewhere only a column already level with the middle is paved.
+	 */
 	private static void paveSide(ServerLevel level, VillageRecord village, BlockPos cell, int dx, int dz) {
 		int x = cell.getX() + dx;
 		int z = cell.getZ() + dz;
@@ -257,10 +262,21 @@ public final class RoadBuilder {
 			return;
 		}
 		int groundY = SiteFinder.groundTop(level, x, z);
+		if (groundY != cell.getY() && insideFrame(village, x, z) && LVConfig.get().levelTerrain) {
+			if (!TerrainGrader.levelColumn(level, village, x, z, cell.getY(), LVConfig.get().maxRoadCut)) {
+				return; // out of budget this tick; the column is paved on a later pass over the road
+			}
+			groundY = SiteFinder.groundTop(level, x, z);
+		}
 		if (Math.abs(groundY - cell.getY()) > 1) {
 			return;
 		}
 		pave(level, village, new BlockPos(x, groundY, z));
+	}
+
+	private static boolean insideFrame(VillageRecord village, int x, int z) {
+		int[] frame = village.getFrame();
+		return frame != null && x >= frame[0] && x <= frame[2] && z >= frame[1] && z <= frame[3];
 	}
 
 	/** Whether the column is inside a plot or the running project of the village. */
