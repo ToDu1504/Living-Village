@@ -63,8 +63,8 @@ public final class VillageLevel {
 
 	/**
 	 * People counted toward a level's population requirement. Adults only, unless {@code levelCountsBabies}
-	 * also counts babies — a baby cannot hold a job, so it never counts toward the profession requirement
-	 * (spec v4 mini-update M2). Not yet used by {@link #qualified}; wired in by that same update.
+	 * also counts babies -- a baby cannot hold a job, so it never counts toward the profession requirement
+	 * (spec v4 mini-update M2).
 	 */
 	public static int population(VillageAnalyzer.Stats stats) {
 		return stats.adultVillagers() + (LVConfig.get().levelCountsBabies ? stats.babies() : 0);
@@ -82,12 +82,13 @@ public final class VillageLevel {
 		return professions;
 	}
 
-	/** The highest level whose requirements the village meets now. */
+	/** The highest level whose requirements the village meets now (spec v4 mini-update M2: population counts babies). */
 	public static int qualified(VillageAnalyzer.Stats stats) {
 		Set<String> professions = professionsOf(stats.adults());
+		int population = population(stats);
 		int level = 0;
 		for (LVConfig.LevelRequirement requirement : LVConfig.get().levelRequirements) {
-			if (stats.adultVillagers() < requirement.villagers || professions.size() < requirement.professions
+			if (population < requirement.villagers || professions.size() < requirement.professions
 					|| !professions.containsAll(requirement.services)) {
 				break;
 			}

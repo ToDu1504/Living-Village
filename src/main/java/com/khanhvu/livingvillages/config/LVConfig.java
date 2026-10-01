@@ -43,7 +43,9 @@ public class LVConfig {
 	public int activeRange = 128;
 	public int freeBedThreshold = 0;
 	public int maxHousesPerVillage = 10;
-	public int cooldownTicks = 24000;
+	/** Rest between two buildings. Lowered in spec v4 mini-update M3 (was 24000): the old value let a village
+	 * finish at most ~6 buildings in 2 hours, far short of what City needs, and starved it of free beds in between. */
+	public int cooldownTicks = 3000;
 	public int minBuildDistance = 12;
 	public int maxBuildDistance = 64;
 	public int siteAttempts = 48;
@@ -89,11 +91,16 @@ public class LVConfig {
 
 	// v2-GĐ 3: build by needs, village levels
 	public boolean levelsEnabled = true;
-	/** Requirements to reach level 1 (Village), 2 (Town) and 3 (City); level 0 (Hamlet) is the start. */
+	/**
+	 * Requirements to reach level 1 (Village), 2 (Town) and 3 (City); level 0 (Hamlet) is the start.
+	 * Lowered in spec v4 mini-update M1 (was 8/3, 20/6, 35/10): 10 professions was out of reach for a
+	 * village style whose pool lacks a workshop for one of the 13 professions; counted together with
+	 * {@code levelCountsBabies}, the old population numbers made City take far longer than intended.
+	 */
 	public List<LevelRequirement> levelRequirements = List.of(
 			new LevelRequirement(8, 3, List.of()),
-			new LevelRequirement(20, 6, List.of("librarian")),
-			new LevelRequirement(35, 10, List.of("librarian", "cleric")));
+			new LevelRequirement(16, 5, List.of("librarian")),
+			new LevelRequirement(26, 8, List.of("librarian", "cleric")));
 	public List<Integer> levelMaxBuildings = List.of(4, 10, 20, 32);
 	public List<Integer> buildRadiusByLevel = List.of(48, 64, 80, 96);
 	public boolean levelCanDecrease = false;
