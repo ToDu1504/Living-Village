@@ -3,6 +3,7 @@ package com.khanhvu.livingvillages.village;
 import com.khanhvu.livingvillages.board.MaterialRequest;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.chronicle.ChronicleEntry;
+import com.khanhvu.livingvillages.road.VillageRoads;
 import com.khanhvu.livingvillages.society.VillageNeeds;
 import com.khanhvu.livingvillages.wall.VillageWalls;
 import com.khanhvu.livingvillages.work.ProfessionWork;
@@ -111,6 +112,9 @@ public class VillageRecord {
 	 */
 	@Nullable
 	private int[] frame;
+
+	/** v4 §5.2: the planned roads inside the frame and how far along each the masons have got (saved). */
+	private VillageRoads roads = new VillageRoads();
 
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
@@ -460,6 +464,10 @@ public class VillageRecord {
 		this.frame = frame;
 	}
 
+	public VillageRoads getRoads() {
+		return roads;
+	}
+
 	public List<PendingSapling> getPendingSaplings() {
 		return pendingSaplings;
 	}
@@ -597,6 +605,7 @@ public class VillageRecord {
 		if (frame != null) {
 			tag.putIntArray("Frame", frame);
 		}
+		tag.put("Roads", roads.save());
 		return tag;
 	}
 
@@ -712,6 +721,9 @@ public class VillageRecord {
 		int[] frame = tag.getIntArray("Frame");
 		if (frame.length == 4) {
 			record.frame = frame;
+		}
+		if (tag.contains("Roads", Tag.TAG_COMPOUND)) {
+			record.roads = VillageRoads.load(tag.getCompound("Roads"));
 		}
 		return record;
 	}

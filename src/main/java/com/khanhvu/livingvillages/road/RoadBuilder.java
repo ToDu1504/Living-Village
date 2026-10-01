@@ -8,6 +8,7 @@ import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
+import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
@@ -75,6 +76,8 @@ public final class RoadBuilder {
 		@Nullable
 		UUID mason;
 		long masonSince;
+		/** The planned segment this path came from, so its saved progress follows the work; -1 for an A* path. */
+		int segment = -1;
 	}
 
 	private static final Map<UUID, Job> JOBS = new HashMap<>();
@@ -97,15 +100,30 @@ public final class RoadBuilder {
 
 	/** Called every tick for villages near a player. */
 	public static void tick(ServerLevel level, VillageRecord village) {
-		Job job = JOBS.get(village.getId());
-		if (job == null) {
-			return;
-		}
 		if (!LVConfig.get().buildRoads) {
 			JOBS.remove(village.getId());
 			return;
 		}
+		// The four axes are laid out as soon as the village has a frame, and are what the masons pave first.
+		if (VillageRoads.layOutAxes(village)) {
+			VillageRegistry.get(level).setDirty();
+			LivingVillages.debug("Village {}: four road axes laid out from {}", village.getId(), VillageRoads.centre(village));
+		}
+		Job job = JOBS.get(village.getId());
+		if (job == null) {
+			if (village.getRoads().unfinished() < 0) {
+				return;
+			}
+			job = JOBS.computeIfAbsent(village.getId(), id -> new Job());
+		}
 		if (job.index < job.path.size()) {
+			work(level, village, job);
+			return;
+		}
+		if (job.segment >= 0) {
+			job.segment = -1; // the segment is finished; look for the next piece of work
+		}
+		if (job.search == null && takeSegment(level, village, job)) {
 			work(level, village, job);
 			return;
 		}
@@ -131,6 +149,36 @@ public final class RoadBuilder {
 		} else {
 			LivingVillages.debug("Village {}: no road found from {} ({} nodes)", village.getId(), search.start, search.expanded);
 		}
+	}
+
+	/**
+	 * Loads the columns still to work of the first unfinished planned road into the job. The segment's saved progress
+	 * is what decides where to carry on, so a restart picks the road up where the masons left it. False when every
+	 * planned road is done or the line is not loaded yet.
+	 */
+	private static boolean takeSegment(ServerLevel level, VillageRecord village, Job job) {
+		VillageRoads roads = village.getRoads();
+		int index = roads.unfinished();
+		if (index < 0) {
+			return false;
+		}
+		RoadSegment segment = roads.getSegments().get(index);
+		job.path.clear();
+		job.index = 0;
+		for (int i = roads.progress(index); i < segment.length(); i++) {
+			BlockPos cell = segment.cell(i);
+			if (!level.hasChunk(cell.getX() >> 4, cell.getZ() >> 4)) {
+				break; // the rest of the line is not loaded: pave what is here and come back for the rest
+			}
+			job.path.add(new BlockPos(cell.getX(), SiteFinder.groundTop(level, cell.getX(), cell.getZ()), cell.getZ()));
+		}
+		if (job.path.isEmpty()) {
+			return false;
+		}
+		job.segment = index;
+		LivingVillages.debug("Village {}: paving road {} ({}), {} of {} columns left", village.getId(), index,
+				segment.axis() ? "axis" : "branch", job.path.size(), segment.length());
+		return true;
 	}
 
 	// ---------------------------------------------------------------- building the road
@@ -162,6 +210,11 @@ public final class RoadBuilder {
 		job.points = 0;
 		paveWidth(level, village, job, cell);
 		job.index++;
+		if (job.segment >= 0) {
+			// A column an obstacle blocked counts as worked too, so a planned road never stalls on it.
+			village.getRoads().advance(job.segment);
+			VillageRegistry.get(level).setDirty();
+		}
 		if (job.index >= job.path.size()) {
 			LivingVillages.debug("Village {}: road finished ({} blocks, mason {})", village.getId(), job.path.size(), mason != null);
 			if (mason != null) {

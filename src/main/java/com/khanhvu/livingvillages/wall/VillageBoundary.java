@@ -73,6 +73,17 @@ public final class VillageBoundary {
 		return new int[] {frame[0], frame[1], frame[2], frame[1], frame[2], frame[3], frame[0], frame[3]};
 	}
 
+	/**
+	 * Where the cross of main roads meets, as {x, z} (spec v4 §5.1): the bell, kept a gate's width away from the
+	 * corners so a bell near the edge still gets four real gates. The gates and the road axes share this, so a road
+	 * always runs into the middle of its gate.
+	 */
+	public static int[] axisCentre(int[] frame, BlockPos bell) {
+		int keep = LVConfig.get().gateWidth;
+		return new int[] {Math.clamp(bell.getX(), frame[0] + keep, frame[2] - keep),
+				Math.clamp(bell.getZ(), frame[1] + keep, frame[3] - keep)};
+	}
+
 	/** Whether every chunk within {@code radius} of the bell is loaded, so a POI scan sees the whole village. */
 	public static boolean areaLoaded(ServerLevel level, BlockPos bell, int radius) {
 		for (int cx = (bell.getX() - radius) >> 4; cx <= (bell.getX() + radius) >> 4; cx++) {

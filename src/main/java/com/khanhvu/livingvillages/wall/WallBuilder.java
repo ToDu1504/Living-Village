@@ -348,15 +348,11 @@ public final class WallBuilder {
 	 */
 	private static List<int[]> gatePoints(VillageRecord village) {
 		int[] frame = village.getFrame();
-		BlockPos bell = village.getBellPos();
 		if (frame == null) {
-			return List.of(new int[] {bell.getX(), bell.getZ()});
+			return List.of(new int[] {village.getBellPos().getX(), village.getBellPos().getZ()});
 		}
-		// Kept a gate's width away from the corners, so a bell near the edge of the frame still gets four real gates.
-		int keep = LVConfig.get().gateWidth;
-		int x = Math.clamp(bell.getX(), frame[0] + keep, frame[2] - keep);
-		int z = Math.clamp(bell.getZ(), frame[1] + keep, frame[3] - keep);
-		return List.of(new int[] {x, frame[1]}, new int[] {x, frame[3]}, new int[] {frame[0], z}, new int[] {frame[2], z});
+		int[] c = VillageBoundary.axisCentre(frame, village.getBellPos());
+		return List.of(new int[] {c[0], frame[1]}, new int[] {c[0], frame[3]}, new int[] {frame[0], c[1]}, new int[] {frame[2], c[1]});
 	}
 
 	private static int nearestColumn(WallRing ring, BlockPos target) {
