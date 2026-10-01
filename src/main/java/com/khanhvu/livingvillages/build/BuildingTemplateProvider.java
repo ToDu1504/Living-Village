@@ -7,6 +7,7 @@ import com.khanhvu.livingvillages.village.VillageType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,9 +23,12 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.JigsawBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.pools.LegacySinglePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
@@ -194,11 +198,21 @@ public final class BuildingTemplateProvider {
 		int gates = 0;
 		Holder<PoiType> jobSite = null;
 		int streetJigsawY = Integer.MAX_VALUE;
+		Direction front = null;
+		Direction doorFront = null;
 		int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
 		int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
 		for (StructureTemplate.StructureBlockInfo info : palettes.get(0).blocks()) {
 			if (isStreetJigsaw(info.state())) {
+				// The jigsaw vanilla uses to join the house to a street also says which way the house faces, and it has
+				// to be read here: preprocess replaces the jigsaw with its final state and the direction is lost.
+				if (info.pos().getY() < streetJigsawY) {
+					front = info.state().getValue(JigsawBlock.ORIENTATION).front();
+				}
 				streetJigsawY = Math.min(streetJigsawY, info.pos().getY());
+			} else if (doorFront == null && info.state().getBlock() instanceof DoorBlock
+					&& info.state().getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
+				doorFront = info.state().getValue(BlockStateProperties.HORIZONTAL_FACING);
 			}
 			StructureTemplate.StructureBlockInfo block = preprocess(info, blockLookup, id);
 			if (block == null) {
@@ -257,6 +271,13 @@ public final class BuildingTemplateProvider {
 			LivingVillages.debug("Template {}: no street jigsaw, bottom layer used as floor", id);
 			floorY = content.minY();
 		}
+		// The street jigsaw is the truth about which way a house faces; its door is the next best guess (spec v4 §6).
+		if (front == null) {
+			front = doorFront;
+		}
+		if (front == null) {
+			LivingVillages.debug("Template {}: no street jigsaw or door, any rotation allowed", id);
+		}
 
 		// Legacy elements (all vanilla village houses) never place air. Other elements do, but only inside the house bounds.
 		List<StructureTemplate.StructureBlockInfo> blocks = new ArrayList<>(processed.size());
@@ -265,7 +286,7 @@ public final class BuildingTemplateProvider {
 				blocks.add(block);
 			}
 		}
-		return new BuildingTemplate(id, template, List.copyOf(blocks), content, floorY, beds, 1, kind, profession);
+		return new BuildingTemplate(id, template, List.copyOf(blocks), content, floorY, beds, 1, kind, profession, front);
 	}
 
 	/**

@@ -440,7 +440,8 @@ public final class LVCommands {
 				Component what = VillageSociety.buildingName(kind, building.profession());
 				source.sendSuccess(() -> LVText.tr("livingvillages.command.templates.entry",
 						what, building.id().getPath(), box.getXSpan() + "x" + box.getYSpan() + "x" + box.getZSpan(),
-						building.bedCount(), building.weight(), building.floorY()), false);
+						building.bedCount(), building.weight(), building.floorY(),
+						building.front() == null ? "?" : building.front().getName()), false);
 			}
 		}
 		return buildings.size();

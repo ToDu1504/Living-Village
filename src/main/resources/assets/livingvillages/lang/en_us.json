@@ -22,7 +22,7 @@
 	"livingvillages.state.active": "active",
 	"livingvillages.state.inactive": "inactive",
 	"livingvillages.command.templates.header": "%s building templates for %s (pool %s):",
-	"livingvillages.command.templates.entry": "- %s: %s  size %s, %s bed(s), weight %s, floor y=%s",
+	"livingvillages.command.templates.entry": "- %s: %s  size %s, %s bed(s), weight %s, floor y=%s, front %s",
 	"livingvillages.command.templates.bad_type": "Unknown village type. Use plains, desert, savanna, snowy or taiga.",
 	"livingvillages.command.build.no_template": "No house template available for %s.",
 	"livingvillages.command.build.no_site": "No suitable building site found near the village.",

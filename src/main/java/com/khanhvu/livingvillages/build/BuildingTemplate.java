@@ -1,6 +1,7 @@
 package com.khanhvu.livingvillages.build;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -23,6 +24,8 @@ import java.util.List;
  * @param weight     how many times the template appears in the pool (vanilla weighting)
  * @param kind       what the building is for
  * @param profession the profession whose job site the building holds (workshops and farms), or null
+ * @param front      template-local direction the front of the building faces, from the jigsaw vanilla uses to join it
+ *                   to a street, or the door when there is none. Null when neither says: any rotation will do
  */
 public record BuildingTemplate(
 		ResourceLocation id,
@@ -33,10 +36,28 @@ public record BuildingTemplate(
 		int bedCount,
 		int weight,
 		BuildingKind kind,
-		@Nullable ResourceLocation profession
+		@Nullable ResourceLocation profession,
+		@Nullable Direction front
 ) {
 	BuildingTemplate withWeight(int newWeight) {
-		return new BuildingTemplate(id, template, blocks, contentBox, floorY, bedCount, newWeight, kind, profession);
+		return new BuildingTemplate(id, template, blocks, contentBox, floorY, bedCount, newWeight, kind, profession, front);
+	}
+
+	/**
+	 * The rotation that turns the building's front towards {@code facing} (spec v4 §6), or null when the template does
+	 * not say where its front is, in which case the caller may use any rotation.
+	 */
+	@Nullable
+	public Rotation rotationFacing(Direction facing) {
+		if (front == null) {
+			return null;
+		}
+		for (Rotation rotation : Rotation.values()) {
+			if (rotation.rotate(front) == facing) {
+				return rotation;
+			}
+		}
+		return null; // unreachable for horizontal directions, but a vertical front must not pick a wrong rotation
 	}
 
 	/** World position of a template-local position, rotating around the template origin like jigsaw placement. */

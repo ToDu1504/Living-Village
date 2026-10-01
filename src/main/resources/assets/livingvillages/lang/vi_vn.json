@@ -22,7 +22,7 @@
 	"livingvillages.state.active": "đang hoạt động",
 	"livingvillages.state.inactive": "ngừng hoạt động",
 	"livingvillages.command.templates.header": "%s mẫu công trình cho kiểu %s (pool %s):",
-	"livingvillages.command.templates.entry": "- %s: %s  kích thước %s, %s giường, trọng số %s, sàn y=%s",
+	"livingvillages.command.templates.entry": "- %s: %s  kích thước %s, %s giường, trọng số %s, sàn y=%s, mặt tiền %s",
 	"livingvillages.command.templates.bad_type": "Kiểu làng không hợp lệ. Dùng plains, desert, savanna, snowy hoặc taiga.",
 	"livingvillages.command.build.no_template": "Không có mẫu nhà nào cho kiểu %s.",
 	"livingvillages.command.build.no_site": "Không tìm được chỗ xây phù hợp quanh làng.",
