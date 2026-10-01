@@ -17,6 +17,7 @@ import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.voice.VillageVoice;
 import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.WallBuilder;
+import com.khanhvu.livingvillages.work.JobSiteMatcher;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -57,6 +58,7 @@ public class LivingVillages implements ModInitializer {
 			CitySites.clear();
 			VillageCare.clear();
 			VillageTicker.clear();
+			JobSiteMatcher.clear();
 		});
 		LVLog.milestone("loaded");
 	}

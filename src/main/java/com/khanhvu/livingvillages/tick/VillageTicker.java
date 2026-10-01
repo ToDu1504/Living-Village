@@ -35,6 +35,7 @@ import com.khanhvu.livingvillages.voice.VillageVoice;
 import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.WallBuilder;
 import com.khanhvu.livingvillages.wall.WallRing;
+import com.khanhvu.livingvillages.work.JobSiteMatcher;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -133,6 +134,9 @@ public final class VillageTicker {
 			}
 			if (config.workEnabled) {
 				ProfessionWork.tick(level, village);
+			}
+			if (manage) {
+				JobSiteMatcher.tick(level, village);
 			}
 			if (config.voiceEnabled) {
 				VillageVoice.tick(level, village);

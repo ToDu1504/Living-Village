@@ -197,6 +197,11 @@ public class LVConfig {
 	public int plazaRadius = 6;
 	/** Farms and pens go outside the wall, at most this far from it. */
 	public int farmBeltWidth = 24;
+	/**
+	 * A jobless villager may claim a job site anywhere in the village's frame plus its farm belt, not just
+	 * vanilla's 48-block range (spec v4 mini-update M4) -- needed because farms and pens stand outside the wall.
+	 */
+	public boolean jobSitesInCity = true;
 	// v4 §8: the village digs and fills inside its frame
 	/** Whole of v4 §8. Off: sites must already be flat (maxHeightDifference), as in v3. */
 	public boolean levelTerrain = true;
