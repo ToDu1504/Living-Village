@@ -165,10 +165,6 @@ public class LVConfig {
 	public int cityWallHeightMax = 4;
 	/** Most wall columns between two towers. */
 	public int towerSpacing = 32;
-	/** A full city at this level builds an outer ring (3 = City), up to maxRings rings, ringExpansion blocks further out. */
-	public int outerRingMinLevel = 3;
-	public int maxRings = 3;
-	public int ringExpansion = 24;
 	/** Torches in dark spots beside roads, on the square and along the inside of the wall (v3-GĐ 5). */
 	public boolean torchesEnabled = true;
 	public int torchLightLevel = 7;
@@ -190,14 +186,14 @@ public class LVConfig {
 	public int farmBeltWidth = 24;
 	/** Free blocks between the outermost building, bed or job site and the wall. */
 	public int wallMargin = 6;
-	public int wallMaxVertices = 16;
+	/** Side of the fixed rectangle a village grows into (v4 §4), clamped to this range. */
+	public int frameMinSize = 64;
+	public int frameMaxSize = 160;
 	public int gateWidth = 3;
 	/** A column higher or lower than the previous one by more than this is left open (a weak point). */
 	public int maxWallStep = 3;
 	/** Wall blocks each mason places per second; the village without a mason builds at half this rate. */
 	public double wallBlocksPerSecond = 1.0;
-	/** The palisade moves out at most once in this many ticks. */
-	public int palisadeMoveCooldown = 24000;
 	/** Wall blocks by village type (plains, desert, savanna, snowy, taiga). */
 	public Map<String, WallBlockSet> wallBlocks = defaultWallBlocks();
 
@@ -417,19 +413,16 @@ public class LVConfig {
 		torchLightLevel = checkInt("torchLightLevel", torchLightLevel, 0, 14, d.torchLightLevel);
 		torchSpacing = checkInt("torchSpacing", torchSpacing, 2, 32, d.torchSpacing);
 		torchIntervalTicks = checkInt("torchIntervalTicks", torchIntervalTicks, 20, 72000, d.torchIntervalTicks);
-		outerRingMinLevel = checkInt("outerRingMinLevel", outerRingMinLevel, 0, 3, d.outerRingMinLevel);
-		maxRings = checkInt("maxRings", maxRings, 1, 5, d.maxRings);
-		ringExpansion = checkInt("ringExpansion", ringExpansion, 12, 64, d.ringExpansion);
 		wallInnerBuffer = checkInt("wallInnerBuffer", wallInnerBuffer, 0, 16, d.wallInnerBuffer);
 		infillMargin = checkInt("infillMargin", infillMargin, 0, 16, d.infillMargin);
 		plazaRadius = checkInt("plazaRadius", plazaRadius, 0, 32, d.plazaRadius);
 		farmBeltWidth = checkInt("farmBeltWidth", farmBeltWidth, 8, 48, d.farmBeltWidth);
 		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
-		wallMaxVertices = checkInt("wallMaxVertices", wallMaxVertices, 3, 64, d.wallMaxVertices);
+		frameMinSize = checkInt("frameMinSize", frameMinSize, 32, 256, d.frameMinSize);
+		frameMaxSize = checkInt("frameMaxSize", frameMaxSize, frameMinSize, 256, Math.max(frameMinSize, d.frameMaxSize));
 		gateWidth = checkInt("gateWidth", gateWidth, 1, 9, d.gateWidth);
 		maxWallStep = checkInt("maxWallStep", maxWallStep, 1, 16, d.maxWallStep);
 		wallBlocksPerSecond = checkDouble("wallBlocksPerSecond", wallBlocksPerSecond, 0.01, 100.0, d.wallBlocksPerSecond);
-		palisadeMoveCooldown = checkInt("palisadeMoveCooldown", palisadeMoveCooldown, 0, 720000, d.palisadeMoveCooldown);
 		if (wallBlocks == null) {
 			warn("wallBlocks", null);
 			wallBlocks = d.wallBlocks;

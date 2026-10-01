@@ -38,8 +38,6 @@ public final class VillageWalls {
 	private final List<BoundingBox> fencedPlots = new ArrayList<>();
 	/** Set by the walls off command. */
 	private boolean paused;
-	/** A building was finished outside the palisade: it moves at the next chance. */
-	private boolean moveWanted;
 
 	public List<WallRing> getRings() {
 		return rings;
@@ -105,14 +103,6 @@ public final class VillageWalls {
 		this.paused = paused;
 	}
 
-	public boolean isMoveWanted() {
-		return moveWanted;
-	}
-
-	public void setMoveWanted(boolean moveWanted) {
-		this.moveWanted = moveWanted;
-	}
-
 	public CompoundTag save() {
 		CompoundTag tag = new CompoundTag();
 		ListTag ringList = new ListTag();
@@ -136,7 +126,6 @@ public final class VillageWalls {
 		tag.putLongArray("Abandoned", abandoned.toLongArray());
 		tag.putInt("NextRingId", nextRingId);
 		tag.putBoolean("Paused", paused);
-		tag.putBoolean("MoveWanted", moveWanted);
 		ListTag fenced = new ListTag();
 		for (BoundingBox box : fencedPlots) {
 			fenced.add(new IntArrayTag(new int[] {box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()}));
@@ -165,7 +154,6 @@ public final class VillageWalls {
 		walls.abandoned.addAll(LongArrayList.wrap(tag.getLongArray("Abandoned")));
 		walls.nextRingId = Math.max(1, tag.getInt("NextRingId"));
 		walls.paused = tag.getBoolean("Paused");
-		walls.moveWanted = tag.getBoolean("MoveWanted");
 		ListTag fenced = tag.getList("FencedPlots", Tag.TAG_INT_ARRAY);
 		for (int i = 0; i < fenced.size(); i++) {
 			int[] a = fenced.getIntArray(i);

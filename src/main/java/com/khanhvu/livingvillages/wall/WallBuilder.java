@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 /**
  * Builds and keeps the walls of villages near players (spec v3 §5). v3-GĐ 1: a palisade from level Village, with a
@@ -156,13 +155,6 @@ public final class WallBuilder {
 	}
 
 	public static void register() {
-		VillageEvents.BUILDING_COMPLETED.register(e -> {
-			WallRing outer = e.village().getWalls().outer();
-			if (outer != null && outer.getType() == WallRing.Type.PALISADE && !VillageBoundary.containsBox(outer.getPolygon(), e.footprint())) {
-				e.village().getWalls().setMoveWanted(true);
-				VillageRegistry.get(e.level()).setDirty();
-			}
-		});
 		// A wall block a player breaks is theirs to leave open (spec v3 §5): its unit is looked at again and skips it.
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
 			if (!(world instanceof ServerLevel level)) {
@@ -234,8 +226,9 @@ public final class WallBuilder {
 	// ---------------------------------------------------------------- planning
 
 	/**
-	 * The walls follow the village level: a palisade from level Village (moved out as the village grows), a city wall
-	 * on the palisade's line from level Town, raised with battlements at level City.
+	 * The walls follow the village level, always on the village's fixed frame (spec v4 §4): a palisade from level
+	 * Village, a city wall on the very same line from level Town, raised with battlements at level City. The outline
+	 * never moves and there is no outer ring.
 	 */
 	private static void plan(ServerLevel level, VillageRegistry registry, VillageRecord village, VillageWalls walls) {
 		LVConfig config = LVConfig.get();
@@ -245,11 +238,20 @@ public final class WallBuilder {
 		}
 		WallRing outer = walls.outer();
 		if (outer == null) {
+			int[] frame = village.getFrame();
+			if (frame == null) {
+				// The frame is taken from the vanilla village, so the whole village must be loaded to be seen at all.
+				if (!VillageBoundary.areaLoaded(level, village.getBellPos(), config.villageRadius)) {
+					return;
+				}
+				frame = VillageBoundary.frame(level, village);
+				village.setFrame(frame);
+				registry.setDirty();
+				LivingVillages.debug("Village {}: frame fixed at [{}, {}] .. [{}, {}]", village.getId(), frame[0], frame[1], frame[2], frame[3]);
+			}
 			// A village that is already a town when first seen skips the palisade (farms and pens stay outside).
-			boolean city = villageLevel >= config.cityWallMinLevel;
-			WallRing.Type type = city ? WallRing.Type.CITY : WallRing.Type.PALISADE;
-			Predicate<BoundingBox> plots = city ? plot -> !village.getFieldPlots().contains(plot) : plot -> true;
-			WallRing ring = createRing(level, village, walls, type, VillageBoundary.compute(level, village, plots), null);
+			WallRing.Type type = villageLevel >= config.cityWallMinLevel ? WallRing.Type.CITY : WallRing.Type.PALISADE;
+			WallRing ring = createRing(level, village, walls, type, VillageBoundary.polygonOf(frame), null);
 			if (ring != null) {
 				walls.getRings().add(ring);
 				registry.setDirty();
@@ -257,26 +259,10 @@ public final class WallBuilder {
 			}
 			return;
 		}
+		// A v3 village (no frame) keeps the hull ring it already has: its wall is never re-outlined or moved.
 		if (outer.getType() == WallRing.Type.PALISADE) {
 			if (villageLevel >= config.cityWallMinLevel && outer.openUnits() == 0 && walls.getRetiring() == null) {
 				upgradeToCity(level, registry, village, walls, outer);
-			} else {
-				movePalisade(level, registry, village, walls, outer);
-			}
-			return;
-		}
-		// v3-GĐ 4: a full city builds an outer ring; the old one stays as the inner wall.
-		if (outer.isFull() && villageLevel >= config.outerRingMinLevel && walls.getRings().size() < config.maxRings
-				&& outer.openUnits() == 0 && walls.getRetiring() == null) {
-			// Few roads reach this far out: a gate faces every gate of the inner wall as well.
-			WallRing ring = createRing(level, village, walls, WallRing.Type.CITY, VillageBoundary.expand(outer.getPolygon(), config.ringExpansion), null,
-					CitySites.gateCenters(outer));
-			if (ring != null) {
-				walls.getRings().add(ring);
-				registry.setDirty();
-				Chronicle.add(level, village, Chronicle.Notice.BIG, "livingvillages.chronicle.outer_started");
-				LivingVillages.debug("Village {}: outer ring {} planned, {} columns, {} gate(s), {} tower(s)", village.getId(), walls.getRings().size(),
-						ring.size(), ring.gateCount(), ring.getTowers().size());
 			}
 			return;
 		}
@@ -294,50 +280,19 @@ public final class WallBuilder {
 		}
 	}
 
-	/** v3-GĐ 1: the palisade follows the village, at most once per palisadeMoveCooldown, never while one is going up or down. */
-	private static void movePalisade(ServerLevel level, VillageRegistry registry, VillageRecord village, VillageWalls walls, WallRing outer) {
-		if (!walls.isMoveWanted() || outer.openUnits() > 0 || walls.getRetiring() != null
-				|| level.getGameTime() - outer.getCreatedTick() < LVConfig.get().palisadeMoveCooldown) {
-			return;
-		}
-		if (!anyPlotOutside(village, outer)) {
-			walls.setMoveWanted(false);
-			registry.setDirty();
-			return;
-		}
-		WallRing ring = createRing(level, village, walls, WallRing.Type.PALISADE, VillageBoundary.compute(level, village, plot -> true), null);
-		if (ring == null) {
-			return; // part of the new line is not loaded: next time
-		}
-		walls.getRings().set(walls.getRings().size() - 1, ring);
-		walls.setRetiring(outer);
-		walls.setMoveWanted(false);
-		registry.setDirty();
-		Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.wall_moving");
-		LivingVillages.debug("Village {}: palisade moves out, {} columns", village.getId(), ring.size());
-	}
-
 	/**
-	 * v3-GĐ 2: the city wall goes up on the palisade's line (a fresh outline if buildings stand outside it), keeping
-	 * its gates. Each column's fence is replaced by stone as the column is built; what is left of the palisade is
-	 * taken down once the city wall stands.
+	 * v4 §9: the city wall goes up on the very same line as the palisade, keeping its gates. Each column's fence is
+	 * replaced by stone as the column is built; what is left of the palisade is taken down once the city wall stands.
 	 */
 	private static void upgradeToCity(ServerLevel level, VillageRegistry registry, VillageRecord village, VillageWalls walls, WallRing palisade) {
-		boolean outside = walls.isMoveWanted() && anyPlotOutside(village, palisade);
-		int[] polygon = outside ? VillageBoundary.compute(level, village, plot -> true) : palisade.getPolygon();
-		WallRing city = createRing(level, village, walls, WallRing.Type.CITY, polygon, outside ? null : palisade);
+		WallRing city = createRing(level, village, walls, WallRing.Type.CITY, palisade.getPolygon(), palisade);
 		if (city == null) {
 			return;
 		}
 		walls.getRings().set(walls.getRings().size() - 1, city);
 		walls.setRetiring(palisade);
-		walls.setMoveWanted(false);
 		registry.setDirty();
 		announceStart(level, village, city);
-	}
-
-	private static boolean anyPlotOutside(VillageRecord village, WallRing ring) {
-		return village.getPlots().stream().anyMatch(plot -> !VillageBoundary.containsBox(ring.getPolygon(), plot));
 	}
 
 	private static void announceStart(ServerLevel level, VillageRecord village, WallRing ring) {
@@ -351,19 +306,13 @@ public final class WallBuilder {
 	}
 
 	/**
-	 * A new ring along the polygon, with the gates of {@code gatesFrom} (same outline) or gates where roads cross it
-	 * (one nearest the bell when none does), and towers for a city wall. Null while part of the line is not loaded.
+	 * A new ring along the polygon, with the gates of {@code gatesFrom} (same outline) or, for a frame, the four gates
+	 * where the axes through the bell meet its sides (spec v4 §5.1), and towers for a city wall. Null while part of the
+	 * line is not loaded.
 	 */
 	@Nullable
 	private static WallRing createRing(ServerLevel level, VillageRecord village, VillageWalls walls, WallRing.Type type, int[] polygon,
 			@Nullable WallRing gatesFrom) {
-		return createRing(level, village, walls, type, polygon, gatesFrom, List.of());
-	}
-
-	/** Also opens a gate at the column nearest to each of {@code facing} (x, z). */
-	@Nullable
-	private static WallRing createRing(ServerLevel level, VillageRecord village, VillageWalls walls, WallRing.Type type, int[] polygon,
-			@Nullable WallRing gatesFrom, List<int[]> facing) {
 		LVConfig config = LVConfig.get();
 		WallRing ring = new WallRing(walls.takeRingId(), type, polygon, level.getGameTime());
 		int n = ring.size();
@@ -380,22 +329,8 @@ public final class WallBuilder {
 				}
 			}
 		} else {
-			Set<Block> roads = RoadBuilder.roadBlocks();
-			boolean any = false;
-			for (int i = 0; i < n; i++) {
-				int x = ring.x(i);
-				int z = ring.z(i);
-				if (roads.contains(level.getBlockState(new BlockPos(x, groundOf(level, walls, x, z), z)).getBlock())) {
-					markGate(ring, i, half);
-					any = true;
-				}
-			}
-			for (int[] gate : facing) {
+			for (int[] gate : gatePoints(village)) {
 				markGate(ring, nearestColumn(ring, new BlockPos(gate[0], 0, gate[1])), half);
-				any = true;
-			}
-			if (!any) {
-				markGate(ring, nearestColumn(ring, village.getBellPos()), half);
 			}
 		}
 		if (type == WallRing.Type.CITY) {
@@ -404,6 +339,24 @@ public final class WallBuilder {
 			placeTowers(level, village, walls, ring);
 		}
 		return ring;
+	}
+
+	/**
+	 * Where the gates go (spec v4 §5.1): the four points at which the axes through the bell meet the sides of the
+	 * frame. The bell need not be in the middle — the cross through it is what decides, so the gates sit off-centre
+	 * with it. A village without a frame (from a v3 world) gets the one gate nearest its bell.
+	 */
+	private static List<int[]> gatePoints(VillageRecord village) {
+		int[] frame = village.getFrame();
+		BlockPos bell = village.getBellPos();
+		if (frame == null) {
+			return List.of(new int[] {bell.getX(), bell.getZ()});
+		}
+		// Kept a gate's width away from the corners, so a bell near the edge of the frame still gets four real gates.
+		int keep = LVConfig.get().gateWidth;
+		int x = Math.clamp(bell.getX(), frame[0] + keep, frame[2] - keep);
+		int z = Math.clamp(bell.getZ(), frame[1] + keep, frame[3] - keep);
+		return List.of(new int[] {x, frame[1]}, new int[] {x, frame[3]}, new int[] {frame[0], z}, new int[] {frame[2], z});
 	}
 
 	private static int nearestColumn(WallRing ring, BlockPos target) {
@@ -759,10 +712,8 @@ public final class WallBuilder {
 			}
 		}
 		BlockState ground = level.getBlockState(new BlockPos(x, groundY, z));
-		if (RoadBuilder.roadBlocks().contains(ground.getBlock())) {
-			markGate(ring, column, config.gateWidth / 2); // a road made since the ring was planned
-			return Result.SETTLED;
-		}
+		// A frame has exactly the four gates of its axes (spec v4 §5.1); a vanilla street crossing the line elsewhere
+		// is left open as a weak point by the check below, the same as any other ground the mod may not build on.
 		if (!ground.getFluidState().isEmpty() || !SiteFinder.isNaturalGround(ground) || insidePlot(level, x, z)
 				|| tooSteep(level, walls, ring, column, groundY)) {
 			ring.setStatus(column, WallRing.WEAK);

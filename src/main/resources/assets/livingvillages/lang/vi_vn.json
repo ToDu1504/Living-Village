@@ -302,7 +302,6 @@
 	"livingvillages.wall.type.city": "tường thành",
 	"livingvillages.chronicle.wall_started": "Dân làng bắt đầu dựng %s quanh làng.",
 	"livingvillages.chronicle.wall_finished": "Đã dựng xong %s quanh làng.",
-	"livingvillages.chronicle.wall_moving": "Làng đã lớn hơn hàng rào: dân làng dựng hàng rào mới rộng hơn.",
 	"livingvillages.chronicle.wall_moved": "Đã có %s mới bao cả làng, hàng rào cũ đã được gỡ.",
 	"livingvillages.command.status.walls": "Tường: %s, xong %s%% (%s cổng, %s tháp, %s điểm yếu)",
 	"livingvillages.command.status.walls_moving": "Tường: %s đang thay vòng cũ, xong %s%% (%s cổng, %s tháp, %s điểm yếu)",

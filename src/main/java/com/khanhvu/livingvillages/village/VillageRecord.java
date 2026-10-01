@@ -105,6 +105,13 @@ public class VillageRecord {
 	// v3: walls (saved)
 	private VillageWalls walls = new VillageWalls();
 
+	/**
+	 * v4 §4: the fixed rectangle this village grows into, as {minX, minZ, maxX, maxZ}. Taken once and never changed,
+	 * so the walls never move. Null for a village from a v3 world, which keeps the hull ring it already has.
+	 */
+	@Nullable
+	private int[] frame;
+
 	// Recent events for villagers to talk about (not saved): name and game tick.
 	@Nullable
 	private String recentBirthName;
@@ -443,6 +450,16 @@ public class VillageRecord {
 		return walls;
 	}
 
+	/** The fixed rectangle {minX, minZ, maxX, maxZ}, or null for a v3 village that keeps its hull ring. */
+	@Nullable
+	public int[] getFrame() {
+		return frame;
+	}
+
+	public void setFrame(int[] frame) {
+		this.frame = frame;
+	}
+
 	public List<PendingSapling> getPendingSaplings() {
 		return pendingSaplings;
 	}
@@ -577,6 +594,9 @@ public class VillageRecord {
 		}
 		tag.putBoolean("BoardPlaced", boardPlaced);
 		tag.put("Walls", walls.save());
+		if (frame != null) {
+			tag.putIntArray("Frame", frame);
+		}
 		return tag;
 	}
 
@@ -688,6 +708,10 @@ public class VillageRecord {
 		record.boardPlaced = tag.getBoolean("BoardPlaced");
 		if (tag.contains("Walls", Tag.TAG_COMPOUND)) {
 			record.walls = VillageWalls.load(tag.getCompound("Walls"));
+		}
+		int[] frame = tag.getIntArray("Frame");
+		if (frame.length == 4) {
+			record.frame = frame;
 		}
 		return record;
 	}
