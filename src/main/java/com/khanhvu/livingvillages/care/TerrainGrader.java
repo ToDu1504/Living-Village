@@ -198,9 +198,6 @@ public final class TerrainGrader {
 			return true; // a wall block or a torch stands here
 		}
 		int ground = SiteFinder.groundTop(level, x, z);
-		if (ground == target || Math.abs(target - ground) > maxMove) {
-			return true;
-		}
 		BlockState top = level.getBlockState(new BlockPos(x, ground, z));
 		boolean water = !top.getFluidState().isEmpty();
 		if (water && !config.fillWater) {
@@ -209,10 +206,16 @@ public final class TerrainGrader {
 		if (!water && !SiteFinder.isNaturalGround(top) && !SiteFinder.isClearable(top)) {
 			return true;
 		}
+		// Over water groundTop gives the surface of the water, not land. Filling has to start from the bed below it,
+		// or the column reads as already at its target and the water is never filled at all.
+		int from = water ? solidBelow(level, x, z, ground) : ground;
+		if (from == target || Math.abs(target - from) > maxMove) {
+			return true;
+		}
 		Block surface = surfaceBlock(level, x, z, ground);
 		Block filler = fillerFor(surface);
-		if (target > ground) {
-			for (int y = ground + (water ? 0 : 1); y < target; y++) {
+		if (target > from) {
+			for (int y = from + 1; y < target; y++) {
 				if (!replaceable(level, x, y, z)) {
 					return true;
 				}
@@ -222,7 +225,7 @@ public final class TerrainGrader {
 				level.setBlockAndUpdate(new BlockPos(x, y, z), filler.defaultBlockState());
 			}
 		} else {
-			for (int y = ground; y > target; y--) {
+			for (int y = from; y > target; y--) {
 				BlockState state = level.getBlockState(new BlockPos(x, y, z));
 				if (state.getFluidState().isEmpty() && !SiteFinder.isNaturalGround(state) && !SiteFinder.isClearable(state)) {
 					return true;
@@ -246,6 +249,17 @@ public final class TerrainGrader {
 			level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState());
 		}
 		return true;
+	}
+
+	/** The first solid, non-fluid block below a water surface: where land has to be built back up from. */
+	private static int solidBelow(ServerLevel level, int x, int z, int from) {
+		for (int y = from; y > level.getMinBuildHeight(); y--) {
+			BlockState state = level.getBlockState(new BlockPos(x, y, z));
+			if (state.getFluidState().isEmpty() && !SiteFinder.isClearable(state)) {
+				return y;
+			}
+		}
+		return from;
 	}
 
 	private static boolean replaceable(ServerLevel level, int x, int y, int z) {

@@ -44,6 +44,8 @@ public class VillageRecord {
 	private final List<BoundingBox> plots = new ArrayList<>();
 	/** The plots that are farms or pens: city walls leave them outside (spec v3 §4). */
 	private final List<BoundingBox> fieldPlots = new ArrayList<>();
+	/** What each plot the mod built was built from, so a road can take its blocks back (spec v4 §8.4). */
+	private final List<PlotBuild> plotBuilds = new ArrayList<>();
 	@Nullable
 	private BuildProject project;
 	/** Saplings still to replant for trees felled on building sites, planted near {@code near}. */
@@ -478,7 +480,7 @@ public class VillageRecord {
 		return grading;
 	}
 
-	public void setGrading(VillageGrading grading) {
+	public void setGrading(@Nullable VillageGrading grading) {
 		this.grading = grading;
 	}
 
@@ -487,14 +489,40 @@ public class VillageRecord {
 	}
 
 	/** Bookkeeping when a building is finished: the plot is reserved and the cooldown starts. */
-	public void recordHouseBuilt(BoundingBox plot, boolean field, long gameTime) {
+	public void recordHouseBuilt(BoundingBox plot, boolean field, long gameTime, @Nullable PlotBuild build) {
 		plots.add(plot);
 		if (field) {
 			fieldPlots.add(plot);
 		}
+		if (build != null) {
+			plotBuilds.add(build);
+		}
 		housesBuilt++;
 		lastBuildTick = gameTime;
 		failedSiteAttempts = 0;
+	}
+
+	public List<PlotBuild> getPlotBuilds() {
+		return plotBuilds;
+	}
+
+	/** What the plot covering this box was built from, or null when the mod has no record of it. */
+	@Nullable
+	public PlotBuild buildOf(BoundingBox plot) {
+		for (PlotBuild build : plotBuilds) {
+			if (build.box().equals(plot)) {
+				return build;
+			}
+		}
+		return null;
+	}
+
+	/** Forgets a plot the mod has taken back down, so the ground is free again and a new building may be needed. */
+	public void removePlot(BoundingBox plot) {
+		plots.remove(plot);
+		fieldPlots.remove(plot);
+		plotBuilds.removeIf(build -> build.box().equals(plot));
+		housesBuilt = Math.max(0, housesBuilt - 1);
 	}
 
 	/** Squared horizontal distance from the bell, used for village membership and merging. */
@@ -525,6 +553,11 @@ public class VillageRecord {
 			fieldList.add(boxTag(box));
 		}
 		tag.put("FieldPlots", fieldList);
+		ListTag buildList = new ListTag();
+		for (PlotBuild build : plotBuilds) {
+			buildList.add(build.save());
+		}
+		tag.put("PlotBuilds", buildList);
 		if (project != null) {
 			tag.put("Project", project.save());
 		}
@@ -738,6 +771,13 @@ public class VillageRecord {
 		int[] frame = tag.getIntArray("Frame");
 		if (frame.length == 4) {
 			record.frame = frame;
+		}
+		ListTag buildList = tag.getList("PlotBuilds", Tag.TAG_COMPOUND);
+		for (int i = 0; i < buildList.size(); i++) {
+			PlotBuild build = PlotBuild.load(buildList.getCompound(i));
+			if (build != null) {
+				record.plotBuilds.add(build);
+			}
 		}
 		if (tag.contains("Roads", Tag.TAG_COMPOUND)) {
 			record.roads = VillageRoads.load(tag.getCompound("Roads"));

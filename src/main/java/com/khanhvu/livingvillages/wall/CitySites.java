@@ -9,6 +9,9 @@ import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.road.Demolisher;
+import com.khanhvu.livingvillages.road.RoadSegment;
+import com.khanhvu.livingvillages.road.VillageRoads;
 import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.tick.VillageTicker;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -23,9 +26,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -45,9 +46,10 @@ public final class CitySites {
 	private static final int COLUMNS_PER_TICK = 4000;
 	private static final int QUICK_CHECKS_PER_TICK = 120;
 	private static final int SITE_TRIES_PER_TICK = 6;
-	private static final int GRID_STEP = 2;
 	/** Farm and pen attempts start this close to a gate. */
 	private static final int NEAR_GATE = 16;
+	/** Branch positions tried before giving up, so one blocked line does not stop the city growing. */
+	private static final int BRANCH_POSITIONS_PER_TRY = 8;
 	/** Farms and pens keep this far from the wall. */
 	private static final int WALL_CLEARANCE = 2;
 
@@ -75,10 +77,14 @@ public final class CitySites {
 		final boolean[] road;
 		boolean[] reserved;
 		int cursor;
-		int[] candidates = new int[0];
+		/** Places a building may stand beside a road: the road column it fronts on, and which way its front must look. */
+		int[] slotX = new int[0];
+		int[] slotZ = new int[0];
+		Direction[] slotFacing = new Direction[0];
 		int templateIndex;
-		int candidateIndex;
-		int rotationIndex;
+		int slotIndex;
+		/** A branch was opened because nothing fitted, so the slots are worked out again before giving up. */
+		boolean branchOpened;
 
 		Scan(WallRing ring, BuildingTemplate requested, @Nullable BuildingTemplate smallestHome) {
 			this.ringId = ring.getId();
@@ -115,10 +121,20 @@ public final class CitySites {
 	private CitySites() {
 	}
 
-	/** The village's outermost ring is a city wall (being built or not): buildings follow the city rules. */
+	/**
+	 * Whether buildings follow the planned-city rules: along the roads inside, farms and pens outside. A v4 village
+	 * does from the moment it has a frame -- the boundary and the roads are known then, long before any stone goes up.
+	 * A village from a v3 world has no frame and keeps the old rule: only once its wall is a city wall.
+	 */
 	public static boolean active(VillageRecord village) {
+		if (!WallBuilder.enabled()) {
+			return false;
+		}
+		if (village.getFrame() != null) {
+			return true;
+		}
 		WallRing outer = village.getWalls().outer();
-		return outer != null && outer.getType() == WallRing.Type.CITY && WallBuilder.enabled();
+		return outer != null && outer.getType() == WallRing.Type.CITY;
 	}
 
 	/** Houses and workshops are built inside the walls; farms and pens outside. */
@@ -127,7 +143,8 @@ public final class CitySites {
 	}
 
 	public static boolean isFull(VillageRecord village) {
-		return active(village) && village.getWalls().outer().isFull();
+		WallRing outer = village.getWalls().outer();
+		return active(village) && outer != null && outer.isFull();
 	}
 
 	/** The build command looks again even in a full city. */
@@ -146,7 +163,11 @@ public final class CitySites {
 	public static void request(ServerLevel level, VillageRecord village, BuildingTemplate requested, List<BuildingTemplate> sameKind) {
 		List<BuildingTemplate> all = BuildingTemplateProvider.getBuildings(level, VillageTicker.villageType(village));
 		BuildingTemplate smallestHome = all.stream().filter(b -> insideKind(b.kind())).min(Comparator.comparingInt(CitySites::area)).orElse(null);
-		Scan scan = new Scan(village.getWalls().outer(), requested, smallestHome);
+		WallRing outer = village.getWalls().outer();
+		if (outer == null) {
+			return; // the frame is fixed but the ring is not up yet: nothing to scan inside
+		}
+		Scan scan = new Scan(outer, requested, smallestHome);
 		scan.templates.add(requested);
 		sameKind.stream().filter(b -> b != requested && area(b) < area(requested)).min(Comparator.comparingInt(CitySites::area))
 				.ifPresent(scan.templates::add);
@@ -246,54 +267,56 @@ public final class CitySites {
 				reserveSquare(scan, reserved, tower.centerX(), tower.centerZ(), 2 + buffer);
 			}
 		}
-		scan.reserved = reserved;
-		// Walking distance to the nearest road over the inside (to the bell when there is no road).
-		int[] distance = new int[total];
-		Arrays.fill(distance, Integer.MAX_VALUE);
-		ArrayDeque<Integer> queue = new ArrayDeque<>();
-		for (int i = 0; i < total; i++) {
-			if (scan.road[i]) {
-				distance[i] = 0;
-				queue.add(i);
+		// The planned roads themselves, and a block either side, are the street: nothing is built on them.
+		int keep = config.roadWidth / 2 + 1;
+		for (RoadSegment segment : village.getRoads().getSegments()) {
+			for (int k = 0; k < segment.length(); k++) {
+				BlockPos cell = segment.cell(k);
+				reserveSquare(scan, reserved, cell.getX(), cell.getZ(), keep);
 			}
 		}
-		int bellIndex = scan.index(bell.getX(), bell.getZ());
-		if (queue.isEmpty() && bellIndex >= 0) {
-			distance[bellIndex] = 0;
-			queue.add(bellIndex);
-		}
-		while (!queue.isEmpty()) {
-			int i = queue.poll();
-			int x = i / scan.depth;
-			int z = i % scan.depth;
-			int[][] next = {{x + 1, z}, {x - 1, z}, {x, z + 1}, {x, z - 1}};
-			for (int[] n : next) {
-				if (n[0] < 0 || n[1] < 0 || n[0] >= scan.width || n[1] >= scan.depth) {
+		scan.reserved = reserved;
+		buildSlots(village, scan, config);
+		scan.phase = Phase.SEARCH;
+	}
+
+	/**
+	 * Every place a building may stand beside a road (spec v4 §7): walking each planned road, both sides, a step of
+	 * {@code plotSpacing} apart, nearest the middle of the village first so a city fills outwards. A slot records which
+	 * way the building's front has to look, which is what puts its door on the street.
+	 */
+	private static void buildSlots(VillageRecord village, Scan scan, LVConfig config) {
+		BlockPos centre = VillageRoads.centre(village);
+		BlockPos from = centre != null ? centre : village.getBellPos();
+		List<int[]> slots = new ArrayList<>();
+		for (RoadSegment segment : village.getRoads().getSegments()) {
+			boolean horizontal = segment.horizontal();
+			for (int k = 0; k < segment.length(); k += Math.max(1, config.plotSpacing)) {
+				BlockPos cell = segment.cell(k);
+				if (scan.index(cell.getX(), cell.getZ()) < 0) {
 					continue;
 				}
-				int j = n[0] * scan.depth + n[1];
-				if (scan.inside[j] && distance[j] == Integer.MAX_VALUE) {
-					distance[j] = distance[i] + 1;
-					queue.add(j);
+				// Perpendicular to the road: one slot on either side, each facing back onto it.
+				for (Direction side : horizontal ? new Direction[] {Direction.NORTH, Direction.SOUTH}
+						: new Direction[] {Direction.WEST, Direction.EAST}) {
+					slots.add(new int[] {cell.getX(), cell.getZ(), side.ordinal(),
+							cell.distManhattan(from)});
 				}
 			}
 		}
-		List<Integer> spots = new ArrayList<>();
-		for (int x = scan.minX; x < scan.minX + scan.width; x += GRID_STEP) {
-			for (int z = scan.minZ; z < scan.minZ + scan.depth; z += GRID_STEP) {
-				int i = scan.index(x, z);
-				if (scan.inside[i] && !reserved[i]) {
-					spots.add(i);
-				}
-			}
+		slots.sort(Comparator.comparingInt(a -> a[3]));
+		scan.slotX = new int[slots.size()];
+		scan.slotZ = new int[slots.size()];
+		scan.slotFacing = new Direction[slots.size()];
+		for (int i = 0; i < slots.size(); i++) {
+			int[] slot = slots.get(i);
+			scan.slotX[i] = slot[0];
+			scan.slotZ[i] = slot[1];
+			// The slot sits on the far side of the road from where the building stands, so the front faces the road.
+			scan.slotFacing[i] = Direction.values()[slot[2]];
 		}
-		spots.sort(Comparator.comparingInt((Integer i) -> distance[i]).thenComparingDouble(i -> {
-			double dx = scan.minX + i / scan.depth - bell.getX();
-			double dz = scan.minZ + i % scan.depth - bell.getZ();
-			return dx * dx + dz * dz;
-		}));
-		scan.candidates = spots.stream().mapToInt(Integer::intValue).toArray();
-		scan.phase = Phase.SEARCH;
+		scan.templateIndex = 0;
+		scan.slotIndex = 0;
 	}
 
 	private static void reserveSquare(Scan scan, boolean[] reserved, int x, int z, int radius) {
@@ -339,49 +362,137 @@ public final class CitySites {
 		LVConfig config = LVConfig.get();
 		int quick = 0;
 		int tries = 0;
-		Rotation[] rotations = Rotation.values();
 		while (quick < QUICK_CHECKS_PER_TICK && tries < SITE_TRIES_PER_TICK) {
 			if (scan.templateIndex >= scan.templates.size()) {
+				// Nothing fits anywhere along the roads: open one more street and look again before calling it full.
+				if (!scan.branchOpened) {
+					RoadSegment branch = openBranch(level, registry, village);
+					if (branch != null) {
+						scan.branchOpened = true;
+						// The new street was added after the kept space was worked out: keep it free too, or a
+						// building would be put on the road that was just opened for it.
+						int keep = config.roadWidth / 2 + 1;
+						for (int k = 0; k < branch.length(); k++) {
+							BlockPos cell = branch.cell(k);
+							reserveSquare(scan, scan.reserved, cell.getX(), cell.getZ(), keep);
+						}
+						// The frontage has changed, so the earlier "nothing fits" verdict no longer stands.
+						scan.smallestHomeFailed = false;
+						buildSlots(village, scan, config);
+						continue;
+					}
+				}
 				finishFailed(level, registry, village, ring, scan);
 				return;
 			}
 			BuildingTemplate building = scan.templates.get(scan.templateIndex);
-			if (scan.candidateIndex >= scan.candidates.length) {
+			if (scan.slotIndex >= scan.slotX.length) {
 				// This building fits nowhere; the smallest house or workshop is the test for "full".
 				if (building == scan.smallestHome) {
 					scan.smallestHomeFailed = true;
 				}
 				scan.templateIndex++;
-				scan.candidateIndex = 0;
-				scan.rotationIndex = 0;
+				scan.slotIndex = 0;
 				if (scan.templateIndex >= scan.templates.size() && !scan.smallestHomeFailed && scan.smallestHome != null
 						&& !scan.templates.contains(scan.smallestHome)) {
 					scan.templates.add(scan.smallestHome);
 				}
 				continue;
 			}
-			int spot = scan.candidates[scan.candidateIndex];
-			int cx = scan.minX + spot / scan.depth;
-			int cz = scan.minZ + spot % scan.depth;
-			Rotation rotation = rotations[scan.rotationIndex];
-			if (++scan.rotationIndex >= rotations.length) {
-				scan.rotationIndex = 0;
-				scan.candidateIndex++;
-			}
-			quick++;
-			BoundingBox footprint = SiteFinder.footprintAt(building, cx, cz, rotation);
-			if (!quickFits(level, ring, scan, footprint, config)) {
-				continue;
-			}
-			tries++;
-			BuildSite site = SiteFinder.tryAt(level, building, cx, cz, rotation, config.infillMargin, SiteFinder.insideFrameCut());
-			if (site != null) {
-				SCANS.remove(village.getId());
-				LivingVillages.debug("Village {}: site inside the walls for {} at {}", village.getId(), building.id(), site.origin());
-				VillageTicker.beginProject(level, registry, village, building, site);
-				return;
+			int roadX = scan.slotX[scan.slotIndex];
+			int roadZ = scan.slotZ[scan.slotIndex];
+			Direction facing = scan.slotFacing[scan.slotIndex];
+			scan.slotIndex++;
+			// A template that does not say where its front is may stand any way round (spec v4 §6 fallback 2).
+			Rotation rotation = building.rotationFacing(facing);
+			for (Rotation candidate : rotation != null ? new Rotation[] {rotation} : Rotation.values()) {
+				quick++;
+				BlockPos centre = centreBeside(building, candidate, roadX, roadZ, facing, config);
+				BoundingBox footprint = SiteFinder.footprintAt(building, centre.getX(), centre.getZ(), candidate);
+				if (!quickFits(level, ring, scan, footprint, config)) {
+					continue;
+				}
+				tries++;
+				BuildSite site = SiteFinder.tryAt(level, building, centre.getX(), centre.getZ(), candidate, config.infillMargin,
+						SiteFinder.insideFrameCut());
+				if (site != null) {
+					SCANS.remove(village.getId());
+					LivingVillages.debug("Village {}: site on a road for {} at {}, front facing {}", village.getId(), building.id(),
+							site.origin(), facing);
+					VillageTicker.beginProject(level, registry, village, building, site);
+					return;
+				}
 			}
 		}
+	}
+
+	/**
+	 * Where a building stands to front onto the road column: back from the street by its own half depth, so its front
+	 * wall ends up just off the road and {@code facing} points from the building at it.
+	 */
+	private static BlockPos centreBeside(BuildingTemplate building, Rotation rotation, int roadX, int roadZ, Direction facing, LVConfig config) {
+		BoundingBox local = building.worldBox(BlockPos.ZERO, rotation);
+		Direction out = facing.getOpposite();
+		int depth = out.getAxis() == Direction.Axis.X ? local.getXSpan() : local.getZSpan();
+		// The street keeps roadWidth/2 + 1 columns either side free, so the near wall has to start one beyond that.
+		int away = config.roadWidth / 2 + 2 + depth / 2;
+		return new BlockPos(roadX + out.getStepX() * away, 0, roadZ + out.getStepZ() * away);
+	}
+
+	/**
+	 * Opens the next branch street (spec v4 §7.4, §8.4). A street may take down one building of the mod's own to get
+	 * through -- inside a planned city the road wins over the house, and the village then wants a replacement, which
+	 * goes on a street. How many it may take at once grows with the village level: a hamlet cannot spare a house, a
+	 * city replanning itself may cut a row. A position costing more than that, or crossing something the mod may not
+	 * touch, is passed over for the next one. Null when the frame has no room for another street, which is what makes
+	 * the city full.
+	 */
+	@Nullable
+	private static RoadSegment openBranch(ServerLevel level, VillageRegistry registry, VillageRecord village) {
+		for (int attempt = 0; attempt < BRANCH_POSITIONS_PER_TRY; attempt++) {
+			RoadSegment branch = VillageRoads.nextBranch(village);
+			if (branch == null) {
+				return null;
+			}
+			List<BoundingBox> blocking = new ArrayList<>();
+			for (BoundingBox plot : village.getPlots()) {
+				if (crosses(branch, plot)) {
+					blocking.add(plot);
+				}
+			}
+			int allowed = demolishAllowance(village);
+			boolean mayClear = blocking.size() <= allowed && blocking.stream().allMatch(p -> Demolisher.canDemolish(level, village, p));
+			if (!mayClear) {
+				LivingVillages.debug("Village {}: branch position skipped, {} building(s) in the way, {} allowed at this level",
+						village.getId(), blocking.size(), allowed);
+				continue;
+			}
+			boolean cleared = true;
+			for (BoundingBox plot : blocking) {
+				cleared &= Demolisher.demolish(level, registry, village, plot);
+			}
+			if (!cleared) {
+				continue;
+			}
+			village.getRoads().add(branch);
+			registry.setDirty();
+			LivingVillages.debug("Village {}: branch street opened ({},{})->({},{})", village.getId(),
+					branch.x1(), branch.z1(), branch.x2(), branch.z2());
+			return branch;
+		}
+		return null;
+	}
+
+	/** Buildings of its own one street may take down, by village level (spec v4 §8.4). */
+	private static int demolishAllowance(VillageRecord village) {
+		List<Integer> byLevel = LVConfig.get().demolishPerBranchByLevel;
+		return byLevel.get(Math.clamp(village.getLevel(), 0, byLevel.size() - 1));
+	}
+
+	private static boolean crosses(RoadSegment segment, BoundingBox plot) {
+		int keep = LVConfig.get().roadWidth / 2 + 1;
+		return plot.intersects(Math.min(segment.x1(), segment.x2()) - keep, Math.min(segment.z1(), segment.z2()) - keep,
+				Math.max(segment.x1(), segment.x2()) + keep, Math.max(segment.z1(), segment.z2()) + keep);
 	}
 
 	/**
@@ -432,10 +543,10 @@ public final class CitySites {
 	/** For a road from a building outside the city wall: the middle of the nearest gate; null inside or without a city wall. */
 	@Nullable
 	public static BlockPos gateFor(VillageRecord village, BlockPos start) {
-		if (!active(village)) {
+		WallRing ring = village.getWalls().outer();
+		if (!active(village) || ring == null) {
 			return null;
 		}
-		WallRing ring = village.getWalls().outer();
 		if (ring.contains(start.getX() + 0.5, start.getZ() + 0.5)) {
 			return null;
 		}
@@ -479,6 +590,9 @@ public final class CitySites {
 	public static Optional<BuildSite> findOutside(ServerLevel level, VillageRecord village, BuildingTemplate building, RandomSource random) {
 		LVConfig config = LVConfig.get();
 		WallRing ring = village.getWalls().outer();
+		if (ring == null) {
+			return Optional.empty();
+		}
 		int[] polygon = ring.getPolygon();
 		double cx = 0;
 		double cz = 0;

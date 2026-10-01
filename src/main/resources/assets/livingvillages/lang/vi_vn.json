@@ -300,6 +300,7 @@
 	"livingvillages.command.board.jobless_leader": "Trưởng làng chưa có nghề nên chưa giao dịch được. Làng có người có nghề thì người đó sẽ làm trưởng làng.",
 	"livingvillages.wall.type.palisade": "hàng rào",
 	"livingvillages.wall.type.city": "tường thành",
+	"livingvillages.chronicle.demolished": "Một ngôi nhà bị phá để mở đường mới.",
 	"livingvillages.chronicle.wall_started": "Dân làng bắt đầu dựng %s quanh làng.",
 	"livingvillages.chronicle.wall_finished": "Đã dựng xong %s quanh làng.",
 	"livingvillages.chronicle.wall_moved": "Đã có %s mới bao cả làng, hàng rào cũ đã được gỡ.",

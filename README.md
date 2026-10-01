@@ -21,10 +21,12 @@ Version 0.1 only built houses when a village ran out of beds. Now:
 - **Level-up fireworks:** a fireworks show over the square when the village reaches a new level.
 - **Material board:** trade the materials the village needs to its chief for emeralds and make it build faster.
 - **Roads:** new buildings get a road to the village streets, laid by a mason.
-- **Palisade:** from Village level, a wooden fence ring grows around the village, moving outward as new buildings are added. Gates appear where roads cross. Masons build and maintain it.
-- **Stone wall with towers and gates:** at Town level the palisade is replaced by a stone wall with 5×5 towers (spiral staircase inside), arched gates and battlements. At City level the wall gains embrasures on alternating merlons.
-- **Buildings inside the walls:** once a city wall stands, houses and workshops are placed inside it; farms and pens go outside near the gates.
-- **Outer rings:** at the highest level a second ring of walls expands around the first.
+- **One fixed outline:** the first time the mod sees a village it takes a rectangle around it and keeps it for good, so the walls never move and the village always knows where it is going to end up.
+- **Four main roads:** a cross through the bell runs out to a gate in the middle of each side, and the village grows along it.
+- **Palisade:** from Village level, masons raise a wooden fence on that rectangle.
+- **Stone wall with towers and gates:** at Town level the palisade is replaced by a stone wall on the very same line, with 5×5 towers (spiral staircase inside), arched gates and battlements. At City level the wall gains embrasures on alternating merlons.
+- **Houses face the street:** buildings stand along the roads with their door on the street; farms and pens go outside the wall near the gates. When the frontage runs out a new branch street is opened, and when there is no room for another the city is full.
+- **The ground is made buildable:** inside the walls the village fills pits and water and cuts small cliffs, keeping the lie of the land rather than levelling it flat.
 - **Torches:** dark spots on roads, along the wall and on the bell square get a wall torch automatically.
 - **Village care:** villagers mend potholes in roads, sweep snow off paths and cut wild plants near doors. Garden fences around mod-built houses are optional (`homeFences`).
 
@@ -185,13 +187,24 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `cityWallHeight` | `3` | Normal wall height above the ground |
 | `cityWallHeightMax` | `4` | Wall height with battlements (City level) |
 | `towerSpacing` | `32` | Columns between towers |
-| `wallMargin` | `6` | Margin added around plots for the wall polygon |
+| `wallMargin` | `6` | Margin added around the vanilla village when the rectangle is taken |
+| `frameMinSize` | `64` | Smallest side of a village's rectangle |
+| `frameMaxSize` | `160` | Largest side of a village's rectangle |
 | `gateWidth` | `3` | Gate opening width |
 | `maxWallStep` | `3` | Largest height difference allowed between adjacent wall columns |
 | `wallBlocksPerSecond` | `1.0` | Rate at which each mason builds wall blocks |
-| `outerRingMinLevel` | `3` | Village level that triggers an outer ring |
-| `maxRings` | `3` | Most wall rings at once |
-| `ringExpansion` | `24` | How much each outer ring expands the polygon |
+| `branchSpacing` | `12` | Blocks between one branch street and the next |
+| `plotSpacing` | `2` | Step along a road when looking for the next building place |
+| `roadsMayDemolish` | `true` | A new street may take down a building the mod itself put up to get through |
+| `demolishPerBranchByLevel` | `[1, 2, 4, 6]` | Buildings one new street may take down, by village level |
+| `levelTerrain` | `true` | Let the village dig and fill inside its rectangle |
+| `gradeTerrain` | `true` | The coarse pass that smooths the whole inside |
+| `maxSlope` | `1` | Most two neighbouring columns may differ by after smoothing |
+| `gradingPasses` | `8` | Smoothing rounds over the target height field |
+| `maxGradeCut` | `12` | Most one column is dug or filled by the coarse pass |
+| `maxLevelCut` | `6` | How uneven a building site inside the rectangle may be |
+| `maxRoadCut` | `4` | Most a road column is dug or filled |
+| `fillWater` | `true` | Fill water inside the rectangle |
 | `torchesEnabled` | `true` | Auto-place torches in dark spots |
 | `torchLightLevel` | `7` | Do not place a torch if light is above this |
 | `torchSpacing` | `6` | Minimum distance between mod-placed torches |

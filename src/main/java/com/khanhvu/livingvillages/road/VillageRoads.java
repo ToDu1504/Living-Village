@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,13 @@ import java.util.List;
  * that a restart threw away, the plan itself is what is kept.
  */
 public final class VillageRoads {
+	/** Stops the branch search even if the frame is enormous. */
+	private static final int MAX_BRANCH_TRIES = 256;
+
 	private final List<RoadSegment> segments = new ArrayList<>();
 	/** Columns of each segment already worked, from its near end. A column an obstacle blocks counts as worked. */
 	private final List<Integer> progress = new ArrayList<>();
-	/** How many branches have been opened, so the next one is always a fresh line (spec v4 §7.4). */
+	/** How many branch positions have been used up, so the next one is always a fresh line (spec v4 §7.4). */
 	private int branches;
 
 	public List<RoadSegment> getSegments() {
@@ -91,6 +95,49 @@ public final class VillageRoads {
 		roads.add(RoadSegment.of(Math.max(c[0] - plaza, frame[0]), c[1], frame[0], c[1], true));
 		roads.add(RoadSegment.of(Math.min(c[0] + plaza, frame[2]), c[1], frame[2], c[1], true));
 		return true;
+	}
+
+	/**
+	 * The next branch to open when the frontage along the roads runs out (spec v4 §7.4): a street parallel to one of
+	 * the axes, {@code branchSpacing} further out each time, kept inside the wall and its free strip. Null when the
+	 * frame has no room for another one, which is what makes a city full.
+	 */
+	@Nullable
+	public static RoadSegment nextBranch(VillageRecord village) {
+		int[] frame = village.getFrame();
+		if (frame == null) {
+			return null;
+		}
+		LVConfig config = LVConfig.get();
+		int inset = 1 + config.wallInnerBuffer;
+		int lowX = frame[0] + inset;
+		int highX = frame[2] - inset;
+		int lowZ = frame[1] + inset;
+		int highZ = frame[3] - inset;
+		if (lowX >= highX || lowZ >= highZ) {
+			return null;
+		}
+		int[] c = VillageBoundary.axisCentre(frame, village.getBellPos());
+		VillageRoads roads = village.getRoads();
+		// Four branches per ring, each ring one branchSpacing further from the cross, so the city fills outwards.
+		for (int k = roads.branches; k < MAX_BRANCH_TRIES; k++) {
+			int ring = k / 4 + 1;
+			int offset = ring * config.branchSpacing;
+			RoadSegment branch = switch (k % 4) {
+				case 0 -> c[1] - offset >= lowZ ? RoadSegment.of(lowX, c[1] - offset, highX, c[1] - offset, false) : null;
+				case 1 -> c[1] + offset <= highZ ? RoadSegment.of(lowX, c[1] + offset, highX, c[1] + offset, false) : null;
+				case 2 -> c[0] - offset >= lowX ? RoadSegment.of(c[0] - offset, lowZ, c[0] - offset, highZ, false) : null;
+				default -> c[0] + offset <= highX ? RoadSegment.of(c[0] + offset, lowZ, c[0] + offset, highZ, false) : null;
+			};
+			roads.branches = k + 1; // a position that does not fit is used up, so the search always moves on
+			if (branch != null) {
+				return branch;
+			}
+			if (offset > Math.max(highX - lowX, highZ - lowZ)) {
+				return null; // every ring from here on is outside the frame
+			}
+		}
+		return null;
 	}
 
 	/** Where the cross meets, or null without a frame. */

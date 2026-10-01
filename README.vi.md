@@ -21,10 +21,12 @@ Bản 0.1 chỉ xây nhà khi làng hết giường. Giờ có thêm:
 - **Pháo hoa mừng lên cấp:** làng lên cấp thì bắn một tràng pháo hoa trên quảng trường.
 - **Bảng vật liệu:** mang vật liệu làng cần tới đổi lấy ngọc với trưởng làng để làng xây nhanh hơn.
 - **Đường làng:** công trình mới được nối đường vào đường làng, do thợ đá lát.
-- **Hàng rào gỗ:** từ cấp Làng, thợ đá dựng một vòng hàng rào gỗ quanh làng (bao hết mọi nhà và bàn nghề). Cổng mở ở chỗ đường cắt qua. Hàng rào dời ra khi làng có thêm nhà mới nằm ngoài.
-- **Tường đá, tháp và cổng vòm:** từ cấp Thị trấn, hàng rào gỗ được thay bằng tường đá: cùng hình đa giác, cao hơn, có tháp 5×5 ở các góc và dọc tường (cầu thang xoắn bên trong, cửa vào mặt trong), cổng có vòm. Ở cấp Thành phố, tường có thêm lỗ châu mai ở mọi con tiêu.
-- **Nhà xây trong tường:** khi tường đá đã dựng xong, nhà ở và xưởng được chọn chỗ bên trong tường; nông trại và chuồng ra ngoài gần cổng.
-- **Vòng tường ngoài:** ở cấp cao nhất, một vòng tường thứ hai mở rộng ra quanh vòng trong.
+- **Một khung cố định:** lần đầu gặp làng, mod chốt luôn một hình chữ nhật quanh nó và giữ cả đời làng, nên tường không bao giờ dời và làng biết trước mình sẽ lớn tới đâu.
+- **Bốn trục đường chính:** một chữ thập qua chuông chạy ra cổng ở giữa mỗi cạnh, làng lớn dần dọc theo đó.
+- **Hàng rào gỗ:** từ cấp Làng, thợ đá dựng hàng rào gỗ đúng trên khung đó.
+- **Tường đá, tháp và cổng vòm:** từ cấp Thị trấn, hàng rào gỗ được thay bằng tường đá **đúng cùng vị trí**, cao hơn, có tháp 5×5 (cầu thang xoắn bên trong, cửa vào mặt trong), cổng có vòm. Ở cấp Thành phố, tường có thêm lỗ châu mai.
+- **Nhà quay cửa ra đường:** công trình xếp dọc đường, cửa nhìn ra phố; nông trại và chuồng ra ngoài tường gần cổng. Hết chỗ dọc đường thì mở thêm một nhánh phố; hết nhánh thì thành đã đầy.
+- **Đất được làm cho xây được:** trong tường, làng lấp hố và nước, cắt vách nhỏ, nhưng **giữ dáng dốc chung** chứ không san phẳng lì.
 - **Đuốc:** chỗ tối trên đường, sân chuông, bên trong tường và đỉnh tường được cắm đuốc tự động.
 - **Chăm sóc làng:** dân làng vá ổ gà đường, quét tuyết trên đường và cắt cỏ dại gần cửa nhà. Có thể bật thêm hàng rào vườn quanh nhà mod xây (`homeFences`).
 
@@ -188,13 +190,24 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `cityWallHeight` | `3` | Chiều cao tường bình thường trên mặt đất |
 | `cityWallHeightMax` | `4` | Chiều cao tường khi có con tiêu (cấp Thành phố) |
 | `towerSpacing` | `32` | Số cột giữa hai tháp |
-| `wallMargin` | `6` | Lề nới ra quanh các nhà khi tính đa giác tường |
+| `wallMargin` | `6` | Lề nới ra quanh làng vanilla khi chốt khung |
+| `frameMinSize` | `64` | Cạnh nhỏ nhất của khung làng |
+| `frameMaxSize` | `160` | Cạnh lớn nhất của khung làng |
 | `gateWidth` | `3` | Độ rộng cổng |
 | `maxWallStep` | `3` | Độ chênh cao tối đa giữa hai cột tường liền nhau |
 | `wallBlocksPerSecond` | `1.0` | Tốc độ mỗi thợ đá xây tường |
-| `outerRingMinLevel` | `3` | Cấp làng cần có vòng tường ngoài |
-| `maxRings` | `3` | Số vòng tường tối đa cùng lúc |
-| `ringExpansion` | `24` | Mức nở rộng mỗi vòng tường ngoài |
+| `branchSpacing` | `12` | Khoảng cách giữa hai nhánh phố |
+| `plotSpacing` | `2` | Bước duyệt dọc đường khi tìm chỗ đặt nhà |
+| `roadsMayDemolish` | `true` | Nhánh phố mới được phá nhà do chính mod xây để đi qua |
+| `demolishPerBranchByLevel` | `[1, 2, 4, 6]` | Số nhà một nhánh phố được phá, theo cấp làng |
+| `levelTerrain` | `true` | Cho làng đào và lấp trong khung |
+| `gradeTerrain` | `true` | Lớp san thô làm mượt toàn bộ mặt trong |
+| `maxSlope` | `1` | Chênh cao tối đa giữa hai cột kề sau khi san |
+| `gradingPasses` | `8` | Số lượt làm mượt trường cao độ |
+| `maxGradeCut` | `12` | Đào/lấp tối đa mỗi cột khi san thô |
+| `maxLevelCut` | `6` | Độ gồ ghề tối đa cho phép của nền nhà trong khung |
+| `maxRoadCut` | `4` | Đào/lấp tối đa mỗi ô đường |
+| `fillWater` | `true` | Lấp nước trong khung |
 | `torchesEnabled` | `true` | Tự cắm đuốc vào chỗ tối |
 | `torchLightLevel` | `7` | Không cắm đuốc nếu độ sáng đã trên mức này |
 | `torchSpacing` | `6` | Khoảng cách tối thiểu giữa hai đuốc mod đặt |

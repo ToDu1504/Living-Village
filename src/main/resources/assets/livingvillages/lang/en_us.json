@@ -300,6 +300,7 @@
 	"livingvillages.command.board.jobless_leader": "The chief has no job yet, so nobody can trade with them. A villager with a job becomes chief as soon as there is one.",
 	"livingvillages.wall.type.palisade": "palisade",
 	"livingvillages.wall.type.city": "city wall",
+	"livingvillages.chronicle.demolished": "A house was taken down to let a new street through.",
 	"livingvillages.chronicle.wall_started": "The villagers started building a %s around the village.",
 	"livingvillages.chronicle.wall_finished": "The %s around the village is finished.",
 	"livingvillages.chronicle.wall_moved": "The new %s encloses the whole village; the old one was taken down.",

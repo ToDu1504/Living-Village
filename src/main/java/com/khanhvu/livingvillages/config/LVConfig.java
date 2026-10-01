@@ -201,6 +201,17 @@ public class LVConfig {
 	public int maxRoadCut = 4;
 	/** Fill water inside the frame. Off: water rejects a site, as in v3. */
 	public boolean fillWater = true;
+	/** Blocks between one branch street and the next, measured out from the cross of axes (v4 §7.4). */
+	public int branchSpacing = 12;
+	/** Step along a road when looking for the next place a building could stand beside it. */
+	public int plotSpacing = 2;
+	/** A new branch street may take down a building the mod itself put up to get through (v4 §8.4). */
+	public boolean roadsMayDemolish = true;
+	/**
+	 * How many of its own buildings one new street may take down, by village level (hamlet, village, town, city).
+	 * A small village cannot spare a house; a city replanning itself may cut a whole row.
+	 */
+	public List<Integer> demolishPerBranchByLevel = List.of(1, 2, 4, 6);
 	/** Free blocks between the outermost building, bed or job site and the wall. */
 	public int wallMargin = 6;
 	/** Side of the fixed rectangle a village grows into (v4 §4), clamped to this range. */
@@ -439,6 +450,13 @@ public class LVConfig {
 		maxGradeCut = checkInt("maxGradeCut", maxGradeCut, 0, 48, d.maxGradeCut);
 		maxLevelCut = checkInt("maxLevelCut", maxLevelCut, 0, 32, d.maxLevelCut);
 		maxRoadCut = checkInt("maxRoadCut", maxRoadCut, 0, 16, d.maxRoadCut);
+		branchSpacing = checkInt("branchSpacing", branchSpacing, 6, 32, d.branchSpacing);
+		if (demolishPerBranchByLevel == null || demolishPerBranchByLevel.size() != 4
+				|| demolishPerBranchByLevel.stream().anyMatch(n -> n == null || n < 0 || n > 64)) {
+			warn("demolishPerBranchByLevel", demolishPerBranchByLevel);
+			demolishPerBranchByLevel = d.demolishPerBranchByLevel;
+		}
+		plotSpacing = checkInt("plotSpacing", plotSpacing, 1, 8, d.plotSpacing);
 		wallMargin = checkInt("wallMargin", wallMargin, 1, 32, d.wallMargin);
 		frameMinSize = checkInt("frameMinSize", frameMinSize, 32, 256, d.frameMinSize);
 		frameMaxSize = checkInt("frameMaxSize", frameMaxSize, frameMinSize, 256, Math.max(frameMinSize, d.frameMaxSize));

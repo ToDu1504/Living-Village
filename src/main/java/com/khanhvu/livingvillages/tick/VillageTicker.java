@@ -26,6 +26,7 @@ import com.khanhvu.livingvillages.society.VillageMood;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
+import com.khanhvu.livingvillages.village.PlotBuild;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
 import com.khanhvu.livingvillages.village.VillageScanner;
@@ -367,7 +368,8 @@ public final class VillageTicker {
 		queueReplants(village, project);
 		BuildingTemplate building = project.getHouse();
 		BuildingKind kind = building == null ? null : building.kind();
-		village.recordHouseBuilt(project.getFootprint(), kind == BuildingKind.FARM || kind == BuildingKind.PEN, level.getGameTime());
+		village.recordHouseBuilt(project.getFootprint(), kind == BuildingKind.FARM || kind == BuildingKind.PEN, level.getGameTime(),
+				new PlotBuild(project.getFootprint(), project.getTemplateId(), project.getOrigin(), project.getRotation()));
 		if (project.getTemplateId().equals(village.getBoostTemplate())) {
 			village.setBoostTemplate(null);
 			village.setSkipCooldown(true); // the next building starts without waiting
