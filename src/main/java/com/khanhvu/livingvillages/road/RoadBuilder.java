@@ -160,7 +160,7 @@ public final class RoadBuilder {
 			return;
 		}
 		job.points = 0;
-		pave(level, village, cell);
+		paveWidth(level, village, job, cell);
 		job.index++;
 		if (job.index >= job.path.size()) {
 			LivingVillages.debug("Village {}: road finished ({} blocks, mason {})", village.getId(), job.path.size(), mason != null);
@@ -168,6 +168,57 @@ public final class RoadBuilder {
 				mason.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
 			}
 		}
+	}
+
+	/**
+	 * Paves the centre cell and, for a wider road, the columns beside it perpendicular to the travel direction.
+	 * Each side column is paved at its own ground height and only when level with the centre (≤1 block difference).
+	 */
+	private static void paveWidth(ServerLevel level, VillageRecord village, Job job, BlockPos cell) {
+		pave(level, village, cell);
+		int half = (LVConfig.get().roadWidth - 1) / 2;
+		if (half < 1) {
+			return;
+		}
+		// Determine the neighbour (previous cell, or next cell at the start) to derive travel direction.
+		BlockPos neighbour = job.index > 0 ? job.path.get(job.index - 1)
+				: job.path.size() > 1 ? job.path.get(1) : null;
+		if (neighbour == null) {
+			return;
+		}
+		// A* only steps cardinally, so perpendicular = rotate 90°: (dx,dz) → (dz,-dx).
+		// Both sides are paved, so the sign of the direction doesn't matter.
+		int px = Integer.signum(cell.getZ() - neighbour.getZ());
+		int pz = -Integer.signum(cell.getX() - neighbour.getX());
+		for (int d = 1; d <= half; d++) {
+			paveSide(level, village, cell, px * d, pz * d);
+			paveSide(level, village, cell, -px * d, -pz * d);
+		}
+	}
+
+	/** Paves one column beside the road at its own ground height; skipped when uneven or inside a plot. */
+	private static void paveSide(ServerLevel level, VillageRecord village, BlockPos cell, int dx, int dz) {
+		int x = cell.getX() + dx;
+		int z = cell.getZ() + dz;
+		if (!level.hasChunk(x >> 4, z >> 4) || insidePlot(village, x, z)) {
+			return;
+		}
+		int groundY = SiteFinder.groundTop(level, x, z);
+		if (Math.abs(groundY - cell.getY()) > 1) {
+			return;
+		}
+		pave(level, village, new BlockPos(x, groundY, z));
+	}
+
+	/** Whether the column is inside a plot or the running project of the village. */
+	static boolean insidePlot(VillageRecord village, int x, int z) {
+		for (BoundingBox plot : village.getPlots()) {
+			if (plot.isInside(x, plot.minY(), z)) {
+				return true;
+			}
+		}
+		BuildProject project = village.getProject();
+		return project != null && project.getFootprint().isInside(x, project.getFootprint().minY(), z);
 	}
 
 	/** Turns one natural ground block into road and clears plants above it. */
@@ -408,13 +459,7 @@ public final class RoadBuilder {
 		}
 
 		private boolean insidePlot(int x, int z) {
-			for (BoundingBox plot : village.getPlots()) {
-				if (plot.isInside(x, plot.minY(), z)) {
-					return true;
-				}
-			}
-			BuildProject project = village.getProject();
-			return project != null && project.getFootprint().isInside(x, project.getFootprint().minY(), z);
+			return RoadBuilder.insidePlot(village, x, z);
 		}
 
 		/** The nearest road block with open air above within roadSearchRadius, outside every plot; null if none. */

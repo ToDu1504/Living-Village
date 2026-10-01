@@ -148,7 +148,9 @@ public class LVConfig {
 	public int roadSearchRadius = 32;
 	/** Blocks that count as village road: dirt paths, and smooth sandstone (desert streets, Regrowth desert roads). */
 	public List<String> roadBlocks = List.of("minecraft:dirt_path", "minecraft:smooth_sandstone");
-	public int roadMaxNodes = 4000;
+	public int roadMaxNodes = 8000;
+	/** Width of a road the mod paves, in blocks, centred on the way found. Even values act as the next lower odd one. */
+	public int roadWidth = 3;
 
 	// v3: walls (village → citadel)
 	public boolean wallsEnabled = true;
@@ -399,6 +401,7 @@ public class LVConfig {
 		}
 		roadSearchRadius = checkInt("roadSearchRadius", roadSearchRadius, 4, 96, d.roadSearchRadius);
 		roadMaxNodes = checkInt("roadMaxNodes", roadMaxNodes, 100, 50000, d.roadMaxNodes);
+		roadWidth = checkInt("roadWidth", roadWidth, 1, 5, d.roadWidth);
 		if (roadBlocks == null || roadBlocks.stream().anyMatch(id -> id == null || ResourceLocation.tryParse(id) == null)) {
 			warn("roadBlocks", roadBlocks);
 			roadBlocks = d.roadBlocks;
