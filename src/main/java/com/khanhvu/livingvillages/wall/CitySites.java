@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.wall;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildSite;
 import com.khanhvu.livingvillages.build.BuildingKind;
@@ -172,7 +172,7 @@ public final class CitySites {
 		sameKind.stream().filter(b -> b != requested && area(b) < area(requested)).min(Comparator.comparingInt(CitySites::area))
 				.ifPresent(scan.templates::add);
 		SCANS.put(village.getId(), scan);
-		LivingVillages.debug("Village {}: looking inside the walls for a site for {}", village.getId(), requested.id());
+		LVLog.detail(LVLog.Category.BUILD, village, "looking inside the walls for a site for {}", requested.id());
 	}
 
 	private static int area(BuildingTemplate building) {
@@ -417,7 +417,7 @@ public final class CitySites {
 						SiteFinder.insideFrameCut());
 				if (site != null) {
 					SCANS.remove(village.getId());
-					LivingVillages.debug("Village {}: site on a road for {} at {}, front facing {}", village.getId(), building.id(),
+					LVLog.detail(LVLog.Category.BUILD, village, "site on a road for {} at {}, front facing {}", building.id(),
 							site.origin(), facing);
 					VillageTicker.beginProject(level, registry, village, building, site);
 					return;
@@ -463,8 +463,8 @@ public final class CitySites {
 			int allowed = demolishAllowance(village);
 			boolean mayClear = blocking.size() <= allowed && blocking.stream().allMatch(p -> Demolisher.canDemolish(level, village, p));
 			if (!mayClear) {
-				LivingVillages.debug("Village {}: branch position skipped, {} building(s) in the way, {} allowed at this level",
-						village.getId(), blocking.size(), allowed);
+				LVLog.detail(LVLog.Category.ROAD, village, "branch position skipped, {} building(s) in the way, {} allowed at this level",
+						blocking.size(), allowed);
 				continue;
 			}
 			boolean cleared = true;
@@ -476,7 +476,7 @@ public final class CitySites {
 			}
 			village.getRoads().add(branch);
 			registry.setDirty();
-			LivingVillages.debug("Village {}: branch street opened ({},{})->({},{})", village.getId(),
+			LVLog.milestone(LVLog.Category.ROAD, village, "branch street opened ({},{})->({},{})",
 					branch.x1(), branch.z1(), branch.x2(), branch.z2());
 			return branch;
 		}
@@ -535,7 +535,7 @@ public final class CitySites {
 			if (ring.noteFull()) {
 				Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.city_full");
 			}
-			LivingVillages.debug("Village {}: no room left inside the walls", village.getId());
+			LVLog.detail(LVLog.Category.BUILD, village, "no room left inside the walls");
 		}
 		VillageTicker.siteFailed(level, registry, village, scan.requested);
 	}

@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.work;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.VillageLevel;
@@ -293,7 +293,7 @@ public final class ProfessionWork {
 
 	private static void perform(ServerLevel level, Villager villager, Task task, long now) {
 		villager.swing(InteractionHand.MAIN_HAND);
-		LivingVillages.debug("{} ({}) does {} at {}", villager.getName().getString(),
+		LVLog.detail(LVLog.Category.WORK, "{} ({}) does {} at {}", villager.getName().getString(),
 				BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()).getPath(), task.kind(), task.target());
 		switch (task.kind()) {
 			case BREED -> {
@@ -337,7 +337,7 @@ public final class ProfessionWork {
 						CURING.clear(); // zombies that died before the cure ended are never removed otherwise
 					}
 					CURING.put(zombie.getUUID(), villager.getUUID());
-					LivingVillages.debug("Cleric {} started curing zombie villager {}", villager.getUUID(), zombie.getUUID());
+					LVLog.detail(LVLog.Category.WORK, "cleric {} started curing zombie villager {}", villager.getUUID(), zombie.getUUID());
 				}
 			}
 			case SMITH -> effect(level, task.target().above(), ParticleTypes.LAVA, SoundEvents.ANVIL_USE);

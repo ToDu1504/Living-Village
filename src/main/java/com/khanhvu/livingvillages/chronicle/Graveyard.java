@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.chronicle;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.tick.VillageTicker;
@@ -74,7 +74,7 @@ public final class Graveyard {
 			entity.setWaxed(true); // players cannot edit the text
 		}
 		VillageRegistry.get(level).setDirty();
-		LivingVillages.debug("Village {}: grave {} for {} at {}", village.getId(), index, name, wall);
+		LVLog.detail(LVLog.Category.CHRONICLE, village, "grave {} for {} at {}", index, name, wall);
 		return true;
 	}
 

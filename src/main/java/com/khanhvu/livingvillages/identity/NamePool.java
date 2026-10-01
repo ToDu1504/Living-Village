@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageType;
 import net.minecraft.util.RandomSource;
 
@@ -79,7 +80,7 @@ public final class NamePool {
 			}
 			return new Gson().fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), type);
 		} catch (IOException | JsonParseException e) {
-			LivingVillages.LOGGER.warn("[LivingVillages] Could not read {}: {}", path, e.getMessage());
+			LVLog.warn("could not read {}: {}", path, e.getMessage());
 			return null;
 		}
 	}

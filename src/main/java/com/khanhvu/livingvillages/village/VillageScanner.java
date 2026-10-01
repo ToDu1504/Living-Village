@@ -1,8 +1,8 @@
 package com.khanhvu.livingvillages.village;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.VillageLevel;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -61,7 +61,7 @@ public final class VillageScanner {
 					BuilderAssignment.release(level, record.getProject());
 				}
 				registry.setDirty();
-				LivingVillages.debug("Village {} lost its bell at {}, now inactive", record.getId(), bell);
+				LVLog.milestone(LVLog.Category.SOCIETY, record, "lost its bell at {}, now inactive", bell);
 			}
 		}
 	}
@@ -77,7 +77,7 @@ public final class VillageScanner {
 				existing.setBellPos(bell);
 				existing.setActive(true);
 				registry.setDirty();
-				LivingVillages.debug("Village {} reactivated with bell at {}", existing.getId(), bell);
+				LVLog.milestone(LVLog.Category.SOCIETY, existing, "reactivated with bell at {}", bell);
 			}
 			return;
 		}
@@ -89,7 +89,7 @@ public final class VillageScanner {
 		VillageAnalyzer.Stats stats = VillageAnalyzer.analyze(level, record);
 		VillageAnalyzer.ensureVillageType(record, stats, registry);
 		VillageLevel.update(level, record, stats); // first computation: sets the starting level silently
-		LivingVillages.debug("Registered village {} at {} ({}), {} adults, {} beds",
-				record.getId(), bell, record.getVillageType(), stats.adultVillagers(), stats.totalBeds());
+		LVLog.milestone(LVLog.Category.SOCIETY, record, "registered at {} ({}), {} adults, {} beds",
+				bell, record.getVillageType(), stats.adultVillagers(), stats.totalBeds());
 	}
 }

@@ -1,7 +1,7 @@
 package com.khanhvu.livingvillages.identity;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -52,7 +52,7 @@ public final class LevelUpFireworks {
 		VillageEvents.LEVEL_UP.register(e -> {
 			if (LVConfig.get().levelUpFireworks) {
 				SHOWS.put(e.village().getId(), ROCKETS);
-				LivingVillages.debug("Village {}: level-up fireworks", e.village().getId());
+				LVLog.detail(LVLog.Category.LEVEL, e.village(), "level-up fireworks");
 			}
 		});
 	}

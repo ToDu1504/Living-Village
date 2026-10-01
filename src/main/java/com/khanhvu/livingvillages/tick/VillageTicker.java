@@ -1,6 +1,5 @@
 package com.khanhvu.livingvillages.tick;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.board.MaterialBoard;
 import com.khanhvu.livingvillages.build.BlockPlacer;
 import com.khanhvu.livingvillages.build.BuildProject;
@@ -24,6 +23,7 @@ import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.society.BuildDecision;
 import com.khanhvu.livingvillages.society.VillageMood;
 import com.khanhvu.livingvillages.society.VillageSociety;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.PlotBuild;
@@ -34,6 +34,7 @@ import com.khanhvu.livingvillages.village.VillageType;
 import com.khanhvu.livingvillages.voice.VillageVoice;
 import com.khanhvu.livingvillages.wall.CitySites;
 import com.khanhvu.livingvillages.wall.WallBuilder;
+import com.khanhvu.livingvillages.wall.WallRing;
 import com.khanhvu.livingvillages.work.ProfessionWork;
 import com.khanhvu.livingvillages.worker.BuilderAssignment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -48,8 +49,12 @@ import net.minecraft.world.entity.npc.Villager;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Main loop, driven by END_WORLD_TICK. Only villages with a player within activeRange do anything; far villages
@@ -66,12 +71,19 @@ public final class VillageTicker {
 	/** Global block budget, shared by all dimensions within one server tick. */
 	private static int budgetServerTick = -1;
 	private static int budgetLeft;
+	/** Last game tick a summary line was printed per village (spec v4 mini-update M6); not saved, a restart just resets the timer. */
+	private static final Map<UUID, Long> lastSummaryTick = new HashMap<>();
 
 	private VillageTicker() {
 	}
 
 	public static void register() {
 		ServerTickEvents.END_WORLD_TICK.register(VillageTicker::tick);
+	}
+
+	/** Forgets per-village summary timers (server stop); a restart just prints the first one sooner. */
+	public static void clear() {
+		lastSummaryTick.clear();
 	}
 
 	private static void tick(ServerLevel level) {
@@ -110,6 +122,7 @@ public final class VillageTicker {
 				if (village.getProject() == null) {
 					tryAutoStart(level, registry, village, time, stats);
 				}
+				maybeSummarize(level, village, stats, time);
 			}
 			BuildProject project = village.getProject();
 			if (project != null) {
@@ -134,6 +147,42 @@ public final class VillageTicker {
 			VillageCare.tick(level, village);
 			HomeFences.tick(level, village);
 		}
+	}
+
+	/**
+	 * A one-line progress summary in the log every {@code logSummaryMinutes} (spec v4 mini-update M6): readable
+	 * after a play session without turning debugLogging on. 0 disables it.
+	 */
+	private static void maybeSummarize(ServerLevel level, VillageRecord village, @Nullable VillageAnalyzer.Stats stats, long time) {
+		LVConfig config = LVConfig.get();
+		if (config.logSummaryMinutes <= 0) {
+			return;
+		}
+		long intervalTicks = config.logSummaryMinutes * 1200L;
+		Long last = lastSummaryTick.get(village.getId());
+		if (last != null && time - last < intervalTicks) {
+			return;
+		}
+		lastSummaryTick.put(village.getId(), time);
+		VillageAnalyzer.Stats s = stats != null ? stats : VillageAnalyzer.analyze(level, village);
+		String levelName = VillageLevel.enabled() ? VillageLevel.name(Math.max(0, village.getLevel())) : "-";
+		VillageLevel.Progress progress = VillageLevel.progress(village, s);
+		String next;
+		if (!VillageLevel.enabled() || progress.maxed()) {
+			next = "max level";
+		} else {
+			next = String.format(Locale.ROOT, "%s needs %d/%d people, %d/%d professions%s",
+					VillageLevel.name(village.getLevel() + 1), VillageLevel.population(s), progress.neededPopulation(),
+					progress.professions(), progress.neededProfessions(),
+					progress.missingServices().isEmpty() ? "" : ", missing " + String.join(",", progress.missingServices()));
+		}
+		BuildProject project = village.getProject();
+		String building = project == null ? "idle" : project.getTemplateId() + " " + project.getProgressPercent() + "%";
+		WallRing outer = village.getWalls().outer();
+		String wall = outer == null ? "none" : outer.getType().getSerializedName() + " " + outer.progressPercent() + "%";
+		LVLog.summary(village, "{} | people {} ({}+{}) | prof {} | beds {} ({} free) | building {} | wall {} | next: {}",
+				levelName, s.adultVillagers() + s.babies(), s.adultVillagers(), s.babies(), progress.professions(),
+				s.totalBeds(), s.freeBeds(), building, wall, next);
 	}
 
 	/**
@@ -237,7 +286,7 @@ public final class VillageTicker {
 		village.setPlannedTemplate(null);
 		village.setSkipCooldown(false);
 		registry.setDirty();
-		LivingVillages.debug("Village {} starts {} at {} ({}), {} tree(s) to fell", village.getId(), house.id(),
+		LVLog.milestone(LVLog.Category.BUILD, village, "starts {} at {} ({}), {} tree(s) to fell", house.id(),
 				site.origin(), site.rotation(), site.treeRoots().size());
 		return project;
 	}
@@ -250,10 +299,10 @@ public final class VillageTicker {
 		village.setPlannedTemplate(null); // plan another design next time
 		registry.setDirty();
 		if (village.getFailedSiteAttempts() == config.maxSiteFailures) {
-			LivingVillages.LOGGER.info("[LivingVillages] Village at {} found no building site {} times in a row; "
-					+ "it stops building until /livingvillages build", village.getBellPos(), config.maxSiteFailures);
+			LVLog.milestone(LVLog.Category.BUILD, village, "found no building site {} times in a row; "
+					+ "it stops building until /livingvillages build", config.maxSiteFailures);
 		} else {
-			LivingVillages.debug("Village {} found no site for {}", village.getId(), house.id());
+			LVLog.detail(LVLog.Category.BUILD, village, "found no site for {}", house.id());
 		}
 	}
 
@@ -261,8 +310,7 @@ public final class VillageTicker {
 			boolean updateBuilders) {
 		LVConfig config = LVConfig.get();
 		if (!project.ensureSteps(level, villageType(village))) {
-			LivingVillages.LOGGER.warn("[LivingVillages] Template {} no longer exists, cancelling the project of the village at {}",
-					project.getTemplateId(), village.getBellPos());
+			LVLog.warn(LVLog.Category.BUILD, village, "template {} no longer exists, project cancelled", project.getTemplateId());
 			cancelProject(level, registry, village);
 			return;
 		}
@@ -319,7 +367,7 @@ public final class VillageTicker {
 				break;
 			}
 			if (project.getSkippedCount() > config.maxSkippedRatio * project.getTotalBlocks()) {
-				LivingVillages.LOGGER.warn("[LivingVillages] Too many blocked positions ({} of {}) building {} at {}, project cancelled",
+				LVLog.warn(LVLog.Category.BUILD, village, "too many blocked positions ({} of {}) building {} at {}, project cancelled",
 						project.getSkippedCount(), project.getTotalBlocks(), project.getTemplateId(), project.getOrigin());
 				cancelProject(level, registry, village);
 				village.setNextSiteAttemptTick(level.getGameTime() + SITE_RETRY_TICKS);
@@ -382,7 +430,7 @@ public final class VillageTicker {
 				project.getFootprint()));
 		village.setProject(null);
 		registry.setDirty();
-		LivingVillages.debug("Village {} finished {} ({} blocks skipped)", village.getId(), project.getTemplateId(), project.getSkippedCount());
+		LVLog.milestone(LVLog.Category.BUILD, village, "finished {} ({} blocks skipped)", project.getTemplateId(), project.getSkippedCount());
 	}
 
 	/** Drops the project without touching the blocks already placed; the plot is not reserved. */

@@ -3,7 +3,7 @@ package com.khanhvu.livingvillages.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -61,6 +61,10 @@ public class LVConfig {
 	public double maxSkippedRatio = 0.1;
 	public boolean showBuilderHeldItem = true;
 	public boolean debugLogging = false;
+	/** Log categories whose detail lines print when debugLogging is on (spec v4 mini-update M6); unknown names are dropped with a warning. */
+	public List<String> logCategories = defaultLogCategories();
+	/** A one-line summary per active village every this many minutes in the log; 0 disables it. */
+	public int logSummaryMinutes = 10;
 
 	// v2-GĐ 1: natural trees in building sites
 	public boolean allowTreeClearing = true;
@@ -93,6 +97,8 @@ public class LVConfig {
 	public List<Integer> levelMaxBuildings = List.of(4, 10, 20, 32);
 	public List<Integer> buildRadiusByLevel = List.of(48, 64, 80, 96);
 	public boolean levelCanDecrease = false;
+	/** Baby villagers count toward a level's population requirement too (spec v4 mini-update M2); only adults hold jobs. */
+	public boolean levelCountsBabies = true;
 
 	// v2-GĐ 4: profession work and animals
 	public boolean workEnabled = true;
@@ -225,6 +231,11 @@ public class LVConfig {
 	/** Wall blocks by village type (plains, desert, savanna, snowy, taiga). */
 	public Map<String, WallBlockSet> wallBlocks = defaultWallBlocks();
 
+	/** Names here must match {@code LVLog.Category.key()} for every enum constant; kept as plain strings to avoid a util→config dependency cycle. */
+	private static List<String> defaultLogCategories() {
+		return List.of("level", "build", "plan", "wall", "road", "grade", "work", "society", "care", "board", "chronicle", "template");
+	}
+
 	private static Map<String, Integer> defaultItemsPerEmerald() {
 		Map<String, Integer> map = new LinkedHashMap<>();
 		map.put("wood", 16);
@@ -313,7 +324,7 @@ public class LVConfig {
 				loaded = GSON.fromJson(reader, LVConfig.class);
 			} catch (IOException | JsonParseException e) {
 				readFailed = true;
-				LivingVillages.LOGGER.warn("[LivingVillages] Could not read {}, using defaults: {}", PATH, e.getMessage());
+				LVLog.warn("could not read {}, using defaults: {}", PATH, e.getMessage());
 			}
 		}
 		if (loaded == null) {
@@ -335,7 +346,7 @@ public class LVConfig {
 				GSON.toJson(instance, writer);
 			}
 		} catch (IOException e) {
-			LivingVillages.LOGGER.warn("[LivingVillages] Could not write {}: {}", PATH, e.getMessage());
+			LVLog.warn("could not write {}: {}", PATH, e.getMessage());
 		}
 	}
 
@@ -487,6 +498,22 @@ public class LVConfig {
 			warn("buildRadiusByLevel", buildRadiusByLevel);
 			buildRadiusByLevel = d.buildRadiusByLevel;
 		}
+		if (logCategories == null) {
+			warn("logCategories", null);
+			logCategories = d.logCategories;
+		} else {
+			List<String> known = d.logCategories;
+			List<String> kept = new java.util.ArrayList<>();
+			for (String category : logCategories) {
+				if (category != null && known.contains(category)) {
+					kept.add(category);
+				} else {
+					warn("logCategories", category);
+				}
+			}
+			logCategories = kept;
+		}
+		logSummaryMinutes = checkInt("logSummaryMinutes", logSummaryMinutes, 0, 120, d.logSummaryMinutes);
 	}
 
 	private static int checkInt(String name, int value, int min, int max, int fallback) {
@@ -506,6 +533,6 @@ public class LVConfig {
 	}
 
 	private static void warn(String name, Object value) {
-		LivingVillages.LOGGER.warn("[LivingVillages] Invalid config value {} = {}, using default", name, value);
+		LVLog.warn("invalid config value {} = {}, using default", name, value);
 	}
 }

@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.board;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
@@ -138,7 +138,7 @@ public final class MaterialBoard {
 					village.setBoostTemplate(village.getRequestTemplate());
 				}
 				VillageRegistry.get(level).setDirty();
-				LivingVillages.debug("Village {}: {} delivered {} {}", village.getId(), player, request.count(), request.itemId());
+				LVLog.detail(LVLog.Category.BOARD, village, "{} delivered {} {}", player, request.count(), request.itemId());
 				VillageEvents.REQUEST_FULFILLED.post(new VillageEvents.RequestFulfilled(level, village, player, request.itemId(),
 						request.count(), allDone));
 			}
@@ -252,7 +252,7 @@ public final class MaterialBoard {
 		requests.addAll(fresh);
 		village.setRequestTemplate(target, day);
 		VillageRegistry.get(level).setDirty();
-		LivingVillages.debug("Village {}: board requests for {}: {}", village.getId(), target,
+		LVLog.detail(LVLog.Category.BOARD, village, "board requests for {}: {}", target,
 				fresh.stream().map(r -> r.count() + " " + r.itemId().getPath()).toList());
 	}
 
@@ -346,7 +346,7 @@ public final class MaterialBoard {
 						village.setBoardPlaced(true);
 						SIGN_TEXT.remove(village.getId());
 						VillageRegistry.get(level).setDirty();
-						LivingVillages.debug("Village {}: board placed at {}", village.getId(), spot);
+						LVLog.detail(LVLog.Category.BOARD, village, "board placed at {}", spot);
 						return true;
 					}
 				}

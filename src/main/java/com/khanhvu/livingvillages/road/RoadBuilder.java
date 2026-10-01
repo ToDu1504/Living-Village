@@ -1,11 +1,11 @@
 package com.khanhvu.livingvillages.road;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.care.TerrainGrader;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -94,7 +94,7 @@ public final class RoadBuilder {
 			BlockPos start = findStart(e.level(), e.footprint(), e.village().getBellPos());
 			if (start != null) {
 				JOBS.computeIfAbsent(e.village().getId(), id -> new Job()).starts.add(new Start(start, e.footprint()));
-				LivingVillages.debug("Village {}: road planned from {}", e.village().getId(), start);
+				LVLog.detail(LVLog.Category.ROAD, e.village(), "road planned from {}", start);
 			}
 		});
 	}
@@ -108,7 +108,7 @@ public final class RoadBuilder {
 		// The four axes are laid out as soon as the village has a frame, and are what the masons pave first.
 		if (VillageRoads.layOutAxes(village)) {
 			VillageRegistry.get(level).setDirty();
-			LivingVillages.debug("Village {}: four road axes laid out from {}", village.getId(), VillageRoads.centre(village));
+			LVLog.milestone(LVLog.Category.ROAD, village, "four road axes laid out from {}", VillageRoads.centre(village));
 		}
 		Job job = JOBS.get(village.getId());
 		if (job == null) {
@@ -146,9 +146,9 @@ public final class RoadBuilder {
 		job.search = null;
 		if (found) {
 			job.path.addAll(search.result());
-			LivingVillages.debug("Village {}: road of {} blocks from {} ({} nodes)", village.getId(), job.path.size(), search.start, search.expanded);
+			LVLog.detail(LVLog.Category.ROAD, village, "road of {} blocks from {} ({} nodes)", job.path.size(), search.start, search.expanded);
 		} else {
-			LivingVillages.debug("Village {}: no road found from {} ({} nodes)", village.getId(), search.start, search.expanded);
+			LVLog.detail(LVLog.Category.ROAD, village, "no road found from {} ({} nodes)", search.start, search.expanded);
 		}
 	}
 
@@ -177,7 +177,7 @@ public final class RoadBuilder {
 			return false;
 		}
 		job.segment = index;
-		LivingVillages.debug("Village {}: paving road {} ({}), {} of {} columns left", village.getId(), index,
+		LVLog.detail(LVLog.Category.ROAD, village, "paving road {} ({}), {} of {} columns left", index,
 				segment.axis() ? "axis" : "branch", job.path.size(), segment.length());
 		return true;
 	}
@@ -217,7 +217,7 @@ public final class RoadBuilder {
 			VillageRegistry.get(level).setDirty();
 		}
 		if (job.index >= job.path.size()) {
-			LivingVillages.debug("Village {}: road finished ({} blocks, mason {})", village.getId(), job.path.size(), mason != null);
+			LVLog.detail(LVLog.Category.ROAD, village, "road finished ({} blocks, mason {})", job.path.size(), mason != null);
 			if (mason != null) {
 				mason.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
 			}

@@ -28,7 +28,7 @@ public final class VillageEvents {
 	public record LeaderChanged(ServerLevel level, VillageRecord village, @Nullable Villager oldLeader, @Nullable Villager newLeader) {
 	}
 
-	public record LevelUp(ServerLevel level, VillageRecord village, int newLevel) {
+	public record LevelUp(ServerLevel level, VillageRecord village, int newLevel, VillageAnalyzer.Stats stats) {
 	}
 
 	/** A player traded a board request with the leader (v2-GĐ 9.4); {@code player} is null if not known. */

@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.build;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -99,7 +99,7 @@ public final class Replanter {
 		if (farmer != null) {
 			farmer.swing(InteractionHand.MAIN_HAND);
 		}
-		LivingVillages.debug("Village {} replanted {} at {}", village.getId(), task.order().sapling(), task.spot());
+		LVLog.detail(LVLog.Category.BUILD, village, "replanted {} at {}", task.order().sapling(), task.spot());
 	}
 
 	/** A dirt or grass spot 3–8 blocks outside the house footprint around {@code near}, not in any plot. */

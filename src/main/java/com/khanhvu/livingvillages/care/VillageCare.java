@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.care;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.road.RoadBuilder;
@@ -116,7 +116,7 @@ public final class VillageCare {
 				level.setBlock(above, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
 			}
 			level.setBlock(ground, RoadBuilder.roadFor(village, groundState).defaultBlockState(), Block.UPDATE_ALL);
-			LivingVillages.debug("Village {}: pothole filled at {}", village.getId(), ground);
+			LVLog.detail(LVLog.Category.CARE, village, "pothole filled at {}", ground);
 			return 0;
 		}
 		if (config.grassCuttingEnabled && isWildPlant(aboveState) && nearDoor(level, above)) {

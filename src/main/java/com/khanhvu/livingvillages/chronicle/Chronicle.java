@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.chronicle;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
@@ -190,7 +190,7 @@ public final class Chronicle {
 		}
 		village.setChronicleDirty(true);
 		VillageRegistry.get(level).setDirty();
-		LivingVillages.debug("Village {} chronicle: {}", village.getId(), entry.text());
+		LVLog.detail(LVLog.Category.CHRONICLE, village, "entry: {}", entry.text());
 		if (config.announceEvents && notice != Notice.NONE) {
 			announce(level, village, notice, entry);
 		}

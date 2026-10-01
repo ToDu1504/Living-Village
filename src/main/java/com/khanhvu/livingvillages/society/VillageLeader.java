@@ -1,9 +1,9 @@
 package com.khanhvu.livingvillages.society;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.NamePool;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -87,7 +87,7 @@ public final class VillageLeader {
 		if (newLeader != null) {
 			applyTitle(village, newLeader);
 		}
-		LivingVillages.debug("Village {} leader is now {} ({})", village.getId(),
+		LVLog.detail(LVLog.Category.SOCIETY, village, "leader is now {} ({})",
 				newLeader == null ? "nobody" : newLeader.getName().getString(), newLeader == null ? "-" : newLeader.getUUID());
 		VillageEvents.LEADER_CHANGED.post(new VillageEvents.LeaderChanged(level, village, oldLeader, newLeader));
 	}

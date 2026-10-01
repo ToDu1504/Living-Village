@@ -12,6 +12,7 @@ import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.society.VillageSociety;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.voice.VillageVoice;
 import com.khanhvu.livingvillages.wall.CitySites;
@@ -55,18 +56,12 @@ public class LivingVillages implements ModInitializer {
 			WallBuilder.clear();
 			CitySites.clear();
 			VillageCare.clear();
+			VillageTicker.clear();
 		});
-		LOGGER.info("[LivingVillages] loaded");
+		LVLog.milestone("loaded");
 	}
 
 	public static ResourceLocation id(String path) {
 		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
-	}
-
-	/** Logs only when debugLogging is enabled in the config. */
-	public static void debug(String message, Object... args) {
-		if (LVConfig.get().debugLogging) {
-			LOGGER.info("[LivingVillages] " + message, args);
-		}
 	}
 }

@@ -1,6 +1,5 @@
 package com.khanhvu.livingvillages.wall;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.build.TreeFeller;
@@ -12,6 +11,7 @@ import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.road.RoadBuilder;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -136,7 +136,7 @@ public final class WallBuilder {
 		if (LVConfig.get().deferToRegrowth && FabricLoader.getInstance().isModLoaded(REGROWTH)) {
 			if (!deferLogged) {
 				deferLogged = true;
-				LivingVillages.LOGGER.info("[LivingVillages] Regrowth is installed: walls and village care are left to it (deferToRegrowth)");
+				LVLog.milestone("Regrowth is installed: walls and village care are left to it (deferToRegrowth)");
 			}
 			return true;
 		}
@@ -171,7 +171,7 @@ public final class WallBuilder {
 						ring.reopen(VillageWalls.columnOf(value));
 					}
 					VillageRegistry.get(level).setDirty();
-					LivingVillages.debug("Village {}: wall block at {} broken by {}, left open", village.getId(), pos, player.getName().getString());
+					LVLog.detail(LVLog.Category.WALL, village, "wall block at {} broken by {}, left open", pos, player.getName().getString());
 					return;
 				}
 			}
@@ -247,7 +247,7 @@ public final class WallBuilder {
 				frame = VillageBoundary.frame(level, village);
 				village.setFrame(frame);
 				registry.setDirty();
-				LivingVillages.debug("Village {}: frame fixed at [{}, {}] .. [{}, {}]", village.getId(), frame[0], frame[1], frame[2], frame[3]);
+				LVLog.milestone(LVLog.Category.WALL, village, "frame fixed at [{}, {}] .. [{}, {}]", frame[0], frame[1], frame[2], frame[3]);
 			}
 			// A village that is already a town when first seen skips the palisade (farms and pens stay outside).
 			WallRing.Type type = villageLevel >= config.cityWallMinLevel ? WallRing.Type.CITY : WallRing.Type.PALISADE;
@@ -276,7 +276,7 @@ public final class WallBuilder {
 			}
 			registry.setDirty();
 			Chronicle.add(level, village, Chronicle.Notice.BIG, "livingvillages.chronicle.wall_raised");
-			LivingVillages.debug("Village {}: city wall raised to {}", village.getId(), config.cityWallHeightMax);
+			LVLog.milestone(LVLog.Category.WALL, village, "city wall raised to {}", config.cityWallHeightMax);
 		}
 	}
 
@@ -301,7 +301,7 @@ public final class WallBuilder {
 		} else {
 			Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.wall_started", ChronicleEntry.keyArg(ring.getType().langKey()));
 		}
-		LivingVillages.debug("Village {}: {} planned, {} columns, {} gate(s), {} tower(s)", village.getId(), ring.getType().getSerializedName(),
+		LVLog.milestone(LVLog.Category.WALL, village, "{} planned, {} columns, {} gate(s), {} tower(s)", ring.getType().getSerializedName(),
 				ring.size(), ring.gateCount(), ring.getTowers().size());
 	}
 
@@ -528,7 +528,7 @@ public final class WallBuilder {
 					release(mason);
 					continue;
 				}
-				LivingVillages.debug("Village {}: mason {} takes wall unit {}", village.getId(), mason.getUUID(), worker.unit);
+				LVLog.detail(LVLog.Category.WALL, village, "mason {} takes wall unit {}", mason.getUUID(), worker.unit);
 			}
 			BlockPos stand = standingPos(level, walls, ring, worker.unit);
 			if (stand == null) {
@@ -1065,7 +1065,7 @@ public final class WallBuilder {
 				ring.reopen(VillageWalls.columnOf(value));
 			}
 			registry.setDirty();
-			LivingVillages.debug("Wall block at {} is gone, to be rebuilt", pos);
+			LVLog.detail(LVLog.Category.WALL, "wall block at {} is gone, to be rebuilt", pos);
 		}
 	}
 
@@ -1107,7 +1107,7 @@ public final class WallBuilder {
 		if (ring != null && ring.getType() == WallRing.Type.PALISADE) {
 			Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.wall_moved", ChronicleEntry.keyArg(ring.getType().langKey()));
 		}
-		LivingVillages.debug("Village {}: old ring taken down", village.getId());
+		LVLog.milestone(LVLog.Category.WALL, village, "old ring taken down");
 	}
 
 	/** Forgets runtime state (server stop). */

@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.care;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.build.TreeFeller;
@@ -55,7 +55,7 @@ public final class HomeFences {
 			}
 			if (fence(level, village, plot, config.careBlocksPerRun)) {
 				walls.getFencedPlots().add(plot);
-				LivingVillages.debug("Village {}: garden fence around {} done", village.getId(), plot);
+				LVLog.detail(LVLog.Category.CARE, village, "garden fence around {} done", plot);
 			}
 			VillageRegistry.get(level).setDirty();
 			return;

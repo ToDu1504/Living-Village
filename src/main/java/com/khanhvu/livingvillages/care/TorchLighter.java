@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.care;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.road.RoadBuilder;
@@ -135,7 +135,7 @@ public final class TorchLighter {
 		if (!nearby.isEmpty()) {
 			nearby.get(0).swing(InteractionHand.MAIN_HAND);
 		}
-		LivingVillages.debug("Village {}: torch at {}", village.getId(), cell);
+		LVLog.detail(LVLog.Category.CARE, village, "torch at {}", cell);
 		return true;
 	}
 

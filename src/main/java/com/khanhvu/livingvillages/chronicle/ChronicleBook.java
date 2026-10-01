@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.chronicle;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.village.VillageRecord;
@@ -72,7 +72,7 @@ public final class ChronicleBook {
 		ItemStack book = createBook(village, librarian);
 		if (!lectern.hasBook()) {
 			LecternBlock.tryPlaceBook(null, level, pos, state, book);
-			LivingVillages.debug("Village {}: chronicle book placed at {}", village.getId(), pos);
+			LVLog.detail(LVLog.Category.CHRONICLE, village, "chronicle book placed at {}", pos);
 		} else if (isChronicleOf(lectern.getBook(), village)) {
 			lectern.setBook(book);
 		}

@@ -83,7 +83,7 @@ public final class LVText {
 		}
 		if (pattern == null) {
 			if (WARNED_KEYS.add(key)) {
-				LivingVillages.LOGGER.warn("[LivingVillages] Missing text for key {}", key);
+				LVLog.warn("missing text for key {}", key);
 			}
 			return key;
 		}
@@ -103,7 +103,7 @@ public final class LVText {
 			return String.format(Locale.ROOT, pattern, plain);
 		} catch (IllegalFormatException e) {
 			if (WARNED_KEYS.add(key)) {
-				LivingVillages.LOGGER.warn("[LivingVillages] Bad placeholders in text {}: {}", key, e.getMessage());
+				LVLog.warn("bad placeholders in text {}: {}", key, e.getMessage());
 			}
 			return pattern;
 		}
@@ -113,14 +113,14 @@ public final class LVText {
 		String path = "/assets/livingvillages/lang/" + language + ".json";
 		try (InputStream in = LivingVillages.class.getResourceAsStream(path)) {
 			if (in == null) {
-				LivingVillages.LOGGER.warn("[LivingVillages] Missing {}", path);
+				LVLog.warn("missing {}", path);
 				return Map.of();
 			}
 			Map<String, String> map = new Gson().fromJson(new InputStreamReader(in, StandardCharsets.UTF_8),
 					new TypeToken<Map<String, String>>() { }.getType());
 			return map == null ? Map.of() : Map.copyOf(map);
 		} catch (IOException | JsonParseException e) {
-			LivingVillages.LOGGER.warn("[LivingVillages] Could not read {}: {}", path, e.getMessage());
+			LVLog.warn("could not read {}: {}", path, e.getMessage());
 			return Map.of();
 		}
 	}

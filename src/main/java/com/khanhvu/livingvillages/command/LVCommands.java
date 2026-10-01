@@ -187,6 +187,13 @@ public final class LVCommands {
 				VillageIdentity.displayName(record), formatPos(bell), typeName(record.getVillageType()), stateName(record)), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.villagers",
 				stats.adultVillagers()), false);
+		if (config.levelCountsBabies) {
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.population",
+					stats.adultVillagers(), stats.babies(), stats.adultVillagers() + stats.babies()), false);
+		}
+		if (VillageLevel.enabled()) {
+			source.sendSuccess(() -> progressLine(record, stats), false);
+		}
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.beds",
 				stats.totalBeds(), stats.freeBeds()), false);
 		source.sendSuccess(() -> LVText.tr("livingvillages.command.status.houses",
@@ -465,6 +472,20 @@ public final class LVCommands {
 				: LVText.tr(project.getBuilderUuid() == null ? "livingvillages.command.status.builder_none" : "livingvillages.command.status.builder_away");
 		return LVText.tr("livingvillages.command.status.project", project.getTemplateId().toString(),
 				project.getProgressPercent(), builderName, project.getSkippedCount());
+	}
+
+	/** "Up to City: 18/26 people, 5/8 professions, missing: cleric" (spec v4 mini-update M6). */
+	private static Component progressLine(VillageRecord record, VillageAnalyzer.Stats stats) {
+		VillageLevel.Progress progress = VillageLevel.progress(record, stats);
+		if (progress.maxed()) {
+			return LVText.tr("livingvillages.command.status.progress_maxed", LVText.tr(VillageLevel.langKey(record.getLevel())));
+		}
+		Component nextName = LVText.tr(VillageLevel.langKey(record.getLevel() + 1));
+		int population = LVConfig.get().levelCountsBabies ? progress.adults() + progress.babies() : progress.adults();
+		Component missing = progress.missingServices().isEmpty() ? LVText.tr("livingvillages.command.status.progress_none_missing")
+				: Component.literal(String.join(", ", progress.missingServices()));
+		return LVText.tr("livingvillages.command.status.progress", nextName, population, progress.neededPopulation(),
+				progress.professions(), progress.neededProfessions(), missing);
 	}
 
 	private static String formatPos(BlockPos pos) {

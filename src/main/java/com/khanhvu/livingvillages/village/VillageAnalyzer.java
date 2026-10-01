@@ -29,20 +29,25 @@ public final class VillageAnalyzer {
 	/**
 	 * @param dominantType majority style of the adult villagers present, or null if there are none
 	 * @param adults       the adult villagers counted (loaded entities)
+	 * @param babies       baby villagers counted in the same area (spec v4 mini-update M2)
 	 */
-	public record Stats(int adultVillagers, int totalBeds, int freeBeds, @Nullable VillageType dominantType, List<Villager> adults) {
+	public record Stats(int adultVillagers, int totalBeds, int freeBeds, @Nullable VillageType dominantType, List<Villager> adults,
+			int babies) {
 	}
 
 	public static Stats analyze(ServerLevel level, VillageRecord record) {
 		int radius = areaRadius(record);
 		BlockPos bell = record.getBellPos();
 
-		List<Villager> adults = getAdultVillagers(level, bell, radius);
+		AABB area = new AABB(bell).inflate(radius, VERTICAL_RANGE, radius);
+		List<Villager> all = level.getEntitiesOfClass(Villager.class, area, Villager::isAlive);
+		List<Villager> adults = all.stream().filter(v -> !v.isBaby()).toList();
+		int babies = all.size() - adults.size();
 		PoiManager poi = level.getPoiManager();
 		int totalBeds = (int) poi.getCountInRange(h -> h.is(PoiTypes.HOME), bell, radius, PoiManager.Occupancy.ANY);
 		int freeBeds = (int) poi.getCountInRange(h -> h.is(PoiTypes.HOME), bell, radius, PoiManager.Occupancy.HAS_SPACE);
 
-		return new Stats(adults.size(), totalBeds, freeBeds, dominantType(adults), adults);
+		return new Stats(adults.size(), totalBeds, freeBeds, dominantType(adults), adults, babies);
 	}
 
 	/**

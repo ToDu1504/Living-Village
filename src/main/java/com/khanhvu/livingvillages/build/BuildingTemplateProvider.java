@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.build;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.mixin.SinglePoolElementAccessor;
 import com.khanhvu.livingvillages.mixin.StructureTemplateAccessor;
 import com.khanhvu.livingvillages.village.VillageType;
@@ -175,7 +175,7 @@ public final class BuildingTemplateProvider {
 		if (ofKind(buildings, BuildingKind.HOUSE).isEmpty()) {
 			warnOnce(poolId, "contains no usable house with a bed");
 		}
-		LivingVillages.debug("Pool {}: {} buildings", poolId, buildings.size());
+		LVLog.detail(LVLog.Category.TEMPLATE, "pool {}: {} buildings", poolId, buildings.size());
 		return List.copyOf(buildings);
 	}
 
@@ -262,13 +262,13 @@ public final class BuildingTemplateProvider {
 
 		BoundingBox content = new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
 		if (content.getXSpan() > MAX_HORIZONTAL_SIZE || content.getZSpan() > MAX_HORIZONTAL_SIZE || content.getYSpan() > MAX_HEIGHT) {
-			LivingVillages.debug("Skipping template {}: too large ({}x{}x{})", id, content.getXSpan(), content.getYSpan(), content.getZSpan());
+			LVLog.detail(LVLog.Category.TEMPLATE, "skipping template {}: too large ({}x{}x{})", id, content.getXSpan(), content.getYSpan(), content.getZSpan());
 			return null;
 		}
 
 		int floorY = streetJigsawY;
 		if (floorY == Integer.MAX_VALUE) {
-			LivingVillages.debug("Template {}: no street jigsaw, bottom layer used as floor", id);
+			LVLog.detail(LVLog.Category.TEMPLATE, "template {}: no street jigsaw, bottom layer used as floor", id);
 			floorY = content.minY();
 		}
 		// The street jigsaw is the truth about which way a house faces; its door is the next best guess (spec v4 §6).
@@ -276,7 +276,7 @@ public final class BuildingTemplateProvider {
 			front = doorFront;
 		}
 		if (front == null) {
-			LivingVillages.debug("Template {}: no street jigsaw or door, any rotation allowed", id);
+			LVLog.detail(LVLog.Category.TEMPLATE, "template {}: no street jigsaw or door, any rotation allowed", id);
 		}
 
 		// Legacy elements (all vanilla village houses) never place air. Other elements do, but only inside the house bounds.
@@ -337,14 +337,14 @@ public final class BuildingTemplateProvider {
 			}
 			return new StructureTemplate.StructureBlockInfo(info.pos(), replacement, null);
 		} catch (CommandSyntaxException e) {
-			LivingVillages.debug("Template {}: bad jigsaw final_state '{}', skipped", templateId, finalState);
+			LVLog.detail(LVLog.Category.TEMPLATE, "template {}: bad jigsaw final_state '{}', skipped", templateId, finalState);
 			return null;
 		}
 	}
 
 	private static void warnOnce(ResourceLocation poolId, String message) {
 		if (WARNED_POOLS.add(poolId)) {
-			LivingVillages.LOGGER.warn("[LivingVillages] Pool {} {}", poolId, message);
+			LVLog.warn("pool {} {}", poolId, message);
 		}
 	}
 }

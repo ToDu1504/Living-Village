@@ -1,9 +1,9 @@
 package com.khanhvu.livingvillages.worker;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildStep;
 import com.khanhvu.livingvillages.config.LVConfig;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
@@ -72,7 +72,7 @@ public final class BuilderAssignment {
 		} else {
 			project.setTicksOutOfReach(project.getTicksOutOfReach() + UPDATE_INTERVAL);
 			if (project.getTicksOutOfReach() >= config.builderStuckTicks) {
-				LivingVillages.debug("Builder {} stuck, choosing another", builder.getUUID());
+				LVLog.detail(LVLog.Category.BUILD, village, "builder {} stuck, choosing another", builder.getUUID());
 				project.excludeBuilder(builder.getUUID());
 				release(builder);
 				builder = assign(level, village, project);
@@ -158,7 +158,7 @@ public final class BuilderAssignment {
 		Villager chosen = choose(level, village, project);
 		project.setBuilderUuid(chosen == null ? null : chosen.getUUID());
 		if (chosen != null) {
-			LivingVillages.debug("Builder {} assigned to {}", chosen.getUUID(), project.getTemplateId());
+			LVLog.detail(LVLog.Category.BUILD, village, "builder {} assigned to {}", chosen.getUUID(), project.getTemplateId());
 		}
 		return chosen;
 	}

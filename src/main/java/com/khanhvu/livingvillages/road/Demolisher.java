@@ -1,11 +1,11 @@
 package com.khanhvu.livingvillages.road;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
 import com.khanhvu.livingvillages.build.BuildingTemplateProvider;
 import com.khanhvu.livingvillages.chronicle.Chronicle;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.village.PlotBuild;
 import com.khanhvu.livingvillages.village.VillageRecord;
 import com.khanhvu.livingvillages.village.VillageRegistry;
@@ -70,8 +70,8 @@ public final class Demolisher {
 		village.removePlot(plot);
 		registry.setDirty();
 		Chronicle.add(level, village, Chronicle.Notice.SMALL, "livingvillages.chronicle.demolished");
-		LivingVillages.debug("Village {}: took down the building at {} for a road, {} blocks removed, {} left as found",
-				village.getId(), plot, removed, kept);
+		LVLog.milestone(LVLog.Category.ROAD, village, "took down the building at {} for a road, {} blocks removed, {} left as found",
+				plot, removed, kept);
 		return true;
 	}
 

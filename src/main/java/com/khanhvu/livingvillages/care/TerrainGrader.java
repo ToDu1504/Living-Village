@@ -1,6 +1,6 @@
 package com.khanhvu.livingvillages.care;
 
-import com.khanhvu.livingvillages.LivingVillages;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.build.SiteFinder;
 import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.tick.VillageTicker;
@@ -78,7 +78,7 @@ public final class TerrainGrader {
 		}
 		registry.setDirty();
 		if (grading.done()) {
-			LivingVillages.debug("Village {}: ground graded, {} columns", village.getId(), grading.columns());
+			LVLog.detail(LVLog.Category.GRADE, village, "ground graded, {} columns", grading.columns());
 		}
 	}
 
@@ -143,8 +143,8 @@ public final class TerrainGrader {
 				offsets[i] = (byte) delta;
 			}
 		}
-		LivingVillages.debug("Village {}: grading planned, {}x{} columns inset {}, base y={}, {} out of range",
-				village.getId(), width, depth, inset, baseY, unset);
+		LVLog.detail(LVLog.Category.GRADE, village, "grading planned, {}x{} columns inset {}, base y={}, {} out of range",
+				width, depth, inset, baseY, unset);
 		return new VillageGrading(minX, minZ, width, depth, baseY, offsets, 0);
 	}
 

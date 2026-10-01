@@ -1,6 +1,5 @@
 package com.khanhvu.livingvillages.society;
 
-import com.khanhvu.livingvillages.LivingVillages;
 import com.khanhvu.livingvillages.build.BuildProject;
 import com.khanhvu.livingvillages.build.BuildingKind;
 import com.khanhvu.livingvillages.build.BuildingTemplate;
@@ -9,6 +8,7 @@ import com.khanhvu.livingvillages.config.LVConfig;
 import com.khanhvu.livingvillages.identity.VillageIdentity;
 import com.khanhvu.livingvillages.identity.VillageLevel;
 import com.khanhvu.livingvillages.tick.VillageTicker;
+import com.khanhvu.livingvillages.util.LVLog;
 import com.khanhvu.livingvillages.util.LVText;
 import com.khanhvu.livingvillages.village.VillageAnalyzer;
 import com.khanhvu.livingvillages.village.VillageEvents;
@@ -62,17 +62,17 @@ public final class VillageSociety {
 		});
 		VillageEvents.BIRTH.register(e -> {
 			e.village().setRecentBirth(e.baby().getName().getString(), e.level().getGameTime());
-			LivingVillages.debug("Village {}: {} was born", e.village().getId(), e.baby().getName().getString());
+			LVLog.detail(LVLog.Category.SOCIETY, e.village(), "{} was born", e.baby().getName().getString());
 		});
 		VillageEvents.REQUEST_FULFILLED.register(e -> VillageMood.addEffect(e.village(), VillageMood.REQUEST_FULFILLED, e.level().getGameTime()));
 		VillageEvents.ZOMBIE_CURED.register(e -> {
 			VillageIdentity.nameNow(e.level(), e.village(), e.villager()); // before the cleric's words, which use the name
 			VillageMood.addEffect(e.village(), VillageMood.ZOMBIE_CURED, e.level().getGameTime());
-			LivingVillages.debug("Village {}: {} was cured", e.village().getId(), e.villager().getName().getString());
+			LVLog.detail(LVLog.Category.SOCIETY, e.village(), "{} was cured", e.villager().getName().getString());
 		});
 		VillageEvents.LEVEL_UP.register(e -> {
 			VillageMood.addEffect(e.village(), VillageMood.LEVEL_UP, e.level().getGameTime());
-			announceLevelUp(e.level(), e.village(), e.newLevel());
+			announceLevelUp(e.level(), e.village(), e.newLevel(), e.stats());
 		});
 
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
@@ -168,7 +168,7 @@ public final class VillageSociety {
 	}
 
 	/** Title for the players near the village (spec v2-GĐ 3.3). */
-	private static void announceLevelUp(ServerLevel level, VillageRecord village, int newLevel) {
+	private static void announceLevelUp(ServerLevel level, VillageRecord village, int newLevel, VillageAnalyzer.Stats stats) {
 		Component title = LVText.tr("livingvillages.levelup.title", LVText.tr(VillageLevel.langKey(newLevel)));
 		BlockPos bell = village.getBellPos();
 		Component subtitle = LVText.tr("livingvillages.levelup.subtitle", bell.getX() + ", " + bell.getZ());
@@ -180,7 +180,10 @@ public final class VillageSociety {
 				player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
 			}
 		}
-		LivingVillages.debug("Village {} reached level {}", village.getId(), newLevel);
+		int professions = VillageLevel.progress(village, stats).professions();
+		LVLog.milestone(LVLog.Category.LEVEL, village, "reached {}: {} people ({} adults + {} babies), {} professions",
+				VillageLevel.name(newLevel).toUpperCase(java.util.Locale.ROOT), stats.adultVillagers() + stats.babies(),
+				stats.adultVillagers(), stats.babies(), professions);
 	}
 
 	/**
