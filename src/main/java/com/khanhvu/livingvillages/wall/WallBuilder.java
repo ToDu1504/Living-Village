@@ -1060,6 +1060,11 @@ public final class WallBuilder {
 				registry.setDirty();
 				continue;
 			}
+			if (VillageWalls.ringOf(value) == TorchLighter.LAMP_RING) {
+				TorchLighter.onLampLost(walls, pos);
+				registry.setDirty();
+				continue;
+			}
 			WallRing ring = walls.ring(VillageWalls.ringOf(value));
 			if (ring != null && ring != walls.getRetiring() && VillageWalls.columnOf(value) < ring.units()) {
 				ring.reopen(VillageWalls.columnOf(value));

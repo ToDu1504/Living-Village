@@ -183,6 +183,17 @@ public class LVConfig {
 	public int torchLightLevel = 7;
 	public int torchSpacing = 6;
 	public int torchIntervalTicks = 200;
+	/**
+	 * Once the village's roads are fully planned (spec v4 mini-update M7), lamp posts line the streets instead of
+	 * loose torches, and the mod's own torches are cleared out as lamps cover their spot. Before that, torches as above.
+	 */
+	public boolean roadLamps = true;
+	/** Village level from which lamp posts replace torches (needs a frame and the four road axes paved). */
+	public int lampMinLevel = 2;
+	/** Blocks between lamp posts, measured along the road; posts alternate sides. */
+	public int lampSpacing = 10;
+	/** Fence posts under each lamp's lantern. */
+	public int lampHeight = 2;
 	/** Village care (v3-GĐ 6): villagers mend roads, sweep snow, cut grass; garden fences around the mod's houses (off by default). */
 	public boolean roadCareEnabled = true;
 	public int roadCareIntervalTicks = 200;
@@ -464,6 +475,9 @@ public class LVConfig {
 		torchLightLevel = checkInt("torchLightLevel", torchLightLevel, 0, 14, d.torchLightLevel);
 		torchSpacing = checkInt("torchSpacing", torchSpacing, 2, 32, d.torchSpacing);
 		torchIntervalTicks = checkInt("torchIntervalTicks", torchIntervalTicks, 20, 72000, d.torchIntervalTicks);
+		lampMinLevel = checkInt("lampMinLevel", lampMinLevel, 0, 3, d.lampMinLevel);
+		lampSpacing = checkInt("lampSpacing", lampSpacing, 4, 24, d.lampSpacing);
+		lampHeight = checkInt("lampHeight", lampHeight, 1, 3, d.lampHeight);
 		wallInnerBuffer = checkInt("wallInnerBuffer", wallInnerBuffer, 0, 16, d.wallInnerBuffer);
 		infillMargin = checkInt("infillMargin", infillMargin, 0, 16, d.infillMargin);
 		plazaRadius = checkInt("plazaRadius", plazaRadius, 0, 32, d.plazaRadius);

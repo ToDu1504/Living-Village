@@ -214,7 +214,7 @@ public final class LVCommands {
 			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.care", care[0], care[1]), false);
 		}
 		if (TorchLighter.enabled()) {
-			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.torches", TorchLighter.count(record)), false);
+			source.sendSuccess(() -> LVText.tr("livingvillages.command.status.torches", TorchLighter.lampPostCount(record), TorchLighter.count(record)), false);
 		}
 		if (CitySites.active(record)) {
 			source.sendSuccess(() -> LVText.tr(CitySites.isFull(record) ? "livingvillages.command.status.city_full" : "livingvillages.command.status.city_room"), false);
