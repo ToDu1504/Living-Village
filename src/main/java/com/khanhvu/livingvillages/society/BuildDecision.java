@@ -69,18 +69,24 @@ public record BuildDecision(@Nullable BuildingKind kind, @Nullable ResourceLocat
 			}
 			farmWaiting = true;
 		}
+		// An empty job site nobody has claimed yet (e.g. too far for a villager to reach, M4's distant matching still
+		// pending) means the village lacks a worker, not another workshop: building a second one would sit empty too.
+		boolean jobsWaiting = false;
 		if (needs.jobs() < threshold) {
 			ResourceLocation profession = rarestWorkshopProfession(stats.adults(), buildings);
 			if (profession != null && !full) {
-				return new BuildDecision(BuildingKind.WORKSHOP, profession, "livingvillages.reason.jobs");
+				if (!hasFreeWorkshop(level, village, profession)) {
+					return new BuildDecision(BuildingKind.WORKSHOP, profession, "livingvillages.reason.jobs");
+				}
+				jobsWaiting = true;
 			}
-			fullBlocked |= profession != null;
+			fullBlocked |= profession != null && !jobsWaiting;
 		}
 		if (has(buildings, BuildingKind.PEN) && needsPen(level, village, stats.adults())) {
 			return new BuildDecision(BuildingKind.PEN, null, "livingvillages.reason.pen");
 		}
 		return new BuildDecision(null, null, fullBlocked ? "livingvillages.reason.city_full"
-				: farmWaiting ? "livingvillages.reason.food_wait" : "livingvillages.reason.ok");
+				: farmWaiting ? "livingvillages.reason.food_wait" : jobsWaiting ? "livingvillages.reason.jobs_wait" : "livingvillages.reason.ok");
 	}
 
 	/** Templates matching the decision (workshops of the chosen profession only). */
@@ -96,6 +102,16 @@ public record BuildDecision(@Nullable BuildingKind kind, @Nullable ResourceLocat
 
 	private static boolean hasFreeFarm(ServerLevel level, VillageRecord village) {
 		return level.getPoiManager().getCountInRange(h -> h.is(PoiTypes.FARMER), village.getBellPos(), VillageAnalyzer.areaRadius(village),
+				PoiManager.Occupancy.HAS_SPACE) > 0;
+	}
+
+	/** Whether a job site for this profession already stands empty, waiting for a worker to reach or claim it. */
+	private static boolean hasFreeWorkshop(ServerLevel level, VillageRecord village, ResourceLocation professionId) {
+		VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(professionId);
+		if (profession == null) {
+			return false;
+		}
+		return level.getPoiManager().getCountInRange(profession.heldJobSite(), village.getBellPos(), VillageAnalyzer.areaRadius(village),
 				PoiManager.Occupancy.HAS_SPACE) > 0;
 	}
 

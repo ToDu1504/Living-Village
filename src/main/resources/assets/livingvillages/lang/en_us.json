@@ -71,6 +71,7 @@
 	"livingvillages.reason.housing": "no free bed left",
 	"livingvillages.reason.food": "more farmers needed",
 	"livingvillages.reason.food_wait": "a farm is waiting for a new farmer",
+	"livingvillages.reason.jobs_wait": "a workshop is waiting for a new worker",
 	"livingvillages.reason.jobs": "many villagers have no job",
 	"livingvillages.reason.pen": "the animals need a pen",
 	"livingvillages.reason.limit": "the village must grow to build more",

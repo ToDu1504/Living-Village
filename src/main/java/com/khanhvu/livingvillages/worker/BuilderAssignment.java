@@ -181,7 +181,11 @@ public final class BuilderAssignment {
 		for (Villager villager : adults) {
 			VillagerProfession profession = villager.getVillagerData().getProfession();
 			if (profession == VillagerProfession.NITWIT || busy.contains(villager.getUUID()) || project.isExcluded(villager.getUUID())
-					|| villager.getUUID().equals(village.getLeaderUuid())) {
+					|| villager.getUUID().equals(village.getLeaderUuid())
+					|| villager.getBrain().hasMemoryValue(MemoryModuleType.POTENTIAL_JOB_SITE)) {
+				// A villager vanilla is already walking to a job site (spec v4 mini-update M4) is left alone: this
+				// mod re-asserts WALK_TARGET every tick for its builder, which would otherwise fight vanilla's own
+				// GoToPotentialJobSite for control of the same memory and the walk would never finish either way.
 				continue;
 			}
 			int rank = profession == VillagerProfession.NONE ? 0 : profession == VillagerProfession.MASON ? 1 : 2;

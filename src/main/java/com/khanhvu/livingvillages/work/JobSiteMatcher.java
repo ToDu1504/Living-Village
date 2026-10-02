@@ -105,15 +105,26 @@ public final class JobSiteMatcher {
 		}
 	}
 
-	/** Resolves matches made at least CHECK_DELAY_TICKS ago: hired is a success, anything else is a failure. */
+	/**
+	 * Resolves matches made at least CHECK_DELAY_TICKS ago: hired is a success (vanilla's own GoToPotentialJobSite
+	 * already cleaned up after itself in that case). Anything else is a failure, and the cleanup is ours to do:
+	 * GoToPotentialJobSite only erases POTENTIAL_JOB_SITE and releases the site's POI ticket from its own
+	 * {@code stop()}, which never runs if the villager's schedule never once let the behavior start (the villager
+	 * busy with something else the whole time) -- without this, the villager stays stuck "going" nowhere forever
+	 * and the site's ticket is never freed for anyone else to claim, including the mod's own re-match.
+	 */
 	private static void checkPending(ServerLevel level, long now) {
 		PENDING.entrySet().removeIf(entry -> {
 			if (now - entry.getValue().matchedAtTick() < CHECK_DELAY_TICKS) {
 				return false;
 			}
-			if (level.getEntity(entry.getKey()) instanceof Villager villager
-					&& !villager.getBrain().hasMemoryValue(MemoryModuleType.JOB_SITE)) {
-				onFailed(entry.getKey(), entry.getValue().site(), now);
+			BlockPos site = entry.getValue().site();
+			if (level.getEntity(entry.getKey()) instanceof Villager villager && !villager.getBrain().hasMemoryValue(MemoryModuleType.JOB_SITE)) {
+				onFailed(entry.getKey(), site, now);
+				villager.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+				if (level.getPoiManager().exists(site, h -> true)) {
+					level.getPoiManager().release(site);
+				}
 			}
 			return true;
 		});
