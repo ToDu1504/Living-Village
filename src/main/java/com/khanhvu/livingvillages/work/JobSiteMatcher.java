@@ -6,6 +6,7 @@ import com.khanhvu.livingvillages.village.VillageRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.behavior.AcquirePoi;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.tags.PoiTypeTags;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -94,6 +95,9 @@ public final class JobSiteMatcher {
 			if (matches >= MAX_MATCHES_PER_RUN) {
 				break;
 			}
+			if (anyJoblessWithinVanillaRange(jobless, site)) {
+				continue; // vanilla's own AcquirePoi has this one covered, and does it better; see below
+			}
 			Villager nearest = nearestFree(jobless, site, now);
 			if (nearest == null) {
 				continue;
@@ -132,6 +136,25 @@ public final class JobSiteMatcher {
 
 	private static boolean inside(BlockPos pos, int minX, int minZ, int maxX, int maxZ) {
 		return pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ;
+	}
+
+	/**
+	 * Whether some jobless villager is already close enough that vanilla's own {@code AcquirePoi} will scan this
+	 * site (it looks {@link AcquirePoi#SCAN_RANGE} blocks around each villager). Such a site must be left alone:
+	 * vanilla claims it within seconds and walks there with a real path, while taking it here would drop its POI
+	 * ticket to zero, make vanilla skip it as occupied, and leave the villager depending on
+	 * {@code GoToPotentialJobSite} -- which does not run at all unless the villager's current activity happens to
+	 * allow it. Doing that to nearby sites is what kept a whole village jobless: every site got taken, nobody was
+	 * ever hired, the ticket was released a thousand ticks later, and the same race started over.
+	 */
+	private static boolean anyJoblessWithinVanillaRange(List<Villager> jobless, BlockPos site) {
+		double range = AcquirePoi.SCAN_RANGE;
+		for (Villager villager : jobless) {
+			if (villager.distanceToSqr(site.getX() + 0.5, site.getY(), site.getZ() + 0.5) <= range * range) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The jobless villager closest to {@code site} that is not a pair remembered as failed recently. */
