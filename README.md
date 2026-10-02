@@ -29,6 +29,11 @@ Version 0.1 only built houses when a village ran out of beds. Now:
 - **The ground is made buildable:** inside the walls the village fills pits and water and cuts small cliffs, keeping the lie of the land rather than levelling it flat.
 - **Torches:** dark spots on roads, along the wall and on the bell square get a wall torch automatically.
 - **Village care:** villagers mend potholes in roads, sweep snow off paths and cut wild plants near doors. Garden fences around mod-built houses are optional (`homeFences`).
+- **Faster growth:** level requirements are lower, babies count toward a level's population (jobs still need adults), and the rest between two buildings is much shorter — a village can grow from nothing into a walled city within a couple of hours of play instead of taking much longer.
+- **Job sites anywhere in the planned city:** a jobless villager can take an empty workshop, farm or pen anywhere inside the village's own planned area, not just within vanilla's normal 48-block range — needed once farms and pens stand outside the wall.
+- **Lamp posts:** once a village's road network is fully laid out, its streets get proper lamp posts (the village's own fence style topped with a lantern) instead of random torches; old torches near a new post are cleared.
+- **Relocating old houses that block a planned street** (off by default, see Known limitations): a house that came with the original village and sits on a road the mod has planned can be rebuilt elsewhere and the old one taken down, once the mod is sure nobody has touched it and the replacement is finished.
+- **One log format:** every log line now follows the same pattern and names the village; a short summary line for each active village appears periodically without needing to turn on `debugLogging`.
 
 Every feature has a switch in the config; with all of them off the mod behaves like 0.1. Worlds from 0.1 load without losing anything.
 
@@ -55,7 +60,8 @@ Every feature has a switch in the config; with all of them off the mod behaves l
   3. jobs below `needThreshold` → a workshop for the profession the village has fewest of;
   4. animal keepers (shepherd, butcher, leatherworker, fletcher) but none of their animals nearby → a pen, which gets a pair of those animals when finished;
   5. otherwise nothing (`status` says why: the village is fine, or it must grow before building more).
-- **Village levels:** Hamlet, Village, Town, City. A level needs a number of adults and of different professions (Town also a librarian, City a librarian and a cleric) and sets how many buildings the mod may build (4 / 10 / 20 / 32) and how far from the bell (48 / 64 / 80 / 96 blocks). The level is computed as soon as a village is found, so an existing vanilla village often starts above Hamlet. Levels only go up; nearby players see a title when a village levels up, and fireworks go up over the square (launched from open ground away from anyone, exploding high, so nobody is hurt and nothing burns).
+- **Village levels:** Hamlet, Village, Town, City. A level needs a number of people and of different professions (Town also a librarian, City a librarian and a cleric) and sets how many buildings the mod may build (4 / 10 / 20 / 32) and how far from the bell (48 / 64 / 80 / 96 blocks). Babies count toward the population a level needs (`levelCountsBabies`); a profession still needs an adult, since a baby cannot hold a job. The level is computed as soon as a village is found, so an existing vanilla village often starts above Hamlet. Levels only go up; nearby players see a title when a village levels up, and fireworks go up over the square (launched from open ground away from anyone, exploding high, so nobody is hurt and nothing burns).
+- **Job sites beyond the usual range:** vanilla only lets a villager claim a job site within 48 blocks of itself. Once a village has a planned rectangle (see "One fixed outline" below), a jobless villager may instead be pointed at any empty, matching job site anywhere inside that rectangle plus its farm belt — vanilla still does the actual walking and hiring. A pairing that never works out (too far to reach in time) is not tried again for about a day.
 - **Professions at work** (during their working hours): shepherds breed and shear sheep, butchers breed pigs and put raw meat and charcoal into their own smoker, leatherworkers breed cows and refill their own cauldron, fletchers breed chickens, fishermen fish at nearby water and put cod or salmon into their own barrel, clerics heal hurt villagers and cure zombie villagers in the village (at most once a day each; never named or leashed ones, or ones kept by a player), cartographers walk around the edge of the village. Armorers and weaponsmiths make the village safer, toolsmiths make it build faster (+10% each, up to +30%), a cartographer widens the building radius by 16. Animals are bred only up to a limit per kind that grows with the level, and are never killed; named or leashed animals are left alone.
 - **Names:** every village gets a name that fits its style. Each house is a household with a family name, and villagers are named after the household of their bed. Names set with a name tag or by another mod are never replaced. Guard Villagers guards are named "Guard <name>". Walking into a village shows its name, level, population and mood as a title.
 - **Speech:** now and then a villager near a player says a short line above their head, picked from what really happens: unmet needs, a building going up, a new baby, a death, their own work, the leader's plans, the mood, or a greeting. The text is a vanilla text display that disappears after a few seconds; leftover text (for example after a crash) is removed as soon as it loads.
@@ -63,7 +69,8 @@ Every feature has a switch in the config; with all of them off the mod behaves l
 - **Material board:** the village asks for the three materials used most by the building it is building or has planned next, on a sign by the bell and as trades with the chief (material → emeralds, one use each). Every delivery cheers the village up and goes into the chronicle; when everything is delivered, that building goes up twice as fast and the next one starts without waiting. The village never needs the board: it only speeds things up.
 - **Roads:** a finished building is linked from its door to the nearest village road within `roadSearchRadius` (dirt path, smooth sandstone, and Regrowth's roads), or to the bell. A mason walks along and paves it (at half speed without a mason). Only grass, dirt, coarse dirt and podzol become dirt path, and sand becomes smooth sandstone in deserts; water, buildings and plots are avoided. A way that cannot be found is skipped.
 - **Palisade and walls:** from Village level, masons build a wooden fence ring around the village (the outer edge of all its plots and POIs). Gates open where roads cross. When the village reaches Town level the palisade is replaced by a stone wall: same polygon, higher, with 5×5 towers at the corners and along the wall (spiral staircase inside, door facing inward, crenellations), and arched gates. At City level the wall gains embrasures at alternating merlons. At the highest level a second ring expands outward. The wall material is stone bricks (or cut sandstone in deserts). Blocks a player breaks are left open; blocks lost to explosions or mobs are repaired. The mod never touches player-placed blocks. Set `wallsEnabled = false` to disable entirely.
-- **Torches:** every `torchIntervalTicks` ticks a dark cell on a road, the bell square, the inside of the wall or a wall block gets a wall torch. Light above `torchLightLevel` is left alone.
+- **Torches, then lamp posts:** while a village is still growing, a dark cell on a road, the bell square or the inside of the wall gets a wall torch every `torchIntervalTicks` ticks (light above `torchLightLevel` is left alone). Once the village has its rectangle, has reached `lampMinLevel`, and all four main roads are fully paved, proper lamp posts take over instead: the village's own fence material topped with a lantern, spaced `lampSpacing` apart and alternating sides along each road, at the far end of each main road near its gate, and at the four corners of the square. A loose torch within `lampSpacing` of a new post is cleared.
+- **Relocating a world-gen house that blocks a planned street:** off by default (`relocateVanillaHouses`). When on, and only once a village has reached `relocateMinLevel`: if a house that came with the original village sits across a road the mod has planned (not the bell or the meeting point), the mod checks it block-by-block against its own design. If it is still close enough to original (`relocateMaxDrift`) and no container in it holds real items, the exact same house is queued to be rebuilt on a proper street frontage through the normal building process; only once that replacement is finished does the mod move anything left in its containers across and take the old one down. A house found to have been changed is never checked again. See Known limitations before turning this on.
 - **Village care:** every `roadCareIntervalTicks` ticks a random awake villager fixes a few things near them: fills a pothole (natural ground flanked by road blocks), raises a road segment sunk below its neighbours, sweeps snow off roads, cuts wild plants on roads or near doors. `homeFences = true` adds a wooden fence around each mod-built house.
 - **The building site** is flat, dry, natural ground at least 12 blocks from the bell and within the building radius of the village level (64 blocks with levels off). Inside a city wall, houses and workshops are placed within the wall; farms and pens go outside near a gate. The mod never builds over paths, buildings, beds, bells, job sites or another house's plot. Small slopes get a foundation (cobblestone, or sandstone in deserts).
 - **Trees:** up to 4 natural trees growing inside the footprint are felled first, with no item drops, and sites without trees are preferred. A tree counts as natural only if it has natural (non-persistent) leaves, so log houses and trees decorated with player-placed leaves are never touched. Giant trees and trees with a bee nest stay. After the house is done, one sapling of the same kind per felled tree is replanted 3–8 blocks away; a farmer walks there to plant it if the village has one.
@@ -113,7 +120,7 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `activeRange` | `128` | A village only works while a player is this close |
 | `freeBedThreshold` | `0` | Start building when free beds ≤ this |
 | `maxHousesPerVillage` | `10` | Buildings the mod builds per village, at most. Only used when levels are off; otherwise the level decides |
-| `cooldownTicks` | `24000` | Wait after a finished house (24000 = one day) |
+| `cooldownTicks` | `3000` | Wait after a finished house (3000 ≈ 2.5 minutes) |
 | `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Distance from the bell for new buildings (with levels on, the level's radius replaces the maximum) |
 | `siteAttempts` | `48` | Candidate spots tried per search |
 | `margin` | `2` | Free border around a house |
@@ -128,7 +135,9 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `workStartTime` / `workEndTime` | `1000` / `11000` | Working hours (time of day in ticks) |
 | `maxSkippedRatio` | `0.1` | Cancel a project when more than this share of its blocks is blocked |
 | `showBuilderHeldItem` | `true` | Builder holds the block it places |
-| `debugLogging` | `false` | Extra log lines about villages, sites and builders |
+| `debugLogging` | `false` | Extra, routine log lines (gated further by `logCategories`); milestones (level up, building finished...) always log |
+| `logCategories` | all categories | Which routine-detail categories log when `debugLogging` is on: `level`, `build`, `plan`, `wall`, `road`, `grade`, `work`, `society`, `care`, `board`, `chronicle`, `template` |
+| `logSummaryMinutes` | `10` | A one-line progress summary per active village in the log this often (in-game minutes); `0` disables it |
 | `allowTreeClearing` | `true` | Fell natural trees inside building sites |
 | `maxTreeLogs` | `40` | Trees with more logs than this are never felled |
 | `maxTreesPerSite` | `4` | Most trees felled for one house |
@@ -143,7 +152,8 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `leaderAbsentTicks` | `12000` | A leader away this long is replaced |
 | `workTimeoutTicks` | `600` | How long a villager may take to walk to a task before it is dropped (a sapling is then planted without them) |
 | `levelsEnabled` | `true` | Village levels (needs `needsEnabled`); off = the limit is `maxHousesPerVillage` |
-| `levelRequirements` | 8 adults, 3 professions / 20, 6, librarian / 35, 10, librarian and cleric | What Village, Town and City need |
+| `levelCountsBabies` | `true` | Babies count toward a level's population requirement (professions still need adults) |
+| `levelRequirements` | 8 people, 3 professions / 16, 5, librarian / 26, 8, librarian and cleric | What Village, Town and City need |
 | `levelMaxBuildings` | `[4, 10, 20, 32]` | Buildings the mod may build at each level |
 | `buildRadiusByLevel` | `[48, 64, 80, 96]` | Farthest distance from the bell at each level |
 | `levelCanDecrease` | `false` | Let a village lose a level when it no longer qualifies |
@@ -151,6 +161,8 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `workIntervalTicks` | `600` | How often villagers may pick a task |
 | `workChance` | `0.5` | Chance to pick a task each time (×1.25 when happy, ×0.75 when miserable) |
 | `professionWork` | all `true` | Switch per profession |
+| `jobSitesInCity` | `true` | Let a jobless villager claim a job site anywhere in the village's planned area, not just vanilla's 48-block range |
+| `farmBeltWidth` | `24` | How far outside the wall farms and pens may stand, and how far `jobSitesInCity` reaches past the wall |
 | `maxAnimalsPerType` | `[6, 8, 12, 16]` | Animals of one kind the village breeds up to, by level |
 | `maxFishInBarrel` | `16` | Fish a fisherman keeps in their barrel |
 | `toolsmithBuildSpeedBonus` / `toolsmithBuildSpeedMax` | `0.1` / `0.3` | Build speed per toolsmith, and the most in total |
@@ -209,7 +221,15 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 | `torchesEnabled` | `true` | Auto-place torches in dark spots |
 | `torchLightLevel` | `7` | Do not place a torch if light is above this |
 | `torchSpacing` | `6` | Minimum distance between mod-placed torches |
-| `torchIntervalTicks` | `200` | How often to look for a dark spot to light |
+| `torchIntervalTicks` | `200` | How often to look for a dark spot to light, or to add the next lamp post |
+| `roadLamps` | `true` | Switch to lamp posts once the village's roads are fully planned (needs `torchesEnabled`) |
+| `lampMinLevel` | `2` | Village level needed before lamp posts replace torches |
+| `lampSpacing` | `10` | Blocks between lamp posts along a road |
+| `lampHeight` | `2` | Fence sections under each lamp's lantern |
+| `relocateVanillaHouses` | `false` | Allow rebuilding a world-gen house that blocks a planned street elsewhere and taking the old one down (see Known limitations) |
+| `relocateMinLevel` | `2` | Village level needed before relocation runs |
+| `relocateMaxDrift` | `0.05` | Share of a world-gen house's blocks that may differ from its design before it is treated as player-modified |
+| `relocatePerDay` | `1` | Most world-gen houses relocated per village per Minecraft day |
 | `roadCareEnabled` | `true` | Fill potholes, sweep snow, raise sunk road segments |
 | `grassCuttingEnabled` | `true` | Cut wild plants on roads and near doors |
 | `roadCareIntervalTicks` | `200` | How often to do care work |
@@ -238,6 +258,7 @@ All commands require permission level 2 (operator), except `chronicle` and `boar
 - The chronicle, graves, level-up titles and speech were tested on a dedicated server without a real player; Guard Villagers could not be loaded in the development environment, so guard names, lines and graves are untested.
 - Wall columns over water, lava or very steep ground are left as weak points; the wall still stands, those columns are just open.
 - The spiral staircase inside towers was designed so villagers can walk up; this was tested headless. Actual pathfinding up the stairs may vary with other mods.
+- **Relocating world-gen houses (`relocateVanillaHouses`) is off by default and should be turned on with care.** Taking a world-gen building down cannot be undone. The "still untouched" check only compares block types against the original design (within `relocateMaxDrift`) and treats a container holding real items as a sign the player has been there; it does not read sign text, redstone state or anything else that might show a player's work. It only ever considers a house that came with the original village and blocks a road the mod itself has planned, inside the village's own rectangle, never the bell or the meeting point — your own building is never a candidate. This path was verified against a real village (the mod correctly found and matched 90–99%+ of real world-gen houses to their own design), but the full take-down-and-rebuild sequence was not exercised end to end on a live house, since no village used for testing happened to have one sitting exactly on a planned road.
 
 ## Removing the mod
 

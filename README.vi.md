@@ -29,6 +29,11 @@ Bản 0.1 chỉ xây nhà khi làng hết giường. Giờ có thêm:
 - **Đất được làm cho xây được:** trong tường, làng lấp hố và nước, cắt vách nhỏ, nhưng **giữ dáng dốc chung** chứ không san phẳng lì.
 - **Đuốc:** chỗ tối trên đường, sân chuông, bên trong tường và đỉnh tường được cắm đuốc tự động.
 - **Chăm sóc làng:** dân làng vá ổ gà đường, quét tuyết trên đường và cắt cỏ dại gần cửa nhà. Có thể bật thêm hàng rào vườn quanh nhà mod xây (`homeFences`).
+- **Lớn nhanh hơn:** hạ điều kiện lên cấp, em bé được tính vào dân số xét cấp (nghề vẫn chỉ tính người lớn), và thời gian nghỉ giữa hai công trình ngắn đi nhiều — làng có thể từ tay trắng lớn thành thành trì có tường chỉ trong vài giờ chơi thay vì lâu hơn nhiều.
+- **Nhận bàn nghề trong cả khu quy hoạch:** một dân thất nghiệp có thể nhận xưởng, nông trại hay chuồng còn trống ở bất cứ đâu trong khu đất mod đã quy hoạch cho làng, không chỉ trong phạm vi 48 khối như vanilla — cần thiết vì nông trại và chuồng nằm ngoài tường.
+- **Cột đèn:** khi mạng đường của làng đã lát xong hết, đường phố có cột đèn thật (vật liệu hàng rào của làng, có đèn lồng trên đỉnh) thay vì đuốc cắm ngẫu nhiên; đuốc cũ gần cột đèn mới được dọn đi.
+- **Dời nhà cũ chắn đường quy hoạch** (mặc định tắt, xem mục Giới hạn đã biết): một nhà có sẵn từ làng gốc nằm trên trục đường mod tự vẽ có thể được dựng lại ở chỗ khác và nhà cũ bị dỡ, nhưng chỉ khi mod chắc chắn không ai đụng vào nó và nhà mới đã xây xong.
+- **Một định dạng log:** mọi dòng log giờ theo cùng một khuôn mẫu và ghi rõ tên làng; mỗi làng đang hoạt động có một dòng tóm tắt định kỳ mà không cần bật `debugLogging`.
 
 Tính năng nào cũng có công tắc trong config; tắt hết thì mod chạy như bản 0.1. Thế giới từ bản 0.1 nạp được, không mất dữ liệu.
 
@@ -57,7 +62,8 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
   3. việc làm dưới `needThreshold` → xưởng cho nghề mà làng có ít người nhất;
   4. có người chăn nuôi (chăn cừu, bán thịt, thuộc da, làm tên) nhưng quanh làng không có gia súc của họ → chuồng, xây xong có sẵn một cặp gia súc đó;
   5. còn lại thì không xây (`status` ghi lý do: làng đang ổn, hoặc làng cần lớn hơn để xây tiếp).
-- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố. Mỗi cấp cần đủ số dân trưởng thành và số nghề khác nhau (Thị trấn cần thêm thủ thư, Thành phố cần thủ thư và mục sư), và quyết định số công trình mod được xây (4 / 10 / 20 / 32) cùng khoảng cách xa nhất tới chuông (48 / 64 / 80 / 96 khối). Cấp được tính ngay khi mod thấy làng, nên làng vanilla có sẵn thường bắt đầu trên cấp Xóm. Cấp chỉ tăng; người chơi ở gần thấy tiêu đề khi làng lên cấp, và pháo hoa bắn lên trên quảng trường (phóng từ chỗ đất trống cách xa mọi người, nổ trên cao nên không ai bị thương, không cháy gì).
+- **Cấp làng:** Xóm, Làng, Thị trấn, Thành phố. Mỗi cấp cần đủ số dân và số nghề khác nhau (Thị trấn cần thêm thủ thư, Thành phố cần thủ thư và mục sư), và quyết định số công trình mod được xây (4 / 10 / 20 / 32) cùng khoảng cách xa nhất tới chuông (48 / 64 / 80 / 96 khối). Em bé được tính vào dân số xét cấp (`levelCountsBabies`); nghề thì vẫn chỉ tính người lớn vì em bé không làm việc được. Cấp được tính ngay khi mod thấy làng, nên làng vanilla có sẵn thường bắt đầu trên cấp Xóm. Cấp chỉ tăng; người chơi ở gần thấy tiêu đề khi làng lên cấp, và pháo hoa bắn lên trên quảng trường (phóng từ chỗ đất trống cách xa mọi người, nổ trên cao nên không ai bị thương, không cháy gì).
+- **Nhận bàn nghề ngoài phạm vi thường:** vanilla chỉ cho dân làng nhận bàn nghề trong 48 khối quanh mình. Khi làng đã có khung quy hoạch (xem "Một khung cố định" bên dưới), một dân thất nghiệp có thể được chỉ tới bất kỳ bàn nghề trống nào còn phù hợp trong cả khung đó cộng dải đất ngoài tường cho nông trại/chuồng — vanilla vẫn tự lo việc đi tới và nhận việc. Một cặp không đi tới được nhau (xa quá) thì không bị thử ghép lại trong khoảng một ngày.
 - **Mỗi nghề một việc** (trong giờ làm việc): người chăn cừu cho cừu sinh sản và xén lông; người bán thịt cho lợn sinh sản và bỏ thịt sống cùng than củi vào lò hun khói của mình; thợ thuộc da cho bò sinh sản và đổ nước vào vạc của mình; thợ làm tên cho gà sinh sản; ngư dân câu cá ở chỗ nước gần đó rồi bỏ cá tuyết hoặc cá hồi vào thùng của mình; mục sư chữa dân bị thương và chữa dân làng zombie trong làng (mỗi người tối đa một lần mỗi ngày; không đụng con có tên, bị dắt dây hay được người chơi giữ lại); người vẽ bản đồ đi một vòng quanh rìa làng. Thợ rèn giáp và thợ rèn vũ khí làm làng an toàn hơn, thợ rèn công cụ giúp xây nhanh hơn (mỗi người +10%, tối đa +30%), có người vẽ bản đồ thì bán kính xây rộng thêm 16. Gia súc chỉ được cho sinh sản tới giới hạn mỗi loại (tăng theo cấp làng) và không bao giờ bị giết; con có tên hoặc bị dắt dây không bị đụng tới.
 - **Tên:** mỗi làng có một cái tên hợp với phong cách ("Làng Suối Bạc"). Mỗi nhà là một hộ có họ riêng, và dân làng mang họ của hộ có giường họ ngủ ("Trần Minh"). Tên đặt bằng name tag hoặc do mod khác đặt không bao giờ bị thay. Lính gác của Guard Villagers được đặt tên "Lính gác <tên>". Bước vào làng sẽ thấy tiêu đề ghi tên làng, cấp, số dân và tâm trạng.
 - **Lời nói:** thỉnh thoảng một dân làng gần người chơi nói một câu ngắn trên đầu, chọn theo điều đang thật sự xảy ra: nhu cầu chưa đủ, công trình đang xây, em bé mới sinh, người vừa mất, việc của nghề mình, dự định của trưởng làng, tâm trạng, hay lời chào. Chữ là một text display vanilla, tự biến mất sau vài giây; chữ còn sót lại (ví dụ sau khi game bị tắt đột ngột) bị xóa ngay khi được nạp.
@@ -65,7 +71,8 @@ Mod tự chạy ngay sau khi cài, không cần gõ lệnh để bật.
 - **Bảng vật liệu:** làng xin ba loại vật liệu dùng nhiều nhất của công trình đang xây hoặc sắp xây, ghi trên một tấm bảng cạnh chuông và thành giao dịch với trưởng làng (vật liệu → ngọc, mỗi giao dịch dùng một lần). Mỗi lần giao làm làng vui hơn và được ghi vào biên niên sử; giao đủ hết thì công trình đó xây nhanh gấp đôi và công trình sau bắt đầu không cần chờ. Làng không bao giờ cần bảng này: nó chỉ giúp làng lớn nhanh hơn.
 - **Đường làng:** công trình xây xong được nối từ cửa tới đường làng gần nhất trong `roadSearchRadius` (đường đất, sa thạch mịn và đường của Regrowth), hoặc về chuông. Thợ đá đi dọc và lát đường (không có thợ đá thì chậm một nửa). Chỉ đổi cỏ, đất, đất thô và podzol thành đường đất; ở sa mạc cát thành sa thạch mịn; tránh nước, công trình và đất của nhà khác. Không tìm được đường thì bỏ qua.
 - **Hàng rào và tường thành:** từ cấp Làng, thợ đá dựng vòng hàng rào gỗ quanh rìa ngoài của mọi nhà và bàn nghề. Cổng mở ở chỗ đường cắt qua. Lên cấp Thị trấn thì hàng rào được thay bằng tường đá gạch (sa thạch mịn ở sa mạc): tháp 5×5 ở các góc và dọc tường, cầu thang xoắn bên trong tháp, cửa vào từ mặt trong, cổng có vòm, có con tiêu. Lên Thành phố thì tường có thêm lỗ châu mai. Ở cấp cao nhất, một vòng tường thứ hai mở rộng ra. Mod không bao giờ đụng khối do người chơi đặt; ô bị người chơi phá vỡ được giữ mở, ô bị quái phá hoặc nổ thì được sửa lại. Tắt hẳn bằng `wallsEnabled = false`.
-- **Đuốc:** mỗi `torchIntervalTicks` tick, một ô tối trên đường, sân chuông, bên trong tường hoặc trên khối tường được cắm đuốc. Độ sáng đã trên `torchLightLevel` thì không cắm thêm.
+- **Đuốc, rồi cột đèn:** khi làng còn đang lớn, mỗi `torchIntervalTicks` tick một ô tối trên đường, sân chuông hoặc bên trong tường được cắm đuốc (độ sáng đã trên `torchLightLevel` thì bỏ qua). Khi làng đã có khung, đạt `lampMinLevel`, và cả 4 trục đường chính đã lát xong, cột đèn thật thay thế đuốc: vật liệu hàng rào của làng có đèn lồng trên đỉnh, cách nhau `lampSpacing` khối và so le hai bên dọc mỗi đường, có thêm một cột ở đầu mỗi trục đường gần cổng, và ở bốn góc quảng trường. Đuốc cũ trong tầm `lampSpacing` của cột đèn mới bị dọn đi.
+- **Dời nhà có sẵn chắn đường quy hoạch:** mặc định tắt (`relocateVanillaHouses`). Khi bật, và chỉ từ cấp `relocateMinLevel`: nếu một nhà có sẵn từ làng gốc (không phải chuông hay điểm tụ họp) nằm trên trục đường mod đã quy hoạch, mod so từng khối với mẫu gốc. Nếu còn đủ nguyên bản (`relocateMaxDrift`) và không hộp nào bên trong có đồ thật, nhà y hệt được xếp dựng lại ở một vị trí dọc đường qua quy trình xây bình thường; chỉ khi nhà mới xây xong mod mới chuyển đồ còn trong hộp của nhà cũ sang rồi dỡ nhà cũ. Nhà bị phát hiện đã bị sửa thì không bao giờ kiểm tra lại. Đọc mục Giới hạn đã biết trước khi bật.
 - **Chăm sóc làng:** mỗi `roadCareIntervalTicks` tick, một dân làng đang thức sửa vài thứ quanh họ: vá ổ gà (đất tự nhiên kẹp giữa hai đoạn đường), nâng đoạn đường bị lún, quét tuyết trên đường, cắt cỏ dại trên đường hoặc gần cửa nhà. `homeFences = true` thêm hàng rào vườn quanh từng nhà mod xây.
 - **Chỗ xây** là đất tự nhiên bằng phẳng, khô ráo, cách chuông ít nhất 12 khối và trong bán kính xây của cấp làng (64 khối khi tắt cấp làng). Khi tường đã dựng xong, nhà ở và xưởng được đặt bên trong tường; nông trại và chuồng ra ngoài gần cổng. Mod không xây đè lên đường, công trình, giường, chuông, khối nghề hay đất của nhà khác. Chỗ hơi dốc sẽ có móng đỡ (đá cuội, riêng làng sa mạc là sa thạch).
 - **Cây:** tối đa 4 cây tự nhiên mọc trong chỗ đặt nhà được chặt trước, không rơi đồ, và chỗ không có cây luôn được ưu tiên. Cây chỉ tính là tự nhiên khi có lá tự nhiên (không phải lá do người chơi đặt), nên nhà gỗ và cây trang trí của người chơi không bao giờ bị đụng tới. Cây khổng lồ và cây có tổ ong được giữ nguyên. Xây xong, mỗi cây đã chặt được trồng lại một cây non cùng loại, cách nhà 3–8 khối; nếu làng có nông dân thì một nông dân đi tới trồng.
@@ -116,7 +123,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `activeRange` | `128` | Làng chỉ hoạt động khi có người chơi trong khoảng này |
 | `freeBedThreshold` | `0` | Bắt đầu xây khi số giường trống ≤ giá trị này |
 | `maxHousesPerVillage` | `10` | Số công trình mod xây tối đa cho mỗi làng. Chỉ dùng khi tắt cấp làng; bật thì theo cấp |
-| `cooldownTicks` | `24000` | Thời gian chờ sau khi xây xong một nhà (24000 = một ngày) |
+| `cooldownTicks` | `3000` | Thời gian chờ sau khi xây xong một nhà (3000 ≈ 2,5 phút) |
 | `minBuildDistance` / `maxBuildDistance` | `12` / `64` | Khoảng cách từ chuông tới công trình mới (bật cấp làng thì bán kính của cấp thay cho giá trị tối đa) |
 | `siteAttempts` | `48` | Số chỗ thử mỗi lần tìm vị trí |
 | `margin` | `2` | Khoảng trống chừa quanh nhà |
@@ -131,7 +138,9 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `workStartTime` / `workEndTime` | `1000` / `11000` | Giờ làm việc (thời gian trong ngày, tính bằng tick) |
 | `maxSkippedRatio` | `0.1` | Hủy dự án khi tỉ lệ khối bị chắn vượt mức này |
 | `showBuilderHeldItem` | `true` | Thợ xây cầm khối đang đặt trên tay |
-| `debugLogging` | `false` | Ghi thêm log về làng, chỗ xây và thợ xây |
+| `debugLogging` | `false` | Ghi thêm log chi tiết thường ngày (lọc tiếp bằng `logCategories`); mốc quan trọng (lên cấp, xây xong...) luôn được ghi |
+| `logCategories` | tất cả | Nhóm chi tiết được ghi khi `debugLogging` bật: `level`, `build`, `plan`, `wall`, `road`, `grade`, `work`, `society`, `care`, `board`, `chronicle`, `template` |
+| `logSummaryMinutes` | `10` | Ghi một dòng tóm tắt tiến độ mỗi làng đang hoạt động sau mỗi khoảng này (phút trong game); `0` để tắt |
 | `allowTreeClearing` | `true` | Chặt cây tự nhiên trong chỗ xây |
 | `maxTreeLogs` | `40` | Cây có nhiều khối gỗ hơn số này thì không bao giờ bị chặt |
 | `maxTreesPerSite` | `4` | Số cây tối đa chặt cho một nhà |
@@ -146,7 +155,8 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `leaderAbsentTicks` | `12000` | Trưởng làng vắng mặt lâu hơn thế thì được thay |
 | `workTimeoutTicks` | `600` | Thời gian dân làng được đi tới chỗ làm việc trước khi bỏ việc đó (cây non khi đó được trồng thẳng) |
 | `levelsEnabled` | `true` | Cấp làng (cần `needsEnabled`); tắt thì giới hạn là `maxHousesPerVillage` |
-| `levelRequirements` | 8 dân, 3 nghề / 20, 6, thủ thư / 35, 10, thủ thư và mục sư | Điều kiện lên Làng, Thị trấn, Thành phố |
+| `levelCountsBabies` | `true` | Em bé được tính vào dân số xét cấp (nghề vẫn chỉ tính người lớn) |
+| `levelRequirements` | 8 dân, 3 nghề / 16, 5, thủ thư / 26, 8, thủ thư và mục sư | Điều kiện lên Làng, Thị trấn, Thành phố |
 | `levelMaxBuildings` | `[4, 10, 20, 32]` | Số công trình mod được xây ở mỗi cấp |
 | `buildRadiusByLevel` | `[48, 64, 80, 96]` | Khoảng cách xa nhất tới chuông ở mỗi cấp |
 | `levelCanDecrease` | `false` | Cho làng tụt cấp khi không còn đủ điều kiện |
@@ -154,6 +164,8 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `workIntervalTicks` | `600` | Bao lâu dân làng được chọn việc một lần |
 | `workChance` | `0.5` | Xác suất chọn việc mỗi lần (×1,25 khi hạnh phúc, ×0,75 khi khốn khó) |
 | `professionWork` | tất cả `true` | Bật/tắt từng nghề |
+| `jobSitesInCity` | `true` | Cho dân thất nghiệp nhận bàn nghề ở bất cứ đâu trong khu quy hoạch của làng, không chỉ trong 48 khối như vanilla |
+| `farmBeltWidth` | `24` | Nông trại và chuồng được đặt xa tường tới mức này, cũng là tầm `jobSitesInCity` vươn ra ngoài tường |
 | `maxAnimalsPerType` | `[6, 8, 12, 16]` | Số gia súc mỗi loại tối đa làng cho sinh sản, theo cấp |
 | `maxFishInBarrel` | `16` | Số cá ngư dân để trong thùng |
 | `toolsmithBuildSpeedBonus` / `toolsmithBuildSpeedMax` | `0.1` / `0.3` | Tốc độ xây mỗi thợ rèn công cụ thêm vào, và tối đa |
@@ -212,7 +224,15 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 | `torchesEnabled` | `true` | Tự cắm đuốc vào chỗ tối |
 | `torchLightLevel` | `7` | Không cắm đuốc nếu độ sáng đã trên mức này |
 | `torchSpacing` | `6` | Khoảng cách tối thiểu giữa hai đuốc mod đặt |
-| `torchIntervalTicks` | `200` | Bao lâu tìm chỗ tối để cắm đuốc một lần |
+| `torchIntervalTicks` | `200` | Bao lâu tìm chỗ tối để cắm đuốc, hoặc dựng cột đèn tiếp theo |
+| `roadLamps` | `true` | Chuyển sang cột đèn khi mạng đường của làng đã quy hoạch xong (cần `torchesEnabled`) |
+| `lampMinLevel` | `2` | Cấp làng cần có trước khi cột đèn thay đuốc |
+| `lampSpacing` | `10` | Khoảng cách giữa các cột đèn dọc đường |
+| `lampHeight` | `2` | Số đoạn hàng rào dưới mỗi đèn lồng |
+| `relocateVanillaHouses` | `false` | Cho phép dựng lại nhà có sẵn chắn đường quy hoạch ở chỗ khác rồi dỡ nhà cũ (xem Giới hạn đã biết) |
+| `relocateMinLevel` | `2` | Cấp làng cần có trước khi việc dời nhà chạy |
+| `relocateMaxDrift` | `0.05` | Tỉ lệ khối của nhà có sẵn được phép khác mẫu gốc trước khi coi là đã bị người chơi sửa |
+| `relocatePerDay` | `1` | Số nhà có sẵn tối đa được dời mỗi làng mỗi ngày Minecraft |
 | `roadCareEnabled` | `true` | Vá ổ gà, quét tuyết, nâng đường lún |
 | `grassCuttingEnabled` | `true` | Cắt cỏ dại trên đường và gần cửa nhà |
 | `roadCareIntervalTicks` | `200` | Bao lâu chăm sóc đường một lần |
@@ -241,6 +261,7 @@ File `config/livingvillages.json`. Giá trị nằm ngoài khoảng cho phép s�
 - Biên niên sử, bia mộ, tiêu đề lên cấp và lời nói mới được test trên server không có người chơi thật; Guard Villagers không nạp được trong môi trường dev nên tên, câu nói và bia mộ của lính gác chưa được test.
 - Các cột tường trên mặt nước, dung nham hoặc đất dốc quá được để là điểm yếu; tường vẫn đứng, chỉ các cột đó để hở.
 - Cầu thang xoắn trong tháp được thiết kế để dân làng leo lên được; điều này mới test headless. Khả năng pathfinding thực sự phụ thuộc vào các mod khác.
+- **Dời nhà có sẵn (`relocateVanillaHouses`) mặc định tắt, bật lên nên cẩn thận.** Dỡ một công trình có sẵn trong làng là việc không thể hoàn tác. Kiểm tra "còn nguyên bản" chỉ so loại khối với mẫu gốc (trong `relocateMaxDrift`) và coi hộp có đồ thật là dấu hiệu người chơi đã tới; không đọc chữ trên bảng, trạng thái redstone hay dấu vết nào khác của người chơi. Mod chỉ xem xét nhà có sẵn từ làng gốc, chắn đúng một trục đường mod tự vẽ, nằm trong khung của làng, không bao giờ là chuông hay điểm tụ họp — nhà do chính bạn xây không bao giờ bị nhắm tới. Phần nhận diện đã được kiểm chứng trên một làng thật (mod tìm và khớp đúng 90–99%+ các nhà có sẵn với mẫu gốc của chúng), nhưng chu trình dỡ-và-dựng-lại đầy đủ chưa được chạy hết trên một nhà thật, vì làng dùng để test không có nhà nào tình cờ nằm đúng trên một trục đường đã quy hoạch.
 
 ## Gỡ mod
 
